@@ -28,11 +28,14 @@ html, body {
 }
 
 /*
- * Mobile overflow guard. A few marquees, huge display headlines, and
- * the Hero spotlight gradient can leak past the viewport edge on narrow
- * screens (≤ 430px) if a descendant opts out of its parent's
- * `overflow-hidden`. Clamping at the <body> level is the cheapest way to
- * guarantee no horizontal scroll without neutering sticky/fixed headers.
+ * Mobile overflow safety net. The known culprit — LiveTicker's
+ * `.ticker-track` (width: max-content) — is now clipped locally at its
+ * own container, so this rule is belt-and-suspenders rather than
+ * load-bearing. We keep it because future marquees / display headlines
+ * could reintroduce overflow, and clamping at the <body> level is
+ * cheaper than re-discovering the bug in production. If you add an
+ * element that depends on horizontal scroll (e.g. a custom carousel),
+ * give it its own explicit overflow container rather than removing this.
  */
 html, body {
   overflow-x: hidden;

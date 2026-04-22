@@ -58,10 +58,16 @@ export function LiveTicker({ markets, limit = 16 }: Props) {
 
   return (
     <div
-      className="border-y border-white/5 bg-ink-900/60 py-2.5 backdrop-blur"
+      className="overflow-hidden border-y border-white/5 bg-ink-900/60 py-2.5 backdrop-blur"
       role="marquee"
       aria-label={t('ticker.aria')}
     >
+      {/*
+       * `ticker-track` has `width: max-content` and scrolls a duplicated row
+       * via translateX — without `overflow-hidden` on this container the
+       * track leaks past the viewport and causes horizontal scroll on narrow
+       * screens. Clip here rather than relying on the body-level guard.
+       */}
       <div className="ticker-track">
         {row.map((m, i) => {
           const p = prices[m.id] ?? m.yesProb;

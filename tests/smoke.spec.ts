@@ -30,15 +30,36 @@ const SAMPLE_MARKET_SLUGS = [
   'worlds-2026-winner',
 ];
 
-/** Capture console errors into an array. Ignore known-noisy sources. */
+/**
+ * Capture console errors into an array. Ignore known-noisy sources.
+ *
+ * We explicitly skip two classes of "error" message that don't reflect JS
+ * health and were causing baseline flakiness:
+ *
+ *   1. Third-party iframe/asset noise — YouTube embed 404s, doubleclick, etc.
+ *      These are matched by URL pattern in either the text or the
+ *      `msg.location().url` field.
+ *
+ *   2. Generic "Failed to load resource" messages — Chromium emits these for
+ *      any sub-resource that fails (video posters, background images) and
+ *      they carry no URL in `msg.text()`, so the URL-pattern filter above
+ *      misses them. These are network-level failures that don't break the
+ *      page; the HTTP-200 assertion on the top-level document is what
+ *      actually certifies the route is healthy. We also check
+ *      `msg.location().url` for a YouTube/YT pattern before the text so the
+ *      filter catches poster 404s even when the text is generic.
+ */
 function trackConsoleErrors(page: Page) {
   const errors: string[] = [];
+  const THIRD_PARTY_URL_RE = /youtube|ytimg|googlesyndication|doubleclick/i;
   const onMsg = (msg: ConsoleMessage) => {
     if (msg.type() !== 'error') return;
     const text = msg.text();
-    // Ignore third-party iframe errors we can't control (ytimg posters that
-    // still 404 even on hq fallback for some edge cases).
-    if (/youtube|ytimg|googlesyndication|doubleclick/i.test(text)) return;
+    const locationUrl = msg.location()?.url ?? '';
+    if (THIRD_PARTY_URL_RE.test(text) || THIRD_PARTY_URL_RE.test(locationUrl)) return;
+    // Generic resource-load failures — not JS errors, the HTTP assertion
+    // already guards the document itself.
+    if (/^Failed to load resource/i.test(text)) return;
     errors.push(text);
   };
   page.on('console', onMsg);

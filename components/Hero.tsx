@@ -15,11 +15,35 @@ export function Hero({ markets }: { markets: Market[] }) {
   const [i, setI] = useState(0);
 
   useEffect(() => {
+    // Guard: `(x + 1) % 0` is NaN, which would poison the rotation index
+    // forever once featured goes empty (data change, all resolved, etc.).
+    // Skip the timer entirely in that case.
+    if (featured.length === 0) return;
     const t = setInterval(() => setI((x) => (x + 1) % featured.length), 7000);
     return () => clearInterval(t);
   }, [featured.length]);
 
   const m = featured[i];
+
+  /*
+   * `timeUntil(endsAt)` is time-dependent, so server and client evaluate it
+   * against different `Date.now()` instants — a minute-boundary flip between
+   * SSR and hydration would produce a React hydration warning. We render a
+   * stable placeholder during SSR and swap the live label in on mount, then
+   * tick it once a minute so the copy stays fresh.
+   */
+  const [endsLabel, setEndsLabel] = useState<string | null>(null);
+  useEffect(() => {
+    if (!m) return;
+    setEndsLabel(timeUntil(m.endsAt));
+    const t = setInterval(() => setEndsLabel(timeUntil(m.endsAt)), 60_000);
+    return () => clearInterval(t);
+  }, [m?.endsAt]);
+
+  // If upstream filters ever produce an empty set (all trending binaries
+  // resolved, data-model change, etc.), render nothing rather than letting
+  // the destructured `m.slug` / `m.media` crash the whole landing page.
+  if (!m) return null;
 
   return (
     <section className="relative overflow-hidden">
@@ -111,7 +135,12 @@ export function Hero({ markets }: { markets: Market[] }) {
 
             <div className="absolute inset-x-0 bottom-0 p-5">
               <div className="text-[11px] font-medium uppercase tracking-widest text-bone-muted">
-                Closes in {timeUntil(m.endsAt)} · {formatUSD(m.volume)} vol
+                {/*
+                 * `endsLabel` is null on the server and first client render
+                 * (same markup → no hydration warning), then populated from
+                 * useEffect. En-dash keeps the layout stable pre/post swap.
+                 */}
+                Closes in {endsLabel ?? '—'} · {formatUSD(m.volume)} vol
               </div>
               <Link
                 href={`/markets/${m.slug}`}
