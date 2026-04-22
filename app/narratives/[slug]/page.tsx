@@ -3,6 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AutoVideo } from '@/components/AutoVideo';
 import { MarketCard } from '@/components/MarketCard';
+import { JsonLd } from '@/components/JsonLd';
+import { PriceChart } from '@/components/PriceChart';
 import {
   AI_TRADERS,
   NARRATIVE_INDICES,
@@ -11,6 +13,8 @@ import {
 } from '@/lib/markets';
 import { formatUSD } from '@/lib/format';
 import type { AITrader, Trader } from '@/lib/types';
+
+const SITE_URL = 'https://conviction-fe.vercel.app';
 
 /**
  * /narratives/[slug] — narrative-index detail.
@@ -107,8 +111,63 @@ export default function NarrativePage({
   const totalVolume = legs.reduce((s, l) => s + l.market.volume, 0);
   const totalLiquidity = legs.reduce((s, l) => s + l.market.liquidity, 0);
 
+  // Deterministic seed for the sparkline so SSR and CSR match.
+  const chartSeed = nx.slug
+    .split('')
+    .reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) >>> 0, 7);
+
+  // Structured data: describe the narrative as a Schema.org FinancialProduct
+  // basket. This gives search engines machine-readable context for price,
+  // volume, and constituent markets.
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FinancialProduct',
+    name: nx.title,
+    description: nx.blurb,
+    url: `${SITE_URL}/narratives/${nx.slug}`,
+    provider: {
+      '@type': 'Organization',
+      name: 'Conviction',
+      url: SITE_URL,
+    },
+    offers: {
+      '@type': 'Offer',
+      priceCurrency: 'USD',
+      price: (nx.price).toFixed(4),
+      availability: 'https://schema.org/InStock',
+    },
+    additionalProperty: [
+      {
+        '@type': 'PropertyValue',
+        name: '24h change',
+        value: `${nx.change24h.toFixed(2)}%`,
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'Basket volume',
+        value: formatUSD(totalVolume),
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'Liquidity',
+        value: formatUSD(totalLiquidity),
+      },
+    ],
+    hasPart: legs.map(({ market, weight }) => ({
+      '@type': 'FinancialProduct',
+      name: market.title,
+      url: `${SITE_URL}/markets/${market.slug}`,
+      additionalProperty: {
+        '@type': 'PropertyValue',
+        name: 'weight',
+        value: `${Math.round(weight * 100)}%`,
+      },
+    })),
+  };
+
   return (
     <div className="bg-ink-900">
+      <JsonLd data={jsonLd} />
       {/* ----- Hero ----- */}
       <section className="relative h-[70vh] min-h-[480px] w-full overflow-hidden">
         {nx.media && (
@@ -117,6 +176,7 @@ export default function NarrativePage({
             className="absolute inset-0 h-full w-full"
             fit="cover"
             title={nx.title}
+            priority
           />
         )}
         <div className="absolute inset-0 narrative-grad" />
@@ -193,14 +253,42 @@ export default function NarrativePage({
         </div>
       </section>
 
+      {/* ----- Basket price sparkline ----- */}
+      <section className="mx-auto max-w-[1440px] px-6 pt-12">
+        <div className="rounded-3xl border border-white/10 bg-ink-800 p-6">
+          <div className="mb-3 flex items-baseline justify-between">
+            <div>
+              <div className="text-xs font-medium uppercase tracking-wider text-bone-muted">
+                Basket price · 30d
+              </div>
+              <div className="mt-1 font-display text-2xl text-bone">
+                Conviction trajectory
+              </div>
+            </div>
+            <div className="text-[11px] text-bone-muted">
+              Mock · oracle feed · updated every 5m
+            </div>
+          </div>
+          <div className="h-56 w-full">
+            <PriceChart seed={chartSeed} days={30} />
+          </div>
+        </div>
+      </section>
+
       {/* ----- Component markets ----- */}
-      <section className="mx-auto max-w-[1440px] px-6 py-16">
+      <section
+        aria-labelledby="narrative-legs-heading"
+        className="mx-auto max-w-[1440px] px-6 py-16"
+      >
         <div className="mb-6 flex items-baseline justify-between">
           <div>
             <div className="text-xs font-medium uppercase tracking-wider text-bone-muted">
               Basket constituents
             </div>
-            <h2 className="mt-1 font-display text-3xl text-bone md:text-4xl">
+            <h2
+              id="narrative-legs-heading"
+              className="mt-1 font-display text-3xl text-bone md:text-4xl"
+            >
               {legs.length} weighted markets
             </h2>
           </div>
@@ -226,11 +314,17 @@ export default function NarrativePage({
 
       {/* ----- Related traders ----- */}
       {(aiTraders.length > 0 || humanTraders.length > 0) && (
-        <section className="mx-auto max-w-[1440px] px-6 pb-24">
+        <section
+          aria-labelledby="narrative-traders-heading"
+          className="mx-auto max-w-[1440px] px-6 pb-24"
+        >
           <div className="text-xs font-medium uppercase tracking-wider text-bone-muted">
             Conviction on this thesis
           </div>
-          <h2 className="mt-1 font-display text-3xl text-bone md:text-4xl">
+          <h2
+            id="narrative-traders-heading"
+            className="mt-1 font-display text-3xl text-bone md:text-4xl"
+          >
             Traders riding {nx.title}
           </h2>
 

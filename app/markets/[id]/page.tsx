@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { MARKETS, getMarket } from '@/lib/markets';
@@ -9,9 +10,41 @@ import { EdgeBadge } from '@/components/EdgeBadge';
 import { PriceChart } from '@/components/PriceChart';
 import { AIOracleCard } from '@/components/AIOracleCard';
 import { MarketCard } from '@/components/MarketCard';
+import { JsonLd } from '@/components/JsonLd';
+
+const SITE_URL = 'https://conviction-fe.vercel.app';
 
 export function generateStaticParams() {
   return MARKETS.map((m) => ({ id: m.slug }));
+}
+
+export function generateMetadata({
+  params,
+}: {
+  params: { id: string };
+}): Metadata {
+  const m = getMarket(params.id);
+  if (!m) return { title: 'Market not found · Conviction' };
+  return {
+    title: `${m.title} · Conviction`,
+    description: m.description,
+    openGraph: {
+      title: m.title,
+      description: m.description,
+      images: [m.media.poster],
+      url: `${SITE_URL}/markets/${m.slug}`,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: m.title,
+      description: m.description,
+      images: [m.media.poster],
+    },
+    alternates: {
+      canonical: `${SITE_URL}/markets/${m.slug}`,
+    },
+  };
 }
 
 export default function MarketDetailPage({
@@ -28,8 +61,47 @@ export default function MarketDetailPage({
 
   const seed = m.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
 
+  // JSON-LD: expose the market as an Event with offers keyed to the YES side.
+  // Schema.org/Event is the closest native match for "question that resolves
+  // at time T"; we use additionalType to hint it's a prediction-market question.
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    additionalType: 'https://schema.org/FinancialProduct',
+    name: m.title,
+    description: m.description,
+    url: `${SITE_URL}/markets/${m.slug}`,
+    image: m.media.poster,
+    startDate: new Date().toISOString(),
+    endDate: m.endsAt,
+    eventStatus:
+      m.status === 'resolved'
+        ? 'https://schema.org/EventCompleted'
+        : 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+    location: {
+      '@type': 'VirtualLocation',
+      url: SITE_URL,
+    },
+    organizer: {
+      '@type': 'Organization',
+      name: 'Conviction',
+      url: SITE_URL,
+    },
+    offers: {
+      '@type': 'Offer',
+      name: `YES · ${m.title}`,
+      priceCurrency: 'USD',
+      price: m.yesProb.toFixed(4),
+      availability: 'https://schema.org/InStock',
+      url: `${SITE_URL}/markets/${m.slug}`,
+    },
+    keywords: m.tags.join(', '),
+  };
+
   return (
     <div className="mx-auto max-w-[1440px] px-6 pt-8">
+      <JsonLd data={jsonLd} />
       {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-2 text-sm text-bone-muted">
         <Link href="/" className="hover:text-bone">
@@ -56,6 +128,7 @@ export default function MarketDetailPage({
                 media={m.media}
                 fit="cover"
                 className="absolute inset-0 h-full w-full"
+                priority
               />
               <div className="absolute inset-0 card-gradient" />
             </div>

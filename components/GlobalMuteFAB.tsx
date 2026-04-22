@@ -16,6 +16,7 @@ export function GlobalMuteFAB() {
         muted ? 'bg-ink-800 text-bone-muted hover:text-bone' : 'bg-volt text-ink-900 hover:brightness-105'
       )}
       aria-label={muted ? t('mute.muted') : t('mute.unmuted')}
+      aria-pressed={!muted}
     >
       {muted ? (
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">

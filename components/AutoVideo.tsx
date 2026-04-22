@@ -15,6 +15,12 @@ interface Props {
   fit?: 'cover' | 'contain';
   /** displayed on the gradient placeholder if all posters 404 */
   title?: string;
+  /**
+   * LCP candidate — poster loads eagerly with fetchPriority="high" and the
+   * inner player mounts immediately (bypasses the IntersectionObserver gate).
+   * Use for the first above-the-fold card per page only.
+   */
+  priority?: boolean;
 }
 
 /**
@@ -52,12 +58,15 @@ export function AutoVideo({
   hoverOnly = false,
   fit = 'cover',
   title,
+  priority = false,
 }: Props) {
   const rawId = useId();
   const playerId = `pl-${rawId}`;
   const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [active, setActive] = useState(!lazy);
+  // If this is a priority (LCP) slot, start active so the video element
+  // is present on first paint — no IO wait, no flash of black.
+  const [active, setActive] = useState(!lazy || priority);
   const [playing, setPlaying] = useState(false);
   const [posterState, setPosterState] = useState<PosterState>('max');
 
@@ -163,7 +172,12 @@ export function AutoVideo({
           className={`absolute inset-0 h-full w-full ${fitClass} transition-opacity duration-500 ${
             playing ? 'opacity-0' : 'opacity-100'
           }`}
-          loading="lazy"
+          loading={priority ? 'eager' : 'lazy'}
+          // fetchPriority is still a relatively new attribute — React 18 lower-
+          // cases it from the JSX side, so we pass it through the DOM literal.
+          // @ts-expect-error: React 18 type defs predate fetchPriority.
+          fetchpriority={priority ? 'high' : undefined}
+          decoding={priority ? 'sync' : 'async'}
           onError={() =>
             setPosterState((s) => (s === 'max' ? 'hq' : 'fallback'))
           }

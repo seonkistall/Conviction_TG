@@ -157,12 +157,37 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={fontVariables}>
+      <head>
+        {/*
+          Preconnect hints for video infrastructure. Each card's poster + iframe
+          hits i.ytimg.com (poster CDN) and youtube-nocookie.com (embed origin);
+          opening those TLS connections in parallel with HTML parse cuts ~200ms
+          off the first video paint on 4G.
+        */}
+        <link rel="preconnect" href="https://i.ytimg.com" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://i.ytimg.com" />
+        <link
+          rel="preconnect"
+          href="https://www.youtube-nocookie.com"
+          crossOrigin=""
+        />
+        <link rel="dns-prefetch" href="https://www.youtube-nocookie.com" />
+      </head>
       <body className="min-h-screen bg-ink-900 text-bone antialiased">
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <I18nProvider>
           <MuteProvider>
             <ParlayProvider>
               <Header />
-              <main className="pt-16 pb-24 md:pb-0">{children}</main>
+              <main
+                id="main-content"
+                tabIndex={-1}
+                className="pt-16 pb-24 md:pb-0"
+              >
+                {children}
+              </main>
               <Footer />
               <ParlaySlip />
               <GlobalMuteFAB />
