@@ -62,6 +62,15 @@ export interface Market {
   edgePP?: number;
   /** Cultural vibe score 0..1 from Weverse/K-Twitter aggregator */
   vibe?: number;
+  // ---------- Resolution fields (status === 'resolved') ----------
+  /** For binary markets: 'YES' | 'NO'. For multi: the winning outcome id. */
+  resolvedOutcome?: 'YES' | 'NO' | string;
+  /** Final settlement price (0..1) paid to the winning side. */
+  closePrice?: number;
+  /** ISO timestamp at which the oracle signed the resolution. */
+  resolvedAt?: string;
+  /** Short human-readable explainer shown on the resolution banner. */
+  resolutionNote?: string;
 }
 
 export interface Trader {

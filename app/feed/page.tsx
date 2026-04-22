@@ -1,4 +1,4 @@
-import { MARKETS } from '@/lib/markets';
+import { LIVE_MARKETS } from '@/lib/markets';
 import { FeedClient } from './FeedClient';
 
 export const metadata = {
@@ -7,10 +7,11 @@ export const metadata = {
 };
 
 export default function FeedPage() {
-  // Put trending first, then the rest.
+  // Put trending first, then the rest. Resolved markets are excluded —
+  // the feed is for live tradable moments only.
   const ordered = [
-    ...MARKETS.filter((m) => m.trending),
-    ...MARKETS.filter((m) => !m.trending),
+    ...LIVE_MARKETS.filter((m) => m.trending),
+    ...LIVE_MARKETS.filter((m) => !m.trending),
   ];
   return <FeedClient markets={ordered} />;
 }

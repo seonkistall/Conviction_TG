@@ -137,11 +137,16 @@ export const MARKETS: Market[] = [
       start: 18,
     },
     tags: ['Football', 'EPL', 'Son Heung-min'],
-    status: 'live',
+    status: 'resolved',
     aiConfidence: 0.53,
     aiTrend: 'flat',
     edgePP: 5,
     vibe: 0.58,
+    resolvedOutcome: 'YES',
+    closePrice: 1,
+    resolvedAt: '2026-05-24T19:35:00Z',
+    resolutionNote:
+      'Son scored his 20th on the final matchday. Oracle confirmed via Premier League + TheSportsDB.',
   },
   {
     id: 'mkt_squidgame_s3',
@@ -259,9 +264,14 @@ export const MARKETS: Market[] = [
       poster: 'https://i.ytimg.com/vi/BAaqCYwZQjM/maxresdefault.jpg',
     },
     tags: ['KBO', 'Baseball', 'Kiwoom'],
-    status: 'live',
+    status: 'resolved',
     aiConfidence: 0.22,
     aiTrend: 'flat',
+    resolvedOutcome: 'NO',
+    closePrice: 0,
+    resolvedAt: '2026-11-11T14:08:00Z',
+    resolutionNote:
+      'Kiwoom eliminated in the semifinal round. Oracle confirmed via KBO official + Naver Sports.',
     edgePP: 8,
   },
   {
@@ -341,10 +351,15 @@ export const MARKETS: Market[] = [
       start: 30,
     },
     tags: ['Oscars', 'Bong Joon-ho', 'Film'],
-    status: 'live',
+    status: 'resolved',
     aiConfidence: 0.11,
     aiTrend: 'down',
     edgePP: 2,
+    resolvedOutcome: 'NO',
+    closePrice: 0,
+    resolvedAt: '2027-03-10T04:22:00Z',
+    resolutionNote:
+      'Best Picture went to another film. Oracle confirmed via Academy broadcast + Exa.',
   },
   {
     id: 'mkt_nikkei_50k',
@@ -830,7 +845,15 @@ export function getAITrader(handle: string): AITrader | undefined {
   return AI_TRADERS.find((t) => t.handle === handle || t.id === handle);
 }
 
-export const TRENDING_MARKETS: Market[] = MARKETS.filter((m) => m.trending);
+export const TRENDING_MARKETS: Market[] = MARKETS.filter(
+  (m) => m.trending && m.status !== 'resolved'
+);
+
+/** Markets that are still tradable (i.e. not resolved). */
+export const LIVE_MARKETS: Market[] = MARKETS.filter((m) => m.status !== 'resolved');
+
+/** Markets that have already settled. */
+export const RESOLVED_MARKETS: Market[] = MARKETS.filter((m) => m.status === 'resolved');
 
 export const CATEGORIES: { label: string; value: string }[] = [
   { label: 'All', value: 'all' },

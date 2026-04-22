@@ -14,6 +14,7 @@ export function OutcomeBar({ market, compact = false, onPick }: Props) {
   const parlay = useParlay();
   if (market.kind !== 'multi' || !market.outcomes) return null;
   const total = market.outcomes.reduce((a, o) => a + o.prob, 0) || 1;
+  const isResolved = market.status === 'resolved';
 
   return (
     <div className="space-y-2">
@@ -44,9 +45,11 @@ export function OutcomeBar({ market, compact = false, onPick }: Props) {
           <button
             key={o.id}
             type="button"
+            disabled={isResolved}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              if (isResolved) return;
               onPick?.(o);
               parlay.add({
                 marketId: market.id,
@@ -54,7 +57,12 @@ export function OutcomeBar({ market, compact = false, onPick }: Props) {
                 price: o.prob / total,
               });
             }}
-            className="group flex items-center justify-between rounded-lg border border-white/10 bg-ink-900/70 px-2.5 py-1.5 text-left backdrop-blur transition hover:border-white/30 hover:bg-ink-900"
+            className={clsx(
+              'group flex items-center justify-between rounded-lg border border-white/10 bg-ink-900/70 px-2.5 py-1.5 text-left backdrop-blur transition',
+              isResolved
+                ? 'cursor-not-allowed opacity-60'
+                : 'hover:border-white/30 hover:bg-ink-900'
+            )}
           >
             <div className="flex items-center gap-2 min-w-0">
               <span

@@ -4,6 +4,7 @@ import type { Market } from '@/lib/types';
 import { AutoVideo } from './AutoVideo';
 import { EdgeBadge } from './EdgeBadge';
 import { OutcomeBar } from './OutcomeBar';
+import { ResolvedBanner } from './ResolvedBanner';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 
 interface Props {
@@ -23,18 +24,28 @@ export function MarketCard({ market, size = 'md' }: Props) {
 
   const isMulti = market.kind === 'multi';
   const topLabel = isMulti ? market.outcomes?.[0]?.label : 'Yes';
+  const isResolved = market.status === 'resolved';
 
   return (
     <Link
       href={`/markets/${market.slug}`}
       className={clsx(
         'group relative block overflow-hidden rounded-2xl border border-white/5 bg-ink-800 transition hover:border-white/20',
-        aspect
+        aspect,
+        isResolved && 'opacity-80 hover:opacity-100'
       )}
+      aria-label={
+        isResolved
+          ? `${market.title} — resolved`
+          : `${market.title} — ${pct(market.yesProb)} ${topLabel}`
+      }
     >
       <AutoVideo
         media={market.media}
-        className="absolute inset-0 h-full w-full"
+        className={clsx(
+          'absolute inset-0 h-full w-full',
+          isResolved && 'grayscale'
+        )}
         fit="cover"
       />
 
@@ -50,19 +61,22 @@ export function MarketCard({ market, size = 'md' }: Props) {
               {market.outcomes?.length}-way
             </Badge>
           )}
-          {market.trending && (
+          {market.trending && !isResolved && (
             <Badge intent="volt">
               <span className="mr-1">🔥</span>Trending
             </Badge>
           )}
-          {typeof market.edgePP === 'number' && market.edgePP >= 5 && (
+          {typeof market.edgePP === 'number' && market.edgePP >= 5 && !isResolved && (
             <EdgeBadge pp={market.edgePP} />
           )}
+          {isResolved && <ResolvedBanner market={market} variant="chip" />}
         </div>
-        <div className="flex items-center gap-1.5 rounded-full bg-ink-900/80 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-bone-muted backdrop-blur">
-          <span className="live-dot" />
-          {timeUntil(market.endsAt)}
-        </div>
+        {!isResolved && (
+          <div className="flex items-center gap-1.5 rounded-full bg-ink-900/80 px-2 py-1 text-[10px] font-medium uppercase tracking-wider text-bone-muted backdrop-blur">
+            <span className="live-dot" />
+            {timeUntil(market.endsAt)}
+          </div>
+        )}
       </div>
 
       {/* Bottom content */}
@@ -97,7 +111,11 @@ export function MarketCard({ market, size = 'md' }: Props) {
 
         {/* Quick actions — binary YES/NO or multi outcome strip */}
         <div className="mt-3">
-          {isMulti ? (
+          {isResolved ? (
+            <div className="rounded-lg border border-white/5 bg-ink-900/60 px-3 py-2 text-[11px] font-semibold uppercase tracking-widest text-bone-muted backdrop-blur">
+              Settled · final ¢{Math.round((market.closePrice ?? 0) * 100)}
+            </div>
+          ) : isMulti ? (
             <OutcomeBar market={market} compact />
           ) : (
             <div className="grid grid-cols-2 gap-2">

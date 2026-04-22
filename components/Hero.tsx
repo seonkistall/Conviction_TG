@@ -8,7 +8,10 @@ import { pct, formatUSD, timeUntil } from '@/lib/format';
 
 export function Hero({ markets }: { markets: Market[] }) {
   // Hero rotates through binary markets with the cleanest YES/NO narrative.
-  const featured = markets.filter((m) => m.kind === 'binary' && m.trending).slice(0, 4);
+  // Always exclude resolved markets — the hero is for live action only.
+  const featured = markets
+    .filter((m) => m.kind === 'binary' && m.trending && m.status !== 'resolved')
+    .slice(0, 4);
   const [i, setI] = useState(0);
 
   useEffect(() => {

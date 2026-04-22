@@ -11,6 +11,7 @@ import { PriceChart } from '@/components/PriceChart';
 import { AIOracleCard } from '@/components/AIOracleCard';
 import { MarketCard } from '@/components/MarketCard';
 import { JsonLd } from '@/components/JsonLd';
+import { ResolvedBanner } from '@/components/ResolvedBanner';
 
 const SITE_URL = 'https://conviction-fe.vercel.app';
 
@@ -118,6 +119,8 @@ export default function MarketDetailPage({
         <span>/</span>
         <span className="text-bone">{m.slug}</span>
       </nav>
+
+      <ResolvedBanner market={m} />
 
       <div className="grid gap-8 md:grid-cols-12">
         {/* Left column — video + chart + details */}
@@ -289,6 +292,7 @@ export default function MarketDetailPage({
                 yesProb={m.yesProb}
                 marketId={m.id}
                 marketTitle={m.title}
+                resolved={m.status === 'resolved'}
               />
             )}
             <AIOracleCard market={m} />

@@ -10,11 +10,19 @@ interface Props {
   /** Passed by the market detail page so the toast can link back. */
   marketId?: string;
   marketTitle?: string;
+  /** When true, the book collapses to a read-only "settled" notice. */
+  resolved?: boolean;
   /** Fallback callback if a parent wants to override the buy handler. */
   onBuy?: (side: 'YES' | 'NO', shares: number, price: number) => void;
 }
 
-export function OrderBook({ yesProb, marketId, marketTitle, onBuy }: Props) {
+export function OrderBook({
+  yesProb,
+  marketId,
+  marketTitle,
+  resolved = false,
+  onBuy,
+}: Props) {
   const [side, setSide] = useState<'YES' | 'NO'>('YES');
   const [shares, setShares] = useState(100);
   const [pulse, setPulse] = useState(false);
@@ -32,6 +40,27 @@ export function OrderBook({ yesProb, marketId, marketTitle, onBuy }: Props) {
   // User's existing position on the selected side (if any) — used for the
   // "You hold N shares @ ¢X" hint that nudges averaging-down/up behavior.
   const existing = marketId ? positions.positionOn(marketId, side) : null;
+
+  if (resolved) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-ink-800 p-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold uppercase tracking-widest text-bone-muted">
+            Market settled
+          </h3>
+          <div className="text-[11px] text-bone-muted">Trading closed</div>
+        </div>
+        <div className="mt-4 rounded-lg border border-white/10 bg-ink-900 p-4 text-sm text-bone-muted">
+          This market has resolved. See the resolution banner above for the
+          winning outcome and payout. Any open positions can be closed from{' '}
+          <a href="/portfolio" className="text-volt underline underline-offset-2">
+            your portfolio
+          </a>
+          .
+        </div>
+      </div>
+    );
+  }
 
   function handleBuy() {
     if (onBuy) onBuy(side, shares, price);
