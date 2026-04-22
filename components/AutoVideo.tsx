@@ -146,6 +146,13 @@ export function AutoVideo({
     <div
       ref={containerRef}
       className={`relative overflow-hidden bg-ink-700 ${className}`}
+      // Become a size container in cover mode so the YouTube iframe can use
+      // cqw/cqh units to compute true "cover" dimensions (see YouTubeEmbed).
+      // Without this, a 16:9 iframe letterboxes inside tall portrait cards
+      // (e.g. Galaxy S25 Ultra's 9:19.5 feed card) because `scale-[1.35]`
+      // is nowhere near enough for aspect ratios < ~0.6. We only opt-in for
+      // cover mode to avoid disrupting aspect-ratio behavior elsewhere.
+      style={fit === 'cover' ? { containerType: 'size' } : undefined}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
       data-player-id={playerId}
@@ -206,9 +213,7 @@ export function AutoVideo({
           start={media.start}
           audio={effectiveAudio}
           onPlay={() => setPlaying(true)}
-          className={`absolute inset-0 h-full w-full ${
-            fit === 'cover' ? 'scale-[1.35]' : ''
-          }`}
+          cover={fit === 'cover'}
         />
       )}
     </div>
@@ -220,14 +225,19 @@ function YouTubeEmbed({
   start = 0,
   audio,
   onPlay,
-  className = '',
+  cover = false,
 }: {
   videoId: string;
   start?: number;
   /** True iff this player currently owns audio. */
   audio: boolean;
   onPlay?: () => void;
-  className?: string;
+  /**
+   * When true, size the iframe so its 16:9 content covers the parent
+   * container regardless of the container's aspect ratio. Relies on the
+   * parent declaring `container-type: size` (AutoVideo does this).
+   */
+  cover?: boolean;
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -278,12 +288,52 @@ function YouTubeEmbed({
     enablejsapi: '1',
   });
 
+  /*
+   * Cover math, explained:
+   *   The iframe's inner video is 16:9. YouTube's player letterboxes the
+   *   video inside whatever size we give the iframe, so to achieve a real
+   *   CSS `object-fit: cover` look we must size the IFRAME itself so its
+   *   own 16:9 box fills (and overflows) the container.
+   *
+   *   If we center the iframe and set:
+   *     width  = max(100cqw, 100cqh * 16/9)
+   *     height = max(100cqh, 100cqw *  9/16)
+   *   then whichever axis is the "short side" of the container is clipped
+   *   by overflow:hidden, and the video covers. The minimum bounds ensure
+   *   we never shrink below the container.
+   *
+   *   cqw / cqh resolve against the nearest ancestor with `container-type:
+   *   size` — AutoVideo's wrapper sets that in cover mode. Browser support:
+   *   Chromium 105+, Safari 16+, Firefox 110+ — all comfortably 2+ years
+   *   old as of 2026. A pre-modern-browser fallback below lands at
+   *   min-size:100% which at worst degrades to today's letterbox behavior.
+   */
+  const coverStyle: React.CSSProperties = {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 'max(100cqw, calc(100cqh * 16 / 9))',
+    height: 'max(100cqh, calc(100cqw * 9 / 16))',
+    minWidth: '100%',
+    minHeight: '100%',
+  };
+  const fillStyle: React.CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+  };
+
   return (
-    <div className={`pointer-events-none ${className}`}>
+    <div
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      aria-hidden
+    >
       {mounted && (
         <iframe
           ref={iframeRef}
-          className="h-full w-full"
+          style={cover ? coverStyle : fillStyle}
           src={`https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`}
           title="market video"
           frameBorder={0}

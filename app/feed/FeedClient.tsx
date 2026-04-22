@@ -36,7 +36,12 @@ export function FeedClient({ markets }: Props) {
   }, [markets.length]);
 
   return (
-    <div className="-mt-16 h-[100dvh] w-full">
+    // `relative` is load-bearing: the top overlay + progress rail use
+    // `absolute` and must anchor to this wrapper rather than the nearest
+    // positioned ancestor (which, without this, would be the fixed Header's
+    // initial containing block — causing the back-button chip to float over
+    // the site Header on mobile).
+    <div className="relative -mt-16 h-[100dvh] w-full">
       {/* Top overlay — back to grid */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),1rem)]">
         <Link

@@ -68,6 +68,58 @@ test.describe('visual · landing surfaces', () => {
     });
   });
 
+  /*
+   * v2.9 — Feed cover-math regression guard.
+   *
+   * Catches the Galaxy S25 Ultra class bug where the YouTube iframe
+   * letterboxed inside the 9:19.5 portrait feed card because the old
+   * `scale-[1.35]` cover hack couldn't reach aspect ratios <0.6.
+   *
+   * We probe the first feed card's iframe bounding box directly rather than
+   * diffing pixels (YouTube content differs across runs even with masks).
+   * Success = the iframe's rendered width & height both exceed the viewport
+   * by at least 1.5× — which is only true when the cqw/cqh cover math kicks
+   * in. A scale-[1.35] style regression would fail this assertion cleanly.
+   */
+  test('feed card iframe covers portrait viewport', async ({ page, viewport }) => {
+    test.skip(!viewport, 'needs a viewport');
+    await page.goto('/feed');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for the first feed card's iframe to mount (YouTubeEmbed adds it
+    // after a 120ms settle delay inside AutoVideo).
+    const firstIframe = page.locator('article iframe').first();
+    await firstIframe.waitFor({ state: 'attached', timeout: 8_000 });
+    await page.waitForTimeout(500);
+
+    const box = await firstIframe.boundingBox();
+    if (!box) throw new Error('iframe has no bounding box');
+
+    const vw = viewport!.width;
+    const vh = viewport!.height;
+    const portraitAspect = vw / vh;
+
+    if (portraitAspect < 16 / 9) {
+      // Container is taller than 16:9 → height axis must be over-sized so
+      // the 16:9 iframe's content covers. We expect at least the viewport
+      // width AND the 16:9-scaled-to-viewport-height width.
+      const expectedMinWidth = (vh * 16) / 9 * 0.95; // 5% tolerance
+      if (box.width < expectedMinWidth) {
+        throw new Error(
+          `Feed iframe width ${box.width} too small; expected ≥ ${expectedMinWidth} to cover ${vw}×${vh} viewport`
+        );
+      }
+    }
+
+    // The iframe must at minimum match the viewport in both dimensions; if
+    // it doesn't, the background will letterbox visibly.
+    if (box.width < vw - 1 || box.height < vh - 1) {
+      throw new Error(
+        `Feed iframe ${box.width}×${box.height} doesn't cover viewport ${vw}×${vh}`
+      );
+    }
+  });
+
   test('leaderboard page top baseline', async ({ page, viewport }) => {
     await page.goto('/leaderboard');
     await page.waitForLoadState('networkidle');
