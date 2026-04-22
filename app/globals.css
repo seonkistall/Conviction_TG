@@ -3,9 +3,20 @@
 @tailwind utilities;
 
 :root {
-  --font-sans: 'Inter', 'Noto Sans KR', 'Noto Sans SC', 'Noto Sans JP', system-ui, -apple-system, sans-serif;
-  --font-display: 'Instrument Serif', 'Noto Serif KR', 'Noto Serif SC', 'Noto Serif JP', Georgia, serif;
-  --font-mono: 'JetBrains Mono', 'Noto Sans KR', 'Noto Sans SC', 'Noto Sans JP', ui-monospace, monospace;
+  /*
+   * Font stacks compose next/font CSS variables injected by app/layout.tsx.
+   * Each --font-* var is a comma-separated list that already includes the
+   * size-adjusted fallback Next emits (e.g. "__Inter_abc123, __Inter_Fallback_abc123"),
+   * so we just stack them in priority order and let the browser pick the
+   * first one that has a glyph for the character being rendered.
+   */
+  --font-sans: var(--font-inter), var(--font-noto-sans-kr), var(--font-noto-sans-sc),
+    var(--font-noto-sans-jp), system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  --font-display: var(--font-instrument-serif), var(--font-noto-serif-kr),
+    var(--font-noto-serif-sc), var(--font-noto-serif-jp), Georgia, 'Times New Roman', serif;
+  --font-mono: var(--font-jetbrains-mono), var(--font-noto-sans-kr), var(--font-noto-sans-sc),
+    var(--font-noto-sans-jp), ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --grid-line: rgba(255, 255, 255, 0.04);
 }
 

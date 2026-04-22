@@ -66,10 +66,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.37,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: 'AOTfM6H8XOo',
+      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+      start: 8,
     },
     tags: ['LoL', 'T1', 'Faker', 'LCK'],
     status: 'live',
@@ -103,10 +103,10 @@ export const MARKETS: Market[] = [
       { id: 'fld', label: 'Field', prob: 0.09, color: '#7C5CFF' },
     ],
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '5FrhtahQiRc',
+      poster: 'https://i.ytimg.com/vi/5FrhtahQiRc/maxresdefault.jpg',
+      start: 30,
     },
     tags: ['LoL', 'Worlds', 'LCK', 'LPL'],
     status: 'live',
@@ -131,10 +131,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.48,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/3195531/3195531-uhd_2560_1440_25fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/3195531/free-video-3195531.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '1MFylXgM7BM',
+      poster: 'https://i.ytimg.com/vi/1MFylXgM7BM/maxresdefault.jpg',
+      start: 18,
     },
     tags: ['Football', 'EPL', 'Son Heung-min'],
     status: 'live',
@@ -159,10 +159,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.78,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '0C5rGB5VtdQ',
+      poster: 'https://i.ytimg.com/vi/0C5rGB5VtdQ/maxresdefault.jpg',
+      start: 5,
     },
     tags: ['Netflix', 'Squid Game', 'K-Drama'],
     status: 'live',
@@ -254,10 +254,9 @@ export const MARKETS: Market[] = [
     yesProb: 0.14,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: 'BAaqCYwZQjM',
+      poster: 'https://i.ytimg.com/vi/BAaqCYwZQjM/maxresdefault.jpg',
     },
     tags: ['KBO', 'Baseball', 'Kiwoom'],
     status: 'live',
@@ -281,10 +280,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.56,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/3209828/3209828-uhd_2560_1440_25fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/3209828/free-video-3209828.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '5zeg52IGlaA',
+      poster: 'https://i.ytimg.com/vi/5zeg52IGlaA/maxresdefault.jpg',
+      start: 3,
     },
     tags: ['BTC', 'Crypto', 'Macro'],
     status: 'live',
@@ -309,10 +308,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.19,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '2AcB6iWcL24',
+      poster: 'https://i.ytimg.com/vi/2AcB6iWcL24/maxresdefault.jpg',
+      start: 4,
     },
     tags: ['Manga', 'Shonen Jump', 'One Piece'],
     status: 'live',
@@ -336,10 +335,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.09,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/3195531/3195531-uhd_2560_1440_25fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/3195531/free-video-3195531.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '5xH0HfJHsaY',
+      poster: 'https://i.ytimg.com/vi/5xH0HfJHsaY/maxresdefault.jpg',
+      start: 30,
     },
     tags: ['Oscars', 'Bong Joon-ho', 'Film'],
     status: 'live',
@@ -363,10 +362,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.64,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/3195531/3195531-uhd_2560_1440_25fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/3195531/free-video-3195531.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '43EPmlTiSxo',
+      poster: 'https://i.ytimg.com/vi/43EPmlTiSxo/maxresdefault.jpg',
+      start: 2,
     },
     tags: ['Nikkei', 'Japan', 'Macro'],
     status: 'live',
@@ -421,9 +420,9 @@ export const MARKETS: Market[] = [
     kind: 'binary',
     media: {
       kind: 'youtube',
-      src: 'ioNng23DkIM',
-      poster: 'https://i.ytimg.com/vi/ioNng23DkIM/maxresdefault.jpg',
-      start: 12,
+      src: '2kdYSeoHChg',
+      poster: 'https://i.ytimg.com/vi/2kdYSeoHChg/maxresdefault.jpg',
+      start: 40,
     },
     tags: ['C-Pop', 'Jay Chou', 'JVR', 'China'],
     status: 'live',
@@ -449,10 +448,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.58,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/3209828/3209828-uhd_2560_1440_25fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/3209828/free-video-3209828.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '8D5AyJAXqiE',
+      poster: 'https://i.ytimg.com/vi/8D5AyJAXqiE/maxresdefault.jpg',
+      start: 8,
     },
     tags: ['C-Drama', 'Tencent', 'Douban', 'China'],
     status: 'live',
@@ -485,11 +484,10 @@ export const MARKETS: Market[] = [
       { id: 'fld', label: 'Field', prob: 0.09, color: '#7C5CFF' },
     ],
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
-      start: 30,
+      kind: 'youtube',
+      src: 'C3GouGa0noM',
+      poster: 'https://i.ytimg.com/vi/C3GouGa0noM/maxresdefault.jpg',
+      start: 25,
     },
     tags: ['LoL', 'LPL', 'JDG', 'Knight', 'China'],
     status: 'live',
@@ -514,10 +512,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.36,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/3209828/3209828-uhd_2560_1440_25fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/3209828/free-video-3209828.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '09hVCl960jY',
+      poster: 'https://i.ytimg.com/vi/09hVCl960jY/maxresdefault.jpg',
+      start: 8,
     },
     tags: ['CSL', 'Football', 'Shanghai Port', 'China'],
     status: 'live',
@@ -541,10 +539,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.67,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/3209828/3209828-uhd_2560_1440_25fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/3209828/free-video-3209828.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '66-eOImoiOY',
+      poster: 'https://i.ytimg.com/vi/66-eOImoiOY/maxresdefault.jpg',
+      start: 6,
     },
     tags: ['BYD', 'Tesla', 'EV', 'Macro'],
     status: 'live',
@@ -569,11 +567,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.29,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/3195531/3195531-uhd_2560_1440_25fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/3195531/free-video-3195531.jpg?auto=compress&cs=tinysrgb&w=1280',
-      start: 3,
+      kind: 'youtube',
+      src: '2wf-lzoWPwY',
+      poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/maxresdefault.jpg',
+      start: 2,
     },
     tags: ['PBOC', 'USD/CNY', 'Macro', 'China'],
     status: 'live',
@@ -655,11 +652,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.21,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
-      start: 4,
+      kind: 'youtube',
+      src: 'Af7sactG2Eo',
+      poster: 'https://i.ytimg.com/vi/Af7sactG2Eo/maxresdefault.jpg',
+      start: 10,
     },
     tags: ['NPB', 'Baseball', 'Hanshin', 'Japan'],
     status: 'live',
@@ -683,10 +679,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.52,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/3209828/3209828-uhd_2560_1440_25fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/3209828/free-video-3209828.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '2nZt4XVxQ2k',
+      poster: 'https://i.ytimg.com/vi/2nZt4XVxQ2k/maxresdefault.jpg',
+      start: 2,
     },
     tags: ['USD/JPY', 'BOJ', 'Macro', 'Japan'],
     status: 'live',
@@ -721,10 +717,10 @@ export const MARKETS: Market[] = [
       { id: 'fld', label: 'Field', prob: 0.07, color: '#7C5CFF' },
     ],
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '6P3E7NGhBNg',
+      poster: 'https://i.ytimg.com/vi/6P3E7NGhBNg/maxresdefault.jpg',
+      start: 5,
     },
     tags: ['LoL', 'LCK', 'T1', 'Faker', 'Korea'],
     status: 'live',
@@ -749,11 +745,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.18,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
-      start: 45,
+      kind: 'youtube',
+      src: '3d7CbPj5HTw',
+      poster: 'https://i.ytimg.com/vi/3d7CbPj5HTw/maxresdefault.jpg',
+      start: 20,
     },
     tags: ['LoL', 'Faker', 'Worlds', 'MVP'],
     status: 'live',
@@ -779,11 +774,10 @@ export const MARKETS: Market[] = [
     yesProb: 0.42,
     kind: 'binary',
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
-      start: 60,
+      kind: 'youtube',
+      src: '1Z6CHioIn3s',
+      poster: 'https://i.ytimg.com/vi/1Z6CHioIn3s/maxresdefault.jpg',
+      start: 15,
     },
     tags: ['LoL', 'Knight', 'JDG', 'LPL', 'Player Prop'],
     status: 'live',
@@ -815,10 +809,10 @@ export const MARKETS: Market[] = [
       { id: 'fld', label: 'Other', prob: 0.03, color: '#C7C4BB' },
     ],
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/3195531/3195531-uhd_2560_1440_25fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/3195531/free-video-3195531.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '5ZSEDfslRxk',
+      poster: 'https://i.ytimg.com/vi/5ZSEDfslRxk/maxresdefault.jpg',
+      start: 2,
     },
     tags: ['Korea', 'Election', 'Politics', '2027'],
     status: 'live',
@@ -1015,10 +1009,10 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
     price: 0.64,
     change24h: -1.2,
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '3Hb61Cs0zFY',
+      poster: 'https://i.ytimg.com/vi/3Hb61Cs0zFY/maxresdefault.jpg',
+      start: 5,
     },
   },
   {
@@ -1035,11 +1029,10 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
     price: 0.41,
     change24h: 1.9,
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
-      start: 30,
+      kind: 'youtube',
+      src: '4Twd965VzX4',
+      poster: 'https://i.ytimg.com/vi/4Twd965VzX4/maxresdefault.jpg',
+      start: 8,
     },
   },
   {
@@ -1080,10 +1073,10 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
     price: 0.47,
     change24h: -0.8,
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/3209828/3209828-uhd_2560_1440_25fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/3209828/free-video-3209828.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: '0oxqSkJlNzg',
+      poster: 'https://i.ytimg.com/vi/0oxqSkJlNzg/maxresdefault.jpg',
+      start: 3,
     },
   },
   {
@@ -1100,10 +1093,10 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
     price: 0.71,
     change24h: 3.8,
     media: {
-      kind: 'mp4',
-      src: 'https://videos.pexels.com/video-files/2034115/2034115-hd_1920_1080_30fps.mp4',
-      poster:
-        'https://images.pexels.com/videos/2034115/free-video-2034115.jpg?auto=compress&cs=tinysrgb&w=1280',
+      kind: 'youtube',
+      src: 'AA-sv3ilNBE',
+      poster: 'https://i.ytimg.com/vi/AA-sv3ilNBE/maxresdefault.jpg',
+      start: 3,
     },
   },
 ];
