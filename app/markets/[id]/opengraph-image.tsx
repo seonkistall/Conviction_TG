@@ -4,8 +4,8 @@ import { MARKETS, getMarket } from '@/lib/markets';
 /**
  * Dynamic 1200x630 OG image for /markets/[id].
  *
- * Mirrors the narrative OG layout but foregrounded for a single market:
- * category pill, big title, YES probability, and edge/status.
+ * Mirrors the narrative OG layout — every wrapper div sets an explicit
+ * flex display so Satori doesn't reject us with the multi-child rule.
  */
 
 export const runtime = 'edge';
@@ -20,6 +20,10 @@ export function generateImageMetadata() {
     size,
     contentType,
   }));
+}
+
+function truncate(s: string, max: number): string {
+  return s.length > max ? s.slice(0, max - 1) + '…' : s;
 }
 
 export default async function Image({ params }: { params: { id: string } }) {
@@ -37,6 +41,7 @@ export default async function Image({ params }: { params: { id: string } }) {
             background: '#0A0A0B',
             color: '#F2EFE4',
             fontSize: 64,
+            fontFamily: 'sans-serif',
           }}
         >
           Conviction
@@ -48,6 +53,8 @@ export default async function Image({ params }: { params: { id: string } }) {
 
   const yesC = Math.round(m.yesProb * 100);
   const edge = typeof m.edgePP === 'number' ? m.edgePP : null;
+  const title = truncate(m.title, 108);
+  const pill = `${m.category} · ${m.region}`;
 
   return new ImageResponse(
     (
@@ -57,25 +64,28 @@ export default async function Image({ params }: { params: { id: string } }) {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          padding: 64,
+          padding: '64px',
           background:
             'linear-gradient(135deg, #0A0A0B 0%, #121318 50%, #1a1c24 100%)',
           color: '#F2EFE4',
           fontFamily: 'sans-serif',
         }}
       >
+        {/* Top row */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            width: '100%',
           }}
         >
           <div
             style={{
+              display: 'flex',
               fontSize: 28,
-              fontWeight: 700,
-              letterSpacing: 4,
+              fontWeight: 800,
+              letterSpacing: '4px',
               color: '#C6FF3D',
             }}
           >
@@ -88,54 +98,58 @@ export default async function Image({ params }: { params: { id: string } }) {
               padding: '10px 20px',
               border: '1.5px solid rgba(255,255,255,0.15)',
               background: 'rgba(255,255,255,0.05)',
-              borderRadius: 999,
+              borderRadius: '999px',
               color: '#F2EFE4',
-              fontSize: 20,
-              letterSpacing: 3,
+              fontSize: 18,
+              letterSpacing: '3px',
               fontWeight: 600,
               textTransform: 'uppercase',
             }}
           >
-            {m.category} · {m.region}
+            {pill}
           </div>
         </div>
 
+        {/* Title */}
         <div
           style={{
-            marginTop: 56,
             display: 'flex',
-            flexDirection: 'column',
-            flex: 1,
+            marginTop: '72px',
+            fontSize: 60,
+            fontWeight: 800,
+            lineHeight: 1.12,
+            color: '#F2EFE4',
+            maxWidth: '1072px',
           }}
         >
-          <div
-            style={{
-              fontSize: 64,
-              fontWeight: 800,
-              lineHeight: 1.1,
-              color: '#F2EFE4',
-              maxWidth: 1072,
-            }}
-          >
-            {m.title.length > 110 ? m.title.slice(0, 107) + '…' : m.title}
-          </div>
+          {title}
         </div>
 
+        <div style={{ display: 'flex', flex: 1 }} />
+
+        {/* Bottom strip */}
         <div
           style={{
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'space-between',
+            width: '100%',
             borderTop: '1px solid rgba(255,255,255,0.1)',
-            paddingTop: 28,
+            paddingTop: '28px',
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             <div
               style={{
+                display: 'flex',
                 fontSize: 20,
-                letterSpacing: 3,
-                color: 'rgba(242, 239, 228, 0.55)',
+                letterSpacing: '3px',
+                color: 'rgba(242,239,228,0.55)',
                 textTransform: 'uppercase',
               }}
             >
@@ -143,17 +157,18 @@ export default async function Image({ params }: { params: { id: string } }) {
             </div>
             <div
               style={{
+                display: 'flex',
                 fontSize: 104,
                 fontWeight: 800,
                 lineHeight: 1,
                 color: '#C6FF3D',
-                marginTop: 4,
+                marginTop: '4px',
               }}
             >
-              {yesC}¢
+              {`${yesC}¢`}
             </div>
           </div>
-          {edge !== null && (
+          {edge !== null ? (
             <div
               style={{
                 display: 'flex',
@@ -163,9 +178,10 @@ export default async function Image({ params }: { params: { id: string } }) {
             >
               <div
                 style={{
+                  display: 'flex',
                   fontSize: 20,
-                  letterSpacing: 3,
-                  color: 'rgba(242, 239, 228, 0.55)',
+                  letterSpacing: '3px',
+                  color: 'rgba(242,239,228,0.55)',
                   textTransform: 'uppercase',
                 }}
               >
@@ -173,17 +189,17 @@ export default async function Image({ params }: { params: { id: string } }) {
               </div>
               <div
                 style={{
+                  display: 'flex',
                   fontSize: 56,
                   fontWeight: 700,
                   color: edge >= 0 ? '#53D866' : '#F04438',
-                  marginTop: 4,
+                  marginTop: '4px',
                 }}
               >
-                {edge >= 0 ? '+' : ''}
-                {edge.toFixed(1)} pp
+                {`${edge >= 0 ? '+' : ''}${edge.toFixed(1)} pp`}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     ),

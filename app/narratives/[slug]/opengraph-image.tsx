@@ -4,15 +4,10 @@ import { NARRATIVE_INDICES } from '@/lib/markets';
 /**
  * Dynamic 1200x630 OG image for /narratives/[slug].
  *
- * Rendered at the edge via @vercel/og (re-exported from next/og). The image
- * is baked at build time for every slug in generateImageMetadata, so there's
- * zero runtime cost.
- *
- * Design goals:
- *   - Brand-consistent (volt accent on deep ink background, display serif title)
- *   - Readable at small thumbnail sizes (Twitter card, Slack unfurl)
- *   - Shows enough signal (price, 24h, emoji) that a reader can tell which
- *     narrative is trading at a glance.
+ * Rendered at the edge via @vercel/og. Satori (the engine behind ImageResponse)
+ * requires `display: "flex"` on every <div> that has more than one child, so
+ * this component is written defensively: every wrapper div sets an explicit
+ * flex display, and text content is always the sole child of its leaf node.
  */
 
 export const runtime = 'edge';
@@ -29,10 +24,13 @@ export function generateImageMetadata() {
   }));
 }
 
+function truncate(s: string, max: number): string {
+  return s.length > max ? s.slice(0, max - 1) + '…' : s;
+}
+
 export default async function Image({ params }: { params: { slug: string } }) {
   const nx = NARRATIVE_INDICES.find((n) => n.slug === params.slug);
   if (!nx) {
-    // Fallback so static build still succeeds for any stale slug.
     return new ImageResponse(
       (
         <div
@@ -45,6 +43,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
             background: '#0A0A0B',
             color: '#F2EFE4',
             fontSize: 64,
+            fontFamily: 'sans-serif',
           }}
         >
           Conviction
@@ -57,6 +56,8 @@ export default async function Image({ params }: { params: { slug: string } }) {
   const priceC = Math.round(nx.price * 100);
   const change = `${nx.change24h >= 0 ? '+' : ''}${nx.change24h.toFixed(2)}%`;
   const up = nx.change24h >= 0;
+  const title = truncate(nx.title, 80);
+  const blurb = truncate(nx.blurb, 108);
 
   return new ImageResponse(
     (
@@ -66,26 +67,28 @@ export default async function Image({ params }: { params: { slug: string } }) {
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          padding: 64,
+          padding: '64px',
           background:
             'linear-gradient(135deg, #0A0A0B 0%, #121318 50%, #1a1c24 100%)',
           color: '#F2EFE4',
           fontFamily: 'sans-serif',
         }}
       >
-        {/* Top row: brand + pill */}
+        {/* Top row */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
+            width: '100%',
           }}
         >
           <div
             style={{
+              display: 'flex',
               fontSize: 28,
-              fontWeight: 700,
-              letterSpacing: 4,
+              fontWeight: 800,
+              letterSpacing: '4px',
               color: '#C6FF3D',
             }}
           >
@@ -96,12 +99,12 @@ export default async function Image({ params }: { params: { slug: string } }) {
               display: 'flex',
               alignItems: 'center',
               padding: '10px 20px',
-              border: '1.5px solid rgba(198, 255, 61, 0.4)',
-              background: 'rgba(198, 255, 61, 0.08)',
-              borderRadius: 999,
+              border: '1.5px solid rgba(198,255,61,0.4)',
+              background: 'rgba(198,255,61,0.08)',
+              borderRadius: '999px',
               color: '#C6FF3D',
               fontSize: 20,
-              letterSpacing: 3,
+              letterSpacing: '3px',
               fontWeight: 600,
             }}
           >
@@ -109,66 +112,65 @@ export default async function Image({ params }: { params: { slug: string } }) {
           </div>
         </div>
 
-        {/* Middle: emoji + title */}
+        {/* Title block */}
         <div
           style={{
-            marginTop: 56,
             display: 'flex',
-            alignItems: 'flex-start',
-            gap: 24,
+            flexDirection: 'column',
+            marginTop: '72px',
           }}
         >
-          <div style={{ fontSize: 108, lineHeight: 1 }}>{nx.emoji}</div>
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
-              flex: 1,
+              fontSize: 76,
+              fontWeight: 800,
+              lineHeight: 1.05,
+              color: '#F2EFE4',
             }}
           >
-            <div
-              style={{
-                fontSize: 76,
-                fontWeight: 800,
-                lineHeight: 1.05,
-                color: '#F2EFE4',
-              }}
-            >
-              {nx.title}
-            </div>
-            <div
-              style={{
-                marginTop: 16,
-                fontSize: 28,
-                color: 'rgba(242, 239, 228, 0.65)',
-                lineHeight: 1.3,
-                maxWidth: 900,
-              }}
-            >
-              {nx.blurb.length > 110 ? nx.blurb.slice(0, 107) + '…' : nx.blurb}
-            </div>
+            {nx.emoji} {title}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 28,
+              color: 'rgba(242,239,228,0.65)',
+              lineHeight: 1.3,
+              marginTop: '20px',
+              maxWidth: '1000px',
+            }}
+          >
+            {blurb}
           </div>
         </div>
 
-        {/* Spacer */}
-        <div style={{ display: 'flex', flexGrow: 1 }} />
+        {/* Spacer pushes price strip to the bottom */}
+        <div style={{ display: 'flex', flex: 1 }} />
 
-        {/* Bottom: price strip */}
+        {/* Bottom strip */}
         <div
           style={{
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'space-between',
+            width: '100%',
             borderTop: '1px solid rgba(255,255,255,0.1)',
-            paddingTop: 28,
+            paddingTop: '28px',
           }}
         >
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
             <div
               style={{
+                display: 'flex',
                 fontSize: 20,
-                letterSpacing: 3,
-                color: 'rgba(242, 239, 228, 0.55)',
+                letterSpacing: '3px',
+                color: 'rgba(242,239,228,0.55)',
                 textTransform: 'uppercase',
               }}
             >
@@ -176,14 +178,15 @@ export default async function Image({ params }: { params: { slug: string } }) {
             </div>
             <div
               style={{
+                display: 'flex',
                 fontSize: 88,
                 fontWeight: 800,
                 lineHeight: 1,
                 color: '#F2EFE4',
-                marginTop: 4,
+                marginTop: '4px',
               }}
             >
-              ¢{priceC}
+              {`¢${priceC}`}
             </div>
           </div>
           <div
@@ -195,9 +198,10 @@ export default async function Image({ params }: { params: { slug: string } }) {
           >
             <div
               style={{
+                display: 'flex',
                 fontSize: 20,
-                letterSpacing: 3,
-                color: 'rgba(242, 239, 228, 0.55)',
+                letterSpacing: '3px',
+                color: 'rgba(242,239,228,0.55)',
                 textTransform: 'uppercase',
               }}
             >
@@ -205,10 +209,11 @@ export default async function Image({ params }: { params: { slug: string } }) {
             </div>
             <div
               style={{
+                display: 'flex',
                 fontSize: 64,
                 fontWeight: 700,
                 color: up ? '#53D866' : '#F04438',
-                marginTop: 4,
+                marginTop: '4px',
               }}
             >
               {change}
