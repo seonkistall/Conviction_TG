@@ -28,10 +28,12 @@ export function generateMetadata({
   return {
     title: `${m.title} · Conviction`,
     description: m.description,
+    // NOTE: we intentionally omit openGraph.images / twitter.images here so
+    // Next's file-based convention (./opengraph-image.tsx + ./twitter-image.tsx)
+    // wins — that route renders a branded 1200×630 PNG per slug.
     openGraph: {
       title: m.title,
       description: m.description,
-      images: [m.media.poster],
       url: `${SITE_URL}/markets/${m.slug}`,
       type: 'website',
     },
@@ -39,7 +41,6 @@ export function generateMetadata({
       card: 'summary_large_image',
       title: m.title,
       description: m.description,
-      images: [m.media.poster],
     },
     alternates: {
       canonical: `${SITE_URL}/markets/${m.slug}`,

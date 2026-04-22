@@ -40,16 +40,18 @@ export async function generateMetadata({
   return {
     title: `${nx.title} · Conviction Index`,
     description: nx.blurb,
+    // NOTE: openGraph.images / twitter.images are intentionally omitted —
+    // ./opengraph-image.tsx + ./twitter-image.tsx render a branded 1200×630
+    // PNG per narrative slug, and the file-based convention only wins when
+    // images are not explicitly set in generateMetadata.
     openGraph: {
       title: nx.title,
       description: nx.blurb,
-      images: nx.media ? [nx.media.poster] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
       title: nx.title,
       description: nx.blurb,
-      images: nx.media ? [nx.media.poster] : undefined,
     },
   };
 }
