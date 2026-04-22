@@ -1,6 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
+import { useState } from 'react';
 import { useParlay } from '@/lib/parlay';
 
 /**
@@ -35,10 +36,19 @@ interface Props {
 export function QuickBetActions({ marketId, yesProb }: Props) {
   const parlay = useParlay();
   const inParlay = parlay.hasLeg(marketId);
+  // v2.12 — pulse micro-interaction. Tracked per-side so tapping YES
+  // doesn't briefly light NO. Double-rAF is how we retrigger a CSS
+  // keyframe on rapid repeat taps without unmounting the button.
+  const [pulse, setPulse] = useState<'YES' | 'NO' | null>(null);
 
   const handle = (pick: 'YES' | 'NO', price: number) => (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    setPulse(null);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => setPulse(pick))
+    );
+    window.setTimeout(() => setPulse((p) => (p === pick ? null : p)), 420);
     parlay.add({ marketId, pick, price });
   };
 
@@ -50,7 +60,8 @@ export function QuickBetActions({ marketId, yesProb }: Props) {
         className={clsx(
           'flex items-center justify-between rounded-lg border px-3 py-2.5 text-xs font-bold uppercase tracking-widest backdrop-blur transition active:scale-[0.97]',
           'border-yes/40 bg-yes-soft text-yes hover:bg-yes/20',
-          inParlay && 'ring-1 ring-yes/60'
+          inParlay && 'ring-1 ring-yes/60',
+          pulse === 'YES' && 'animate-bet-pulse'
         )}
         aria-label={`Buy YES at ${Math.round(yesProb * 100)} cents`}
       >
@@ -62,7 +73,8 @@ export function QuickBetActions({ marketId, yesProb }: Props) {
         onClick={handle('NO', 1 - yesProb)}
         className={clsx(
           'flex items-center justify-between rounded-lg border px-3 py-2.5 text-xs font-bold uppercase tracking-widest backdrop-blur transition active:scale-[0.97]',
-          'border-no/40 bg-no-soft text-no hover:bg-no/20'
+          'border-no/40 bg-no-soft text-no hover:bg-no/20',
+          pulse === 'NO' && 'animate-bet-pulse'
         )}
         aria-label={`Buy NO at ${Math.round((1 - yesProb) * 100)} cents`}
       >

@@ -7,10 +7,13 @@ import {
   CURRENT_USER,
   MARKETS,
   getMarket,
+  priceHistory,
 } from '@/lib/markets';
 import { formatUSD } from '@/lib/format';
 import { PriceChart } from '@/components/PriceChart';
 import { ParlayTickets } from '@/components/ParlayTickets';
+import { Sparkline } from '@/components/Sparkline';
+import { HotPositions } from '@/components/HotPositions';
 import { usePositions } from '@/lib/positions';
 import { useToast } from '@/lib/toast';
 
@@ -140,6 +143,9 @@ export default function PortfolioPage() {
                     <Th>Side</Th>
                     <Th className="text-right">Shares</Th>
                     <Th className="text-right">Avg · Now</Th>
+                    <Th className="hidden text-right md:table-cell">
+                      Trend · 14d
+                    </Th>
                     <Th className="text-right">P&L</Th>
                     <Th className="w-10"></Th>
                   </tr>
@@ -157,6 +163,18 @@ export default function PortfolioPage() {
                         p.side === 'YES' ? mk.yesProb : 1 - mk.yesProb;
                       const livePnl = p.shares * (mark - p.avgPrice);
                       const pnlPct = (mark / p.avgPrice - 1) * 100;
+                      // 14-day trend series — seeded from the market's
+                      // yesProb and flipped for NO positions so "up" on the
+                      // sparkline visually corresponds to the user winning.
+                      const rawSeries = priceHistory(mk.yesProb * 100, 14);
+                      const series =
+                        p.side === 'YES' ? rawSeries : rawSeries.map((v) => 1 - v);
+                      const dir: 'up' | 'down' | 'flat' =
+                        Math.abs(mark - p.avgPrice) < 0.005
+                          ? 'flat'
+                          : mark > p.avgPrice
+                          ? 'up'
+                          : 'down';
                       return (
                         <tr
                           key={`${p.marketId}-${p.side}`}
@@ -200,6 +218,17 @@ export default function PortfolioPage() {
                             ¢{Math.round(p.avgPrice * 100)} →{' '}
                             <span className="text-bone">
                               ¢{Math.round(mark * 100)}
+                            </span>
+                          </td>
+                          <td className="hidden p-4 text-right md:table-cell">
+                            <span className="inline-block align-middle">
+                              <Sparkline
+                                data={series}
+                                baseline={p.avgPrice}
+                                direction={dir}
+                                width={90}
+                                height={26}
+                              />
                             </span>
                           </td>
                           <td
@@ -280,8 +309,9 @@ export default function PortfolioPage() {
           )}
         </div>
 
-        {/* Activity */}
-        <div className="md:col-span-4">
+        {/* Activity column — Hot positions first, then raw activity feed. */}
+        <div className="md:col-span-4 space-y-6">
+          <HotPositions />
           <h3 className="font-display text-3xl text-bone">Activity</h3>
           <ul className="mt-4 space-y-3">
             {ACTIVITY.map((a) => {

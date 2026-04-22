@@ -67,8 +67,18 @@ export function ParlayTickets() {
           {t('portfolio.loading')}
         </div>
       ) : tickets.length === 0 ? (
-        <div className="mt-4 rounded-2xl border border-dashed border-white/10 bg-ink-800/40 p-8 text-center text-sm text-bone-muted">
-          {t('portfolio.no_tickets')}
+        <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl border border-dashed border-white/10 bg-ink-800/40 p-10 text-center">
+          <div className="text-4xl" aria-hidden="true">🎟️</div>
+          <div className="font-display text-xl text-bone">No tickets yet</div>
+          <p className="max-w-sm text-sm text-bone-muted">
+            {t('portfolio.no_tickets')}
+          </p>
+          <Link
+            href="/feed"
+            className="mt-1 rounded-full bg-volt px-5 py-2 text-sm font-semibold text-ink-900 transition hover:bg-volt-dark"
+          >
+            Browse feed →
+          </Link>
         </div>
       ) : (
         <ul className="mt-4 grid gap-4 md:grid-cols-2">

@@ -22,6 +22,7 @@ import {
   encodeSharedParlay,
   ticketIdFromTxHash,
 } from './parlayShare';
+import { commit as commitHaptic, success as successHaptic } from './haptics';
 
 export interface ParlayReceipt {
   /** Short, URL-friendly ticket id, e.g. "cv-a7b3c9d1". */
@@ -207,7 +208,12 @@ export function ParlayProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [s.legs, s.stake]);
 
-  const add = useCallback((leg: ParlayLeg) => dispatch({ type: 'ADD', leg }), []);
+  const add = useCallback((leg: ParlayLeg) => {
+    // Tiny tap confirms the pick was registered. On desktop this is a
+    // no-op; on Android it's a subtle 8-24-18ms buzz that feels right.
+    successHaptic();
+    dispatch({ type: 'ADD', leg });
+  }, []);
   const remove = useCallback(
     (marketId: string) => dispatch({ type: 'REMOVE', marketId }),
     []
@@ -304,6 +310,8 @@ export function ParlayProvider({ children }: { children: React.ReactNode }) {
         amount: `×${multiplier.toFixed(2)}`,
         cta: { href: receipt.sharePath, label: 'View receipt' },
       });
+      // Heavier commit buzz to sell the on-chain-confirm moment.
+      commitHaptic();
     }, 1300);
   }, [s.placing, s.legs, s.stake, multiplier, maxPayout, positions, pushToast]);
 

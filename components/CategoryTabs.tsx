@@ -216,13 +216,19 @@ export function CategoryTabs({ markets }: { markets: Market[] }) {
       </div>
 
       {filtered.length === 0 && (
-        <div className="mt-12 flex min-h-[280px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/10 px-6 text-center text-bone-muted">
-          <span>{t('discover.no_matches')}</span>
+        <div className="mt-12 flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/10 px-6 py-10 text-center">
+          <div className="text-4xl" aria-hidden="true">🔍</div>
+          <div className="font-display text-xl text-bone">
+            Nothing matches those filters
+          </div>
+          <p className="max-w-sm text-sm text-bone-muted">
+            {t('discover.no_matches')}
+          </p>
           {hasFilters && (
             <button
               type="button"
               onClick={clearFilters}
-              className="rounded-full border border-white/10 bg-ink-800 px-4 py-2 text-sm font-semibold text-bone hover:border-white/30"
+              className="mt-1 rounded-full border border-white/10 bg-ink-800 px-4 py-2 text-sm font-semibold text-bone transition hover:border-volt/40 hover:text-volt"
             >
               {t('discover.clear_filters')}
             </button>

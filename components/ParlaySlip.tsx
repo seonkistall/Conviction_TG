@@ -107,11 +107,21 @@ export function ParlaySlip() {
               </div>
 
               {count === 0 ? (
-                <div className="mt-8 flex flex-1 flex-col items-center justify-center text-center">
-                  <div className="text-5xl">🎯</div>
-                  <p className="mt-4 max-w-xs text-sm text-bone-muted">
-                    {t('parlay.empty')}
-                  </p>
+                <div className="mt-8 flex flex-1 flex-col items-center justify-center gap-4 text-center">
+                  <div className="text-5xl" aria-hidden="true">🎯</div>
+                  <div className="max-w-xs space-y-2">
+                    <p className="font-display text-xl text-bone">Stack your picks</p>
+                    <p className="text-sm text-bone-muted">
+                      {t('parlay.empty')}
+                    </p>
+                  </div>
+                  <Link
+                    href="/feed"
+                    onClick={() => toggle(false)}
+                    className="mt-2 rounded-full bg-volt px-5 py-2 text-sm font-semibold text-ink-900 transition hover:bg-volt-dark"
+                  >
+                    Open feed →
+                  </Link>
                 </div>
               ) : (
                 <div className="mt-5 flex-1 overflow-y-auto pr-1">

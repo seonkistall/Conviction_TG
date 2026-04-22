@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { Market } from '@/lib/types';
 import { AutoVideo } from './AutoVideo';
+import { LivePrice } from './LivePrice';
+import { useLivePrice } from '@/lib/livePrices';
 import { pct, formatUSD, timeUntil } from '@/lib/format';
 
 export function Hero({ markets }: { markets: Market[] }) {
@@ -44,6 +46,26 @@ export function Hero({ markets }: { markets: Market[] }) {
   // resolved, data-model change, etc.), render nothing rather than letting
   // the destructured `m.slug` / `m.media` crash the whole landing page.
   if (!m) return null;
+
+  return <HeroCard m={m} featured={featured} i={i} setI={setI} endsLabel={endsLabel} />;
+}
+
+function HeroCard({
+  m,
+  featured,
+  i,
+  setI,
+  endsLabel,
+}: {
+  m: Market;
+  featured: Market[];
+  i: number;
+  setI: (n: number) => void;
+  endsLabel: string | null;
+}) {
+  // Live-tick the featured card's YES probability. Falls back to the
+  // seed during SSR so the server-rendered number never mismatches.
+  const liveYes = useLivePrice(m.id, m.yesProb);
 
   return (
     <section className="relative overflow-hidden">
@@ -108,9 +130,16 @@ export function Hero({ markets }: { markets: Market[] }) {
         <div className="md:col-span-5">
           <div className="relative overflow-hidden rounded-3xl border border-white/10 shadow-[0_40px_120px_-20px_rgba(124,92,255,0.45)]">
             <div className="aspect-[4/5]">
+              {/*
+               * `priority` marks the first featured poster as the LCP
+               * candidate: eager <img loading>, fetchpriority="high",
+               * and bypasses the IntersectionObserver gate so the
+               * hero never shows a blank tile during first paint.
+               */}
               <AutoVideo
                 media={m.media}
                 fit="cover"
+                priority
                 className="absolute inset-0 h-full w-full"
               />
               <div className="absolute inset-0 card-gradient" />
@@ -173,23 +202,31 @@ export function Hero({ markets }: { markets: Market[] }) {
                 <div className="flex-1">
                   <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
                     <div
-                      className="h-full bg-volt transition-all"
-                      style={{ width: `${m.yesProb * 100}%` }}
+                      className="h-full bg-volt transition-all duration-700"
+                      style={{ width: `${liveYes * 100}%` }}
                     />
                   </div>
                   <div className="mt-1 flex justify-between text-[11px] text-bone-muted">
-                    <span>YES {pct(m.yesProb)}</span>
-                    <span>NO {pct(1 - m.yesProb)}</span>
+                    <span>
+                      YES{' '}
+                      <LivePrice
+                        marketId={m.id}
+                        seed={m.yesProb}
+                        format="percent"
+                        className="text-bone"
+                      />
+                    </span>
+                    <span>NO {pct(1 - liveYes)}</span>
                   </div>
                 </div>
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
                 <button className="rounded-lg border border-yes/30 bg-yes-soft py-2.5 text-sm font-semibold text-yes transition hover:bg-yes/20">
-                  Buy YES · ¢{(m.yesProb * 100).toFixed(0)}
+                  Buy YES · ¢{(liveYes * 100).toFixed(0)}
                 </button>
                 <button className="rounded-lg border border-no/30 bg-no-soft py-2.5 text-sm font-semibold text-no transition hover:bg-no/20">
-                  Buy NO · ¢{((1 - m.yesProb) * 100).toFixed(0)}
+                  Buy NO · ¢{((1 - liveYes) * 100).toFixed(0)}
                 </button>
               </div>
             </div>

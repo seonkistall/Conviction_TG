@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import clsx from 'clsx';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { Market } from '@/lib/types';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 import { useParlay } from '@/lib/parlay';
+import { useToast } from '@/lib/toast';
 
 /**
  * v2.11 — Market detail sheet for /feed cards.
@@ -41,6 +42,13 @@ interface Props {
 
 export function FeedDetailSheet({ market, open, onClose }: Props) {
   const parlay = useParlay();
+  const toast = useToast();
+  // "Share" button state. We flash a "Copied!" label for 1.4s after a
+  // clipboard-path share so the user has a visible acknowledgement even
+  // when no native Web Share chooser opened.
+  const [shareLabel, setShareLabel] = useState<'default' | 'copied' | 'shared'>(
+    'default'
+  );
 
   // Close on ESC
   useEffect(() => {
@@ -67,6 +75,78 @@ export function FeedDetailSheet({ market, open, onClose }: Props) {
   const pickAndClose = (pick: 'YES' | 'NO', price: number) => {
     parlay.add({ marketId: market.id, pick, price });
     onClose();
+  };
+
+  /**
+   * Share flow — three-tier fallback.
+   *
+   *   1. navigator.share (Web Share API). Opens the native iOS / Android
+   *      share sheet; on Chrome desktop this is no-op-ish (falls into 2).
+   *   2. Copy to clipboard. Works everywhere modern, toast confirms.
+   *   3. X.com intent URL. Opens Twitter/X compose in a new tab. Used as
+   *      an explicit secondary button ("Share on X") so it's discoverable
+   *      even when 1/2 already worked.
+   *
+   * Intentionally skipped: KakaoTalk SDK. It needs a registered app key
+   * and a DOM-loaded SDK — a deep-link URL scheme (kakaotalk://) only works
+   * inside the KakaoTalk in-app browser. Not worth the bundle weight for
+   * v2.12 demo scope.
+   */
+  const shareUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/markets/${market.slug}`
+      : `/markets/${market.slug}`;
+  const shareText = `${market.title} · Conviction`;
+
+  const handleShare = async () => {
+    const data = { title: shareText, text: shareText, url: shareUrl };
+    try {
+      if (
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        // canShare isn't standard yet — feature-detect before asserting.
+        (!navigator.canShare || navigator.canShare(data))
+      ) {
+        await navigator.share(data);
+        setShareLabel('shared');
+        window.setTimeout(() => setShareLabel('default'), 1400);
+        return;
+      }
+    } catch {
+      // User dismissed the share sheet — fall through to clipboard.
+    }
+    try {
+      if (
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard?.writeText
+      ) {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareLabel('copied');
+        window.setTimeout(() => setShareLabel('default'), 1400);
+        toast.push({
+          kind: 'trade',
+          title: 'Link copied',
+          body: shareUrl,
+        });
+        return;
+      }
+    } catch {}
+    // Last-ditch: X.com intent. Only reached if both share and clipboard
+    // are unavailable — extremely rare on any modern browser.
+    if (typeof window !== 'undefined') {
+      const xHref = `https://x.com/intent/tweet?text=${encodeURIComponent(
+        shareText
+      )}&url=${encodeURIComponent(shareUrl)}`;
+      window.open(xHref, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleShareX = () => {
+    if (typeof window === 'undefined') return;
+    const xHref = `https://x.com/intent/tweet?text=${encodeURIComponent(
+      shareText
+    )}&url=${encodeURIComponent(shareUrl)}`;
+    window.open(xHref, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -185,9 +265,58 @@ export function FeedDetailSheet({ market, open, onClose }: Props) {
           </div>
         )}
 
+        {/*
+         * Share row. Primary button goes through the three-tier fallback
+         * (native share → clipboard → X intent). Secondary button jumps
+         * straight to X.com compose for a one-tap Twitter share even when
+         * the native sheet would've also worked. Kept compact so the
+         * "View full market" CTA stays the visual anchor.
+         */}
+        <div className="mt-5 grid grid-cols-[1fr_auto] gap-2">
+          <button
+            type="button"
+            onClick={handleShare}
+            className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-ink-900 px-4 py-3 text-sm font-semibold text-bone transition hover:bg-ink-700"
+            aria-label="Share this market"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <path d="m8.59 13.51 6.83 3.98" />
+              <path d="m15.41 6.51-6.82 3.98" />
+            </svg>
+            {shareLabel === 'copied'
+              ? 'Link copied'
+              : shareLabel === 'shared'
+              ? 'Shared'
+              : 'Share market'}
+          </button>
+          <button
+            type="button"
+            onClick={handleShareX}
+            className="flex items-center justify-center rounded-xl border border-white/10 bg-ink-900 px-3 py-3 text-sm font-semibold text-bone transition hover:bg-ink-700"
+            aria-label="Share on X"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M18.244 2H21.5l-7.56 8.635L23 22h-6.938l-5.43-7.106L4.4 22H1.13l8.086-9.236L1 2h7.112l4.911 6.49L18.244 2zm-1.217 18h1.83L7.084 4h-1.97L17.027 20z" />
+            </svg>
+          </button>
+        </div>
+
         <Link
           href={`/markets/${market.slug}`}
-          className="mt-5 block rounded-xl border border-white/10 bg-ink-900 px-4 py-3 text-center text-sm font-semibold text-bone transition hover:bg-ink-700"
+          className="mt-3 block rounded-xl border border-white/10 bg-ink-900 px-4 py-3 text-center text-sm font-semibold text-bone transition hover:bg-ink-700"
         >
           View full market →
         </Link>

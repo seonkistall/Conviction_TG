@@ -61,14 +61,35 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <div className="hidden items-center gap-2 rounded-md border border-white/10 bg-ink-800 px-3 py-1.5 lg:flex">
+          {/*
+           * "Searchbar" is actually a button that opens the global
+           * command palette (CommandPalette.tsx). We keep the search-
+           * input aesthetic so users know it's searchable, but
+           * clicking / tabbing into it dispatches a synthetic ⌘K event
+           * so every entry point routes through one focus trap.
+           */}
+          <button
+            type="button"
+            onClick={() =>
+              window.dispatchEvent(
+                new KeyboardEvent('keydown', {
+                  key: 'k',
+                  metaKey: true,
+                  bubbles: true,
+                })
+              )
+            }
+            className="hidden items-center gap-2 rounded-md border border-white/10 bg-ink-800 px-3 py-1.5 text-left transition hover:border-white/20 lg:flex"
+            aria-label="Open search palette"
+          >
             <SearchIcon />
-            <input
-              placeholder={t('nav.search')}
-              className="w-56 bg-transparent text-sm text-bone placeholder:text-bone-muted/60 focus:outline-none xl:w-72"
-            />
-            <kbd className="rounded border border-white/10 px-1 text-[10px] text-bone-muted">/</kbd>
-          </div>
+            <span className="w-56 text-sm text-bone-muted/80 xl:w-72">
+              {t('nav.search')}
+            </span>
+            <kbd className="rounded border border-white/10 px-1 text-[10px] text-bone-muted">
+              ⌘K
+            </kbd>
+          </button>
           <TimezoneCluster />
           <button className="hidden items-center gap-2 rounded-md border border-white/10 bg-ink-800 px-3 py-1.5 text-sm text-bone hover:bg-ink-700 sm:flex">
             <span className="live-dot" />

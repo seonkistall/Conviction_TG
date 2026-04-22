@@ -17,10 +17,12 @@ import { MuteProvider } from '@/lib/mute';
 import { ParlayProvider } from '@/lib/parlay';
 import { PositionsProvider } from '@/lib/positions';
 import { ToastProvider } from '@/lib/toast';
+import { LivePricesProvider } from '@/lib/livePrices';
 import { Toaster } from '@/components/Toaster';
 import { ParlaySlip } from '@/components/ParlaySlip';
 import { GlobalMuteFAB } from '@/components/GlobalMuteFAB';
 import { OnboardingIntro } from '@/components/OnboardingIntro';
+import { CommandPalette } from '@/components/CommandPalette';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -198,12 +200,21 @@ export default function RootLayout({
               <PositionsProvider>
                 <ParlayProvider>
                   {/*
-                   * ChromeShell renders Header/Footer/MobileNav + the <main>
-                   * padding — but skips all of it on /feed so that the
-                   * TikTok-style immersive feed gets a true 100dvh canvas.
-                   * See components/ChromeShell.tsx for rationale.
+                   * LivePricesProvider ticks market prices client-side so
+                   * the UI feels alive. It's intentionally INSIDE the
+                   * Parlay/Positions providers (so a parlay leg price
+                   * stays frozen at add-time while the global store
+                   * keeps ticking) and OUTSIDE ChromeShell (so every
+                   * page inherits the same live map).
                    */}
-                  <ChromeShell>{children}</ChromeShell>
+                  <LivePricesProvider>
+                    {/*
+                     * ChromeShell renders Header/Footer/MobileNav + the <main>
+                     * padding — but skips all of it on /feed so that the
+                     * TikTok-style immersive feed gets a true 100dvh canvas.
+                     * See components/ChromeShell.tsx for rationale.
+                     */}
+                    <ChromeShell>{children}</ChromeShell>
                   {/*
                    * The floating overlays below sit outside the chrome shell
                    * because they're controlled by global state (parlay store,
@@ -212,10 +223,12 @@ export default function RootLayout({
                    * (e.g. swipe-right → open parlay) still work. Each
                    * overlay owns its own pathname-aware visibility check.
                    */}
-                  <ParlaySlip />
-                  <GlobalMuteFAB />
-                  <OnboardingIntro />
-                  <Toaster />
+                    <ParlaySlip />
+                    <GlobalMuteFAB />
+                    <OnboardingIntro />
+                    <CommandPalette />
+                    <Toaster />
+                  </LivePricesProvider>
                 </ParlayProvider>
               </PositionsProvider>
             </ToastProvider>

@@ -171,9 +171,14 @@ export function AutoVideo({
         )}
       </div>
 
-      {/* Tier-1/2 poster with error-chained fallback. */}
+      {/* Tier-1/2 poster with error-chained fallback.
+          `key={posterSrc}` forces a full img remount when the state
+          transitions from 'max' → 'hq'. Without it some browsers reuse
+          the errored <img> element and never re-fire onError on the
+          second URL, leaving us stuck on a broken image icon. */}
       {posterSrc && (
         <img
+          key={posterSrc}
           src={posterSrc}
           alt=""
           className={`absolute inset-0 h-full w-full ${fitClass} transition-opacity duration-500 ${

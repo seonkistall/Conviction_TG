@@ -9,6 +9,8 @@ import { EdgeBadge } from './EdgeBadge';
 import { OutcomeBar } from './OutcomeBar';
 import { ResolvedBanner } from './ResolvedBanner';
 import { FeedDetailSheet } from './FeedDetailSheet';
+import { LivePrice } from './LivePrice';
+import { useLivePrice } from '@/lib/livePrices';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 import { useParlay } from '@/lib/parlay';
 import { useMute } from '@/lib/mute';
@@ -58,6 +60,10 @@ export function FeedCard({ market }: Props) {
   const inParlay = parlay.hasLeg(market.id);
   const isResolved = market.status === 'resolved';
   const isBinary = market.kind === 'binary';
+  // Resolved markets keep their settlement price frozen. Everyone else
+  // feeds from the live-tick store so the numbers drift subtly.
+  const liveYes = useLivePrice(market.id, market.yesProb);
+  const displayYes = isResolved ? market.yesProb : liveYes;
 
   // --- Heart-burst animation state -----------------------------------------
   // Each tap spawns a new heart with a unique id so React can track AnimatePresence.
@@ -310,12 +316,12 @@ export function FeedCard({ market }: Props) {
           <div className="mt-4 grid grid-cols-2 gap-2">
             <QuickBet
               side="YES"
-              price={market.yesProb}
+              price={displayYes}
               marketId={market.id}
             />
             <QuickBet
               side="NO"
-              price={1 - market.yesProb}
+              price={1 - displayYes}
               marketId={market.id}
             />
           </div>
@@ -328,7 +334,13 @@ export function FeedCard({ market }: Props) {
         {/* Stats strip */}
         <div className="mt-3 flex items-center gap-4 text-[11px] text-bone-muted">
           <span className="font-mono">
-            <span className="text-bone">{pct(market.yesProb)}</span> {t('card.yes')}
+            <LivePrice
+              marketId={market.id}
+              seed={market.yesProb}
+              format="percent"
+              className="text-bone"
+            />{' '}
+            {t('card.yes')}
           </span>
           <span>·</span>
           <span>{formatUSD(market.volume)} {t('card.vol')}</span>
@@ -397,18 +409,35 @@ function QuickBet({
   marketId: string;
 }) {
   const parlay = useParlay();
+  // v2.12 — micro-interaction. A 380ms `bet-pulse` keyframe on click gives
+  // the user a crisp "registered" cue that pairs with the success haptic
+  // in parlay.add. We toggle a ref-backed token and apply a remount-free
+  // replay trick: setting animation: none → forcing reflow → restoring it
+  // would be cleaner, but the className flip below is simpler and good
+  // enough for a 380ms flash. The timer clears the class so a re-render
+  // from unrelated state doesn't keep the glow on.
+  const [pulsing, setPulsing] = useState(false);
   return (
     <button
       type="button"
       onClick={(e) => {
         e.preventDefault();
+        // Reset-then-set so the keyframe re-plays on rapid repeat taps.
+        setPulsing(false);
+        // Double rAF so the browser commits the class removal before we
+        // add it back — otherwise React batches and nothing retriggers.
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => setPulsing(true))
+        );
+        window.setTimeout(() => setPulsing(false), 420);
         parlay.add({ marketId, pick: side, price });
       }}
       className={clsx(
         'flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-bold uppercase tracking-widest backdrop-blur transition hover:scale-[1.02]',
         side === 'YES'
           ? 'border-yes/40 bg-yes-soft text-yes hover:bg-yes/20'
-          : 'border-no/40 bg-no-soft text-no hover:bg-no/20'
+          : 'border-no/40 bg-no-soft text-no hover:bg-no/20',
+        pulsing && 'animate-bet-pulse'
       )}
     >
       <span>{side}</span>

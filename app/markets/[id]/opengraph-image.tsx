@@ -52,9 +52,21 @@ export default async function Image({ params }: { params: { id: string } }) {
   }
 
   const yesC = Math.round(m.yesProb * 100);
+  const noC = 100 - yesC;
   const edge = typeof m.edgePP === 'number' ? m.edgePP : null;
   const title = truncate(m.title, 108);
   const pill = `${m.category} · ${m.region}`;
+  const aiConf = Math.round(m.aiConfidence * 100);
+  const volM =
+    m.volume >= 1_000_000
+      ? `$${(m.volume / 1_000_000).toFixed(1)}M`
+      : m.volume >= 1_000
+      ? `$${(m.volume / 1_000).toFixed(0)}K`
+      : `$${m.volume}`;
+  const tradersN =
+    m.traders >= 1_000
+      ? `${(m.traders / 1_000).toFixed(1)}K`
+      : m.traders.toString();
 
   return new ImageResponse(
     (
@@ -69,8 +81,24 @@ export default async function Image({ params }: { params: { id: string } }) {
             'linear-gradient(135deg, #0A0A0B 0%, #121318 50%, #1a1c24 100%)',
           color: '#F2EFE4',
           fontFamily: 'sans-serif',
+          position: 'relative',
         }}
       >
+        {/* Ambient volt blob — bottom-right corner glow that ties the card
+            to the app's live-trading energy without a real image. */}
+        <div
+          style={{
+            position: 'absolute',
+            right: '-140px',
+            bottom: '-140px',
+            width: '560px',
+            height: '560px',
+            borderRadius: '50%',
+            background:
+              'radial-gradient(closest-side, rgba(198,255,61,0.22), rgba(198,255,61,0))',
+            display: 'flex',
+          }}
+        />
         {/* Top row */}
         <div
           style={{
@@ -83,13 +111,37 @@ export default async function Image({ params }: { params: { id: string } }) {
           <div
             style={{
               display: 'flex',
-              fontSize: 28,
-              fontWeight: 800,
-              letterSpacing: '4px',
-              color: '#C6FF3D',
+              alignItems: 'center',
+              gap: '14px',
             }}
           >
-            CONVICTION
+            <div
+              style={{
+                display: 'flex',
+                width: '34px',
+                height: '34px',
+                borderRadius: '8px',
+                background: '#C6FF3D',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#05060A',
+                fontSize: 22,
+                fontWeight: 800,
+              }}
+            >
+              ▲
+            </div>
+            <div
+              style={{
+                display: 'flex',
+                fontSize: 28,
+                fontWeight: 800,
+                letterSpacing: '4px',
+                color: '#C6FF3D',
+              }}
+            >
+              CONVICTION
+            </div>
           </div>
           <div
             style={{
@@ -125,9 +177,23 @@ export default async function Image({ params }: { params: { id: string } }) {
           {title}
         </div>
 
+        {/* Stat strip — volume · traders · AI confidence. Lives directly
+            below the title and reads like a ticker row. */}
+        <div
+          style={{
+            display: 'flex',
+            marginTop: '28px',
+            gap: '44px',
+          }}
+        >
+          <StatCol label="Volume" value={volM} />
+          <StatCol label="Traders" value={tradersN} />
+          <StatCol label="AI conf" value={`${aiConf}%`} />
+        </div>
+
         <div style={{ display: 'flex', flex: 1 }} />
 
-        {/* Bottom strip */}
+        {/* Bottom strip — YES / NO split + AI edge chip */}
         <div
           style={{
             display: 'flex',
@@ -138,35 +204,9 @@ export default async function Image({ params }: { params: { id: string } }) {
             paddingTop: '28px',
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                fontSize: 20,
-                letterSpacing: '3px',
-                color: 'rgba(242,239,228,0.55)',
-                textTransform: 'uppercase',
-              }}
-            >
-              YES
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                fontSize: 104,
-                fontWeight: 800,
-                lineHeight: 1,
-                color: '#C6FF3D',
-                marginTop: '4px',
-              }}
-            >
-              {`${yesC}¢`}
-            </div>
+          <div style={{ display: 'flex', gap: '48px' }}>
+            <PriceCol label="YES" cents={yesC} color="#C6FF3D" />
+            <PriceCol label="NO" cents={noC} color="rgba(242,239,228,0.6)" />
           </div>
           {edge !== null ? (
             <div
@@ -204,5 +244,74 @@ export default async function Image({ params }: { params: { id: string } }) {
       </div>
     ),
     { ...size }
+  );
+}
+
+// --- Subcomponents (inline flex layouts for Satori) -----------------------
+function StatCol({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div
+        style={{
+          display: 'flex',
+          fontSize: 16,
+          letterSpacing: '3px',
+          color: 'rgba(242,239,228,0.45)',
+          textTransform: 'uppercase',
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          fontSize: 36,
+          fontWeight: 700,
+          color: '#F2EFE4',
+          marginTop: '2px',
+        }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function PriceCol({
+  label,
+  cents,
+  color,
+}: {
+  label: string;
+  cents: number;
+  color: string;
+}) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      <div
+        style={{
+          display: 'flex',
+          fontSize: 20,
+          letterSpacing: '3px',
+          color: 'rgba(242,239,228,0.55)',
+          textTransform: 'uppercase',
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          fontSize: 96,
+          fontWeight: 800,
+          lineHeight: 1,
+          color,
+          marginTop: '4px',
+        }}
+      >
+        {`${cents}¢`}
+      </div>
+    </div>
   );
 }
