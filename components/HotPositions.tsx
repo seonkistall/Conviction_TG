@@ -3,30 +3,60 @@
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { usePositions } from '@/lib/positions';
-import { useLivePrice } from '@/lib/livePrices';
+import { useLivePrices } from '@/lib/livePrices';
 import { getMarket, priceHistory } from '@/lib/markets';
 import { Sparkline } from './Sparkline';
 
 /**
  * Hot Positions widget.
  *
- * A compact "top movers" list for the portfolio sidebar. We rank all OPEN
- * positions by |live P&L| and show the top 5. Each row gets:
- *   - Poster thumb + shortened market title
- *   - Mini sparkline (last 14 days of the underlying YES price, flipped if
- *     the user is on NO side) with a dashed baseline at the user's avg.
- *   - Live delta vs. avg in pp (percentage points).
- *   - Colored P&L in dollars.
+ * Compact "top movers" list for the portfolio sidebar. Ranks OPEN
+ * positions by |live P&L| and shows the top 5. Each row shows poster
+ * thumb, market title, YES/NO side pill, avg→mark cents, delta in pp,
+ * a mini sparkline with a dashed baseline at avgPrice, and live $ P&L.
  *
- * The live mark comes from the global livePrices ticker so this widget
- * visibly moves every ~4s — which does the emotional job you'd want from
- * a "hot positions" strip on a trading app demo.
+ * Subscription model (v2.13):
+ * ---------------------------
+ * The parent calls `useLivePrices([ids])` ONCE and passes each row's
+ * mark as a plain prop. HotRow is now hook-lite (only the memoized
+ * sparkline series), which sidesteps any rules-of-hooks concern if the
+ * sorted/sliced list length changes as prices tick.
  */
 export function HotPositions() {
   const { positions, hydrated } = usePositions();
 
-  // Render nothing until hydrated so we don't flash the seed values for
-  // a returning user whose real positions are still loading from storage.
+  const marketIds = useMemo(
+    () => positions.map((p) => p.marketId),
+    [positions]
+  );
+  const seeds = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const p of positions) {
+      const m = getMarket(p.marketId);
+      if (m) map[p.marketId] = m.yesProb;
+    }
+    return map;
+  }, [positions]);
+
+  const liveMap = useLivePrices(marketIds, seeds);
+
+  // Rank + render data computed once so ordering and P&L can't drift
+  // between sort() and the JSX mapping.
+  const ranked = useMemo(() => {
+    return positions
+      .map((p) => {
+        const mk = getMarket(p.marketId);
+        if (!mk) return null;
+        const liveYes = liveMap[p.marketId] ?? mk.yesProb;
+        const mark = p.side === 'YES' ? liveYes : 1 - liveYes;
+        const livePnl = p.shares * (mark - p.avgPrice);
+        return { p, mk, mark, livePnl };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null)
+      .sort((a, b) => Math.abs(b.livePnl) - Math.abs(a.livePnl))
+      .slice(0, 5);
+  }, [positions, liveMap]);
+
   if (!hydrated) {
     return (
       <div className="rounded-2xl border border-white/10 bg-ink-800 p-5">
@@ -51,49 +81,48 @@ export function HotPositions() {
         </span>
       </div>
       <ul className="mt-4 space-y-3">
-        {positions
-          .slice()
-          .map((p) => ({ p, absPnl: Math.abs(p.pnl) }))
-          .sort((a, b) => b.absPnl - a.absPnl)
-          .slice(0, 5)
-          .map(({ p }) => (
-            <HotRow key={`${p.marketId}-${p.side}`} marketId={p.marketId} side={p.side} shares={p.shares} avgPrice={p.avgPrice} />
-          ))}
+        {ranked.map(({ p, mk, mark, livePnl }) => (
+          <HotRow
+            key={`${p.marketId}-${p.side}`}
+            slug={mk.slug}
+            title={mk.title}
+            poster={mk.media.poster}
+            side={p.side}
+            avgPrice={p.avgPrice}
+            mark={mark}
+            livePnl={livePnl}
+            yesProb={mk.yesProb}
+          />
+        ))}
       </ul>
     </div>
   );
 }
 
-/**
- * One row. Split out so we can call `useLivePrice` for each position
- * without breaking rules-of-hooks — the parent sorts & slices before
- * mounting any of these, so the hook count per row is stable.
- */
 function HotRow({
-  marketId,
+  slug,
+  title,
+  poster,
   side,
-  shares,
   avgPrice,
+  mark,
+  livePnl,
+  yesProb,
 }: {
-  marketId: string;
+  slug: string;
+  title: string;
+  poster: string;
   side: 'YES' | 'NO';
-  shares: number;
   avgPrice: number;
+  mark: number;
+  livePnl: number;
+  yesProb: number;
 }) {
-  const mk = getMarket(marketId);
-  const liveYes = useLivePrice(marketId, mk?.yesProb ?? 0.5);
-
-  // History is derived from the market's yesProb. If the position is NO,
-  // flip the series so "up" visually aligns with "user is winning".
   const series = useMemo(() => {
-    const base = priceHistory(mk?.yesProb ? mk.yesProb * 100 : 50, 14);
+    const base = priceHistory(yesProb * 100, 14);
     return side === 'NO' ? base.map((v) => 1 - v) : base;
-  }, [mk?.yesProb, side]);
+  }, [yesProb, side]);
 
-  if (!mk) return null;
-
-  const mark = side === 'YES' ? liveYes : 1 - liveYes;
-  const livePnl = shares * (mark - avgPrice);
   const deltaPP = (mark - avgPrice) * 100;
   const dir: 'up' | 'down' | 'flat' =
     Math.abs(deltaPP) < 0.1 ? 'flat' : deltaPP > 0 ? 'up' : 'down';
@@ -101,17 +130,17 @@ function HotRow({
   return (
     <li>
       <Link
-        href={`/markets/${mk.slug}`}
+        href={`/markets/${slug}`}
         className="group flex items-center gap-3 rounded-lg border border-transparent p-1.5 transition hover:border-white/10 hover:bg-white/[0.03]"
       >
         <img
-          src={mk.media.poster}
+          src={poster}
           alt=""
           className="h-10 w-10 flex-shrink-0 rounded-md object-cover"
         />
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
-            <div className="line-clamp-1 text-sm text-bone">{mk.title}</div>
+            <div className="line-clamp-1 text-sm text-bone">{title}</div>
             <div
               className={`font-mono text-xs tabular-nums ${
                 livePnl >= 0 ? 'text-yes' : 'text-no'

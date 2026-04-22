@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import clsx from 'clsx';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Market } from '@/lib/types';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 import { useParlay } from '@/lib/parlay';
@@ -49,6 +49,28 @@ export function FeedDetailSheet({ market, open, onClose }: Props) {
   const [shareLabel, setShareLabel] = useState<'default' | 'copied' | 'shared'>(
     'default'
   );
+  // Track the active reset timer so we can (a) cancel a pending reset when
+  // the user shares again in rapid succession, and (b) clear it on unmount
+  // to avoid a setState-on-unmounted warning if the sheet closes mid-flash.
+  const shareResetTimer = useRef<number | null>(null);
+  const scheduleShareReset = (label: 'copied' | 'shared') => {
+    setShareLabel(label);
+    if (shareResetTimer.current !== null) {
+      window.clearTimeout(shareResetTimer.current);
+    }
+    shareResetTimer.current = window.setTimeout(() => {
+      setShareLabel('default');
+      shareResetTimer.current = null;
+    }, 1400);
+  };
+  useEffect(() => {
+    return () => {
+      if (shareResetTimer.current !== null) {
+        window.clearTimeout(shareResetTimer.current);
+        shareResetTimer.current = null;
+      }
+    };
+  }, []);
 
   // Close on ESC
   useEffect(() => {
@@ -108,8 +130,7 @@ export function FeedDetailSheet({ market, open, onClose }: Props) {
         (!navigator.canShare || navigator.canShare(data))
       ) {
         await navigator.share(data);
-        setShareLabel('shared');
-        window.setTimeout(() => setShareLabel('default'), 1400);
+        scheduleShareReset('shared');
         return;
       }
     } catch {
@@ -121,8 +142,7 @@ export function FeedDetailSheet({ market, open, onClose }: Props) {
         navigator.clipboard?.writeText
       ) {
         await navigator.clipboard.writeText(shareUrl);
-        setShareLabel('copied');
-        window.setTimeout(() => setShareLabel('default'), 1400);
+        scheduleShareReset('copied');
         toast.push({
           kind: 'trade',
           title: 'Link copied',

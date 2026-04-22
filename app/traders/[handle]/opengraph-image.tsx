@@ -10,6 +10,9 @@ import { AI_TRADERS, getAITrader } from '@/lib/markets';
  * with-multiple-children unless flex/grid is declared.
  */
 export const runtime = 'edge';
+// v2.13: Explicit ISR — stats text will drift as the demo evolves;
+// recheck hourly rather than trusting the default indefinite cache.
+export const revalidate = 3600;
 export const alt = 'Conviction AI Trader';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';

@@ -11,6 +11,8 @@ import { NARRATIVE_INDICES } from '@/lib/markets';
  */
 
 export const runtime = 'edge';
+// v2.13: Explicit ISR window so narrative index OGs refresh hourly.
+export const revalidate = 3600;
 export const alt = 'Conviction Narrative Index';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';

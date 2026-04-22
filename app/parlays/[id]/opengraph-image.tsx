@@ -11,6 +11,10 @@ import { decodeSharedParlay, computePayout } from '@/lib/parlayShare';
  */
 
 export const runtime = 'edge';
+// v2.13: Explicit ISR. Payload is ?d=-encoded so the image is effectively
+// content-addressed, but an hourly revalidate still lets us roll branding
+// changes (logo, tint) out without a redeploy of static OGs.
+export const revalidate = 3600;
 export const alt = 'Conviction Parlay';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';

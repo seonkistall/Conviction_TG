@@ -52,11 +52,30 @@ const STATIC_PAGES: { title: string; subtitle: string; href: string }[] = [
   { title: 'Create a market', subtitle: 'Spawn with the AI wizard', href: '/markets/new' },
 ];
 
+/**
+ * Normalize for substring matching.
+ *
+ * v2.13: Markets and narrative titles include Korean (e.g. "LPL Rising ·
+ * 중국 리그 제국", trader options labels with 한글 aliases). Hangul
+ * pasted from some sources arrives in decomposed form (NFD) — those code
+ * points won't substring-match the precomposed (NFC) form even though they
+ * look identical. We normalize BOTH the haystack and the needle to NFC,
+ * then collapse runs of whitespace so "한국  대선" matches "한국 대선".
+ *
+ * Latin lowercasing is preserved (`toLocaleLowerCase` is unicode-safe and
+ * matches the previous behaviour for ASCII queries).
+ */
+function norm(s: string): string {
+  return s.normalize('NFC').toLocaleLowerCase().replace(/\s+/g, ' ').trim();
+}
+
 function scoreMatch(text: string, q: string): number {
   // -1 = no match. 0+ = match, lower-is-better.
   if (!q) return 0;
-  const t = text.toLowerCase();
-  const idx = t.indexOf(q);
+  const t = norm(text);
+  const needle = norm(q);
+  if (!needle) return 0;
+  const idx = t.indexOf(needle);
   if (idx < 0) return -1;
   // Starting at position 0 is the best. Whole-word matches outrank mid-word.
   if (idx === 0) return 0;

@@ -154,6 +154,106 @@ test.describe('smoke · SEO artifacts', () => {
  * We check semantic landmarks + geometry rather than class names so the
  * test survives future styling refactors.
  */
+/*
+ * v2.13 — ⌘K palette Korean substring smoke.
+ *
+ * Markets/narratives with Hangul titles (e.g. "LPL Rising · 중국 리그 제국")
+ * must match a Hangul needle. Regression guard for the NFC-normalize path
+ * in CommandPalette.scoreMatch/norm.
+ */
+test.describe('smoke · v2.13 ⌘K palette', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        window.localStorage.setItem('cv_onboarded_v1', '1');
+      } catch {
+        /* noop */
+      }
+    });
+  });
+
+  test('Ctrl+K opens palette and matches Korean query', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    // The `/` shortcut is blocked when focus is in a text field, so we use
+    // the platform-agnostic Control+K — it's Meta-or-Ctrl in the handler.
+    await page.keyboard.press('Control+K');
+    const dialog = page.getByRole('dialog', { name: /Command palette/i });
+    await expect(dialog).toBeVisible();
+    await page.getByRole('searchbox', { name: /Search/i }).fill('중국');
+    // At least one listbox option should render for the Hangul needle.
+    await expect(
+      dialog.locator('[role="option"]').first()
+    ).toBeVisible({ timeout: 2000 });
+  });
+});
+
+/*
+ * v2.13 — Expanded route sampling.
+ *
+ * Previously we hit 3 markets and the 6 narrative indices. The trader
+ * profile + expanded market sample catches OG-metadata regressions on
+ * routes we'd otherwise only notice when someone shares the URL.
+ *
+ * Each route must (a) return 200, (b) expose an `og:image` meta, and
+ * (c) include JSON-LD for SEO. We rotate through a small hand-picked
+ * mix of K/J/C region slugs so a locale-specific renderer break (e.g.
+ * Hangul font fallback) is visible.
+ */
+const V213_MARKET_SAMPLE = [
+  'son-heung-min-20-goals',
+  'newjeans-comeback-q4',
+  'kiwoom-kbo-2026',
+  'byd-beats-tesla-ev-2026',
+  'hanshin-tigers-japan-series-2026',
+];
+const V213_TRADER_SAMPLE = [
+  'ai.oracle.kr',
+  'allora.lck',
+  'qwen.drama',
+  'sonnet.macro',
+  'anime.signal.jp',
+];
+
+test.describe('smoke · v2.13 expanded markets', () => {
+  for (const slug of V213_MARKET_SAMPLE) {
+    test(`/markets/${slug} has og:image + json-ld`, async ({ page }) => {
+      const response = await page.goto(`/markets/${slug}`);
+      expect(response?.status()).toBe(200);
+      // og:image meta — generated from opengraph-image.tsx. The URL
+      // itself doesn't need to resolve for this assertion; we just
+      // verify that the metadata pipeline emitted it.
+      const ogImage = await page
+        .locator('meta[property="og:image"]')
+        .first()
+        .getAttribute('content');
+      expect(ogImage, `og:image on /markets/${slug}`).toBeTruthy();
+      const ldCount = await page
+        .locator('script[type="application/ld+json"]')
+        .count();
+      expect(ldCount).toBeGreaterThanOrEqual(1);
+    });
+  }
+});
+
+test.describe('smoke · v2.13 trader profiles', () => {
+  for (const handle of V213_TRADER_SAMPLE) {
+    test(`/traders/${handle} renders + has og:image`, async ({ page }) => {
+      const response = await page.goto(`/traders/${handle}`);
+      expect(response?.status()).toBe(200);
+      // @handle is the h1 in the trader profile header.
+      await expect(
+        page.getByRole('heading', { name: new RegExp(`@${handle}`) })
+      ).toBeVisible();
+      const ogImage = await page
+        .locator('meta[property="og:image"]')
+        .first()
+        .getAttribute('content');
+      expect(ogImage, `og:image on /traders/${handle}`).toBeTruthy();
+    });
+  }
+});
+
 test.describe('smoke · v2.11 desktop /feed chrome', () => {
   // Dismiss the first-visit OnboardingIntro modal which is `fixed inset-0
   // z-[80]` and intercepts pointer events until gated by `cv_onboarded_v1`

@@ -98,3 +98,25 @@ export function useLivePrice(marketId: string, seed: number): number {
   const { prices } = useContext(Ctx);
   return prices[marketId] ?? seed;
 }
+
+/**
+ * Batched subscription — for widgets that render a list of rows keyed
+ * by marketId. Returns a { [marketId]: price } map, falling back to
+ * `seeds[id]` when the provider hasn't populated that id yet.
+ *
+ * Prefer this over calling `useLivePrice` inside each row component —
+ * the parent owns a single context read and passes plain props down,
+ * which keeps child components hook-free and immune to "list shrinks
+ * on re-render" rules-of-hooks foot-guns.
+ */
+export function useLivePrices(
+  ids: string[],
+  seeds: Record<string, number> = {}
+): PriceMap {
+  const { prices } = useContext(Ctx);
+  const out: PriceMap = {};
+  for (const id of ids) {
+    out[id] = prices[id] ?? seeds[id] ?? 0.5;
+  }
+  return out;
+}

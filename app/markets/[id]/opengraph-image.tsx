@@ -9,6 +9,10 @@ import { MARKETS, getMarket } from '@/lib/markets';
  */
 
 export const runtime = 'edge';
+// v2.13: Explicit ISR window — keeps OG fresh within an hour if a
+// market's title / category changes, instead of Vercel's default
+// indefinite Edge image cache.
+export const revalidate = 3600;
 export const alt = 'Conviction Market';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
