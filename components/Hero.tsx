@@ -25,23 +25,29 @@ export function Hero({ markets }: { markets: Market[] }) {
     <section className="relative overflow-hidden">
       <div className="spotlight absolute inset-x-0 top-0 h-[720px]" />
       <div className="grid-bg absolute inset-0 opacity-60" />
-      <div className="relative mx-auto grid max-w-[1440px] gap-10 px-6 pt-16 pb-12 md:grid-cols-12">
+      <div className="relative mx-auto grid max-w-[1440px] gap-10 px-6 pt-10 pb-12 sm:pt-16 md:grid-cols-12">
         {/* Headline */}
         <div className="md:col-span-7">
-          <div className="inline-flex items-center gap-2 rounded-full border border-volt/30 bg-volt/5 px-3 py-1 text-[11px] font-medium uppercase tracking-widest text-volt">
-            <span className="live-dot" /> Asia-native · AI-powered · live in beta
+          <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-volt/30 bg-volt/5 px-3 py-1 text-[10px] font-medium uppercase tracking-widest text-volt sm:text-[11px]">
+            <span className="live-dot shrink-0" />
+            <span className="truncate">Asia-native · AI-powered · live in beta</span>
           </div>
 
-          <h1 className="mt-6 display-xl text-6xl text-bone md:text-[88px]">
-            Trade your{' '}
-            <span className="italic text-volt">conviction</span>
-            <br />
+          {/*
+           * Headline scales: ~40px mobile → 56px sm → 72px md → 88px lg.
+           * The hard <br/>s are kept only at md+; on mobile we let the
+           * browser wrap the 3-phrase headline naturally so it never
+           * overflows 375px viewports.
+           */}
+          <h1 className="mt-6 display-xl text-[40px] leading-[0.95] text-bone sm:text-[56px] md:text-[72px] lg:text-[88px]">
+            Trade your <span className="italic text-volt">conviction</span>
+            <span className="hidden md:inline"><br /></span>{' '}
             on the moments
-            <br />
+            <span className="hidden md:inline"><br /></span>{' '}
             that <span className="italic">actually</span> move APAC.
           </h1>
 
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-bone-muted">
+          <p className="mt-6 max-w-xl text-base leading-relaxed text-bone-muted sm:text-lg">
             K-pop comebacks. T1 at Worlds. Son scoring a brace. The next Oscar.
             Every narrative that matters to 4 billion Asians — priced, tradable, and
             graded by a 23-source AI evidence swarm.
@@ -50,19 +56,19 @@ export function Hero({ markets }: { markets: Market[] }) {
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href={`/markets/${m.slug}`}
-              className="rounded-full bg-volt px-6 py-3 text-sm font-semibold text-ink-900 transition hover:bg-volt-dark"
+              className="rounded-full bg-volt px-5 py-2.5 text-sm font-semibold text-ink-900 transition hover:bg-volt-dark sm:px-6 sm:py-3"
             >
               Explore markets →
             </Link>
             <a
               href="#how"
-              className="rounded-full border border-white/10 bg-ink-800 px-6 py-3 text-sm font-semibold text-bone hover:bg-ink-700"
+              className="rounded-full border border-white/10 bg-ink-800 px-5 py-2.5 text-sm font-semibold text-bone hover:bg-ink-700 sm:px-6 sm:py-3"
             >
               How it resolves
             </a>
           </div>
 
-          <div className="mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-white/5 pt-6">
+          <div className="mt-10 grid max-w-lg grid-cols-3 gap-3 border-t border-white/5 pt-6 sm:gap-6">
             <StatCell k="Markets live" v="87" />
             <StatCell k="24h volume" v="$4.2M" />
             <StatCell k="AI accuracy" v="84%" />
@@ -109,7 +115,7 @@ export function Hero({ markets }: { markets: Market[] }) {
               </div>
               <Link
                 href={`/markets/${m.slug}`}
-                className="mt-1 block font-display text-2xl leading-tight text-bone md:text-3xl"
+                className="mt-1 block font-display text-xl leading-tight text-bone line-clamp-3 sm:text-2xl md:text-3xl"
               >
                 {m.title}
               </Link>
@@ -147,9 +153,9 @@ export function Hero({ markets }: { markets: Market[] }) {
 
 function StatCell({ k, v }: { k: string; v: string }) {
   return (
-    <div>
-      <div className="font-mono text-2xl font-bold tabular-nums text-bone">{v}</div>
-      <div className="mt-1 text-[11px] font-medium uppercase tracking-widest text-bone-muted">
+    <div className="min-w-0">
+      <div className="font-mono text-lg font-bold tabular-nums text-bone sm:text-2xl">{v}</div>
+      <div className="mt-1 text-[9px] font-medium uppercase tracking-widest text-bone-muted sm:text-[11px]">
         {k}
       </div>
     </div>

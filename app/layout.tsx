@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import {
   Inter,
   Instrument_Serif,
@@ -151,6 +151,20 @@ export const metadata: Metadata = {
       'Trade conviction on the moments that move APAC. Priced by AI, graded by a 23-source evidence swarm.',
     images: ['/og-image.png'],
   },
+};
+
+/**
+ * Explicit viewport export (Next 14+ metadata API). Using `viewport-fit=cover`
+ * so the page can opt into iPhone safe-area inset padding where needed, and
+ * pinning initialScale=1 + maximumScale=5 to prevent mobile Safari from
+ * auto-zooming on input focus while still allowing user pinch-zoom up to 5x.
+ */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
+  themeColor: '#05060A',
 };
 
 export default function RootLayout({

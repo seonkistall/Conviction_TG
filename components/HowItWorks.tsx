@@ -5,10 +5,10 @@ import { useT } from '@/lib/i18n';
 export function HowItWorks() {
   const t = useT();
   return (
-    <section id="how" className="mx-auto max-w-[1440px] px-6 pt-20">
+    <section id="how" className="mx-auto max-w-[1440px] px-6 pt-16 sm:pt-20">
       <div className="grid gap-10 md:grid-cols-12">
         <div className="md:col-span-4">
-          <h2 className="display-xl text-5xl text-bone md:text-6xl">
+          <h2 className="display-xl text-4xl text-bone sm:text-5xl md:text-6xl">
             {t('hp.how_h')}
             <br />
             <span className="italic text-volt">{t('hp.how_h2')}</span>

@@ -16,7 +16,7 @@ const MODEL_TINT: Record<string, string> = {
 export function AgenticTraders() {
   const t = useT();
   return (
-    <section className="mx-auto max-w-[1440px] px-6 pt-16">
+    <section className="mx-auto max-w-[1440px] px-6 pt-12 sm:pt-16">
       <div className="mb-5 flex items-baseline justify-between">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-conviction/30 bg-conviction/10 px-3 py-1 text-[11px] font-medium uppercase tracking-widest text-conviction">
@@ -26,7 +26,7 @@ export function AgenticTraders() {
             </span>
             Conviction × Allora
           </div>
-          <h2 className="mt-3 font-display text-4xl text-bone md:text-5xl">
+          <h2 className="mt-3 font-display text-3xl text-bone sm:text-4xl md:text-5xl">
             {t('agentic.title')}
           </h2>
           <p className="mt-1 max-w-2xl text-sm text-bone-muted">
