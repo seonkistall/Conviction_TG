@@ -229,6 +229,32 @@ html, body {
 .flicker-down { animation: flicker-down 0.6s ease-out; border-radius: 4px; padding: 0 2px; margin: 0 -2px; }
 
 /*
+ * v2.10 — Heart-burst overlay for /feed double-tap YES bet.
+ *
+ * Spawned per-tap and removed after 900ms (see FeedCard.tsx). Scales from
+ * 0 → 1.4 while drifting upward and fading out so multiple rapid double-
+ * taps stack visibly (each heart starts its own independent animation
+ * because each has its own DOM node and fresh `animation-name`).
+ *
+ * Color is Conviction's `volt` (C6FF3D) with a heart-pink accent shadow so
+ * it reads at a glance against either bright or dark video frames.
+ */
+@keyframes heart-burst {
+  0%   { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
+  20%  { transform: translate(-50%, -50%) scale(1.4); opacity: 1; }
+  70%  { transform: translate(-50%, -120%) scale(1.2); opacity: 0.9; }
+  100% { transform: translate(-50%, -180%) scale(0.8); opacity: 0; }
+}
+.heart-burst {
+  color: #ff4d88;
+  text-shadow:
+    0 0 18px rgba(255, 77, 136, 0.65),
+    0 0 4px rgba(255, 255, 255, 0.9);
+  animation: heart-burst 900ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/*
  * LiveTicker — horizontally scrolling tape of recent trades / price moves
  * shown above the homepage feed. Loops infinitely via translateX.
  */

@@ -97,3 +97,59 @@ test.describe('mobile-fit · Header', () => {
     await expect(page.getByRole('navigation', { name: /Primary mobile/i })).toBeVisible();
   });
 });
+
+/*
+ * v2.10 — /feed immersive chrome guard.
+ *
+ * The TikTok-style /feed route deliberately hides the site Header,
+ * Footer, and MobileNav so the full-bleed video card owns the entire
+ * 100dvh. Before v2.10, those three chrome bars + the Samsung Internet
+ * / Chrome Mobile browser chrome combined to compress the usable video
+ * area on tall Android portraits (Galaxy S25 Ultra class). The user
+ * reported it as "the screen is pushed down" twice.
+ *
+ * These assertions fail cleanly if anyone re-adds a global Header or
+ * MobileNav on /feed in the future (e.g. by forgetting to pathname-gate
+ * a new layout component). We check the semantic landmarks rather than
+ * specific DOM class names so component refactors don't flap this test.
+ */
+test.describe('mobile-fit · /feed immersive chrome', () => {
+  test('Header is hidden on /feed', async ({ page }) => {
+    await page.goto('/feed');
+    await expect(
+      page.getByRole('banner'),
+      '/feed should not render the site Header'
+    ).toHaveCount(0);
+  });
+
+  test('MobileNav is hidden on /feed', async ({ page }) => {
+    await page.goto('/feed');
+    await expect(
+      page.getByRole('navigation', { name: /Primary mobile/i }),
+      '/feed should not render the mobile bottom nav'
+    ).toHaveCount(0);
+  });
+
+  test('Feed card owns the full dynamic viewport height', async ({ page, viewport }) => {
+    test.skip(!viewport, 'needs a viewport');
+    await page.goto('/feed');
+    await page.waitForLoadState('networkidle');
+
+    // The first <article> is the first feed card. Its top must start at
+    // y=0 (no Header pushing it down) and its height must equal the
+    // viewport height (full 100dvh, no MobileNav chewing space off the
+    // bottom). We allow 2px tolerance for sub-pixel rounding.
+    const firstCard = page.locator('article').first();
+    await expect(firstCard).toBeVisible();
+    const box = await firstCard.boundingBox();
+    expect(box, 'first feed card bounding box').not.toBeNull();
+    expect(
+      box!.y,
+      `Feed card should start at y=0, got ${box!.y}px (Header still rendering?)`
+    ).toBeLessThanOrEqual(2);
+    expect(
+      box!.height,
+      `Feed card height (${box!.height}px) should ~match viewport height (${viewport!.height}px)`
+    ).toBeGreaterThanOrEqual(viewport!.height - 2);
+  });
+});

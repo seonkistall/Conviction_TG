@@ -2,6 +2,7 @@
 
 import clsx from 'clsx';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useParlay } from '@/lib/parlay';
 import { useT } from '@/lib/i18n';
 import { getMarket } from '@/lib/markets';
@@ -26,15 +27,23 @@ export function ParlaySlip() {
   } = useParlay();
   const t = useT();
   const count = legs.length;
+  // v2.10 — the FAB trigger is redundant on /feed because the feed card
+  // exposes a swipe-right gesture that calls `toggle(true)` directly. Hide
+  // the button on immersive routes so it doesn't float over the video; the
+  // drawer itself stays rendered below so the programmatic toggle still
+  // opens it.
+  const path = usePathname() ?? '/';
+  const immersive = path === '/feed' || path.startsWith('/feed/');
 
   return (
     <>
-      {/* Floating trigger — bottom-right */}
+      {/* Floating trigger — bottom-right. Hidden on /feed (swipe-right opens). */}
       <button
         type="button"
         onClick={() => toggle()}
         className={clsx(
           'fixed bottom-20 right-5 z-40 flex items-center gap-2 rounded-full px-4 py-3 font-semibold shadow-2xl transition md:bottom-6 md:right-6',
+          immersive && 'hidden',
           count > 0
             ? 'bg-gradient-to-r from-volt to-volt-dark text-ink-900 hover:brightness-105'
             : 'border border-white/10 bg-ink-800 text-bone-muted hover:text-bone'

@@ -11,8 +11,7 @@ import {
   Noto_Serif_JP,
 } from 'next/font/google';
 import './globals.css';
-import { Header } from '@/components/Header';
-import { Footer } from '@/components/Footer';
+import { ChromeShell } from '@/components/ChromeShell';
 import { I18nProvider } from '@/lib/i18n';
 import { MuteProvider } from '@/lib/mute';
 import { ParlayProvider } from '@/lib/parlay';
@@ -21,7 +20,6 @@ import { ToastProvider } from '@/lib/toast';
 import { Toaster } from '@/components/Toaster';
 import { ParlaySlip } from '@/components/ParlaySlip';
 import { GlobalMuteFAB } from '@/components/GlobalMuteFAB';
-import { MobileNav } from '@/components/MobileNav';
 import { OnboardingIntro } from '@/components/OnboardingIntro';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
@@ -199,18 +197,23 @@ export default function RootLayout({
             <ToastProvider>
               <PositionsProvider>
                 <ParlayProvider>
-                  <Header />
-                  <main
-                    id="main-content"
-                    tabIndex={-1}
-                    className="pt-16 pb-24 md:pb-0"
-                  >
-                    {children}
-                  </main>
-                  <Footer />
+                  {/*
+                   * ChromeShell renders Header/Footer/MobileNav + the <main>
+                   * padding — but skips all of it on /feed so that the
+                   * TikTok-style immersive feed gets a true 100dvh canvas.
+                   * See components/ChromeShell.tsx for rationale.
+                   */}
+                  <ChromeShell>{children}</ChromeShell>
+                  {/*
+                   * The floating overlays below sit outside the chrome shell
+                   * because they're controlled by global state (parlay store,
+                   * mute context, toast queue) and need to remain mounted
+                   * even on immersive routes so that feed gestures
+                   * (e.g. swipe-right → open parlay) still work. Each
+                   * overlay owns its own pathname-aware visibility check.
+                   */}
                   <ParlaySlip />
                   <GlobalMuteFAB />
-                  <MobileNav />
                   <OnboardingIntro />
                   <Toaster />
                 </ParlayProvider>

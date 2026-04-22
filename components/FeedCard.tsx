@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import clsx from 'clsx';
+import { useCallback, useRef, useState } from 'react';
 import type { Market } from '@/lib/types';
 import { AutoVideo } from './AutoVideo';
 import { EdgeBadge } from './EdgeBadge';
@@ -9,22 +10,143 @@ import { OutcomeBar } from './OutcomeBar';
 import { ResolvedBanner } from './ResolvedBanner';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 import { useParlay } from '@/lib/parlay';
+import { useMute } from '@/lib/mute';
 import { useT } from '@/lib/i18n';
 
 interface Props {
   market: Market;
 }
 
+/*
+ * v2.10 gesture constants.
+ *
+ * These were tuned against Galaxy S25 Ultra portrait (384×854) and iPhone
+ * 14 (390×844). The goals were:
+ *   - Double-tap window 260ms: fast enough not to trigger by accident when
+ *     snap-scrolling (typical snap = 1 tap), slow enough that a deliberate
+ *     double-tap on a small target still registers.
+ *   - Swipe thresholds biased so that vertical snap-scroll always wins ties.
+ *     The user is paging the feed 95% of the time; swipe-right is a
+ *     shortcut, not a mis-grab waiting to happen.
+ */
+const DOUBLE_TAP_MS = 260;
+const SWIPE_MIN_DX = 60;          // px — minimum horizontal distance
+const SWIPE_MAX_DY = 40;          // px — maximum vertical drift allowed
+const SWIPE_MAX_MS = 400;         // ms — must complete within this
+const TAP_MAX_DX = 14;            // px — if moved more than this, it's a drag
+const TAP_MAX_MS = 260;           // ms — if held longer, it's not a tap
+const HEART_ANIM_MS = 900;        // lifespan of the heart pop overlay
+
 /**
  * Full-viewport TikTok-style market card. Snaps vertically on a snap-feed
  * container. Right rail has vertical-stack action buttons (like / comment
  * / parlay / share) in the familiar short-form video UX.
+ *
+ * v2.10 gestures added on the video/overlay area (NOT on the right rail
+ * buttons, CTAs, or title link — those keep their click semantics):
+ *   - Single tap → toggle global mute (TikTok-like audio control).
+ *   - Double tap → add YES leg to parlay + heart-burst animation overlay
+ *     at the tap point. Only for binary, non-resolved markets.
+ *   - Swipe right → open Parlay Slip drawer. Axis-locked so it never
+ *     fights the vertical snap-feed scroll.
  */
 export function FeedCard({ market }: Props) {
   const parlay = useParlay();
+  const mute = useMute();
   const t = useT();
   const inParlay = parlay.hasLeg(market.id);
   const isResolved = market.status === 'resolved';
+  const isBinary = market.kind === 'binary';
+
+  // --- Heart-burst animation state -----------------------------------------
+  // Each tap spawns a new heart with a unique id so React can track AnimatePresence.
+  const [hearts, setHearts] = useState<
+    Array<{ id: number; x: number; y: number }>
+  >([]);
+
+  const popHeart = useCallback((x: number, y: number) => {
+    const id = Date.now() + Math.random();
+    setHearts((prev) => [...prev, { id, x, y }]);
+    window.setTimeout(() => {
+      setHearts((prev) => prev.filter((h) => h.id !== id));
+    }, HEART_ANIM_MS);
+  }, []);
+
+  // --- Touch-state refs ----------------------------------------------------
+  // We intentionally use refs rather than state for raw touch coords so
+  // we don't re-render on every move event. The React state only flips
+  // on actual resolved gestures.
+  const touchStart = useRef<{ x: number; y: number; t: number } | null>(null);
+  const lastTapAt = useRef<number>(0);
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    const t0 = e.touches[0];
+    if (!t0) return;
+    touchStart.current = { x: t0.clientX, y: t0.clientY, t: Date.now() };
+  }, []);
+
+  const onTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      const start = touchStart.current;
+      touchStart.current = null;
+      if (!start) return;
+      const t1 = e.changedTouches[0];
+      if (!t1) return;
+      const dx = t1.clientX - start.x;
+      const dy = t1.clientY - start.y;
+      const dt = Date.now() - start.t;
+
+      // --- Swipe-right → open parlay slip ---
+      // Must be mostly-horizontal, rightward, fast, and of meaningful magnitude.
+      if (
+        dx > SWIPE_MIN_DX &&
+        Math.abs(dy) < SWIPE_MAX_DY &&
+        Math.abs(dx) > Math.abs(dy) * 1.5 &&
+        dt < SWIPE_MAX_MS
+      ) {
+        parlay.toggle(true);
+        return;
+      }
+
+      // --- Tap detection ---
+      // If the finger barely moved and the press was short, treat as tap.
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+      if (absDx > TAP_MAX_DX || absDy > TAP_MAX_DX || dt > TAP_MAX_MS) return;
+
+      const now = Date.now();
+      const isDouble = now - lastTapAt.current < DOUBLE_TAP_MS;
+
+      if (isDouble) {
+        // Reset so a third tap doesn't chain-fire as another double.
+        lastTapAt.current = 0;
+        if (!isResolved && isBinary) {
+          parlay.add({
+            marketId: market.id,
+            pick: 'YES',
+            price: market.yesProb,
+          });
+          // Coordinate in element-local space so the heart animates at the
+          // finger position, not the viewport origin.
+          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+          popHeart(t1.clientX - rect.left, t1.clientY - rect.top);
+        }
+        return;
+      }
+
+      lastTapAt.current = now;
+      // Single tap → toggle global mute. We wait one DOUBLE_TAP_MS window
+      // before committing so we don't fire mute on the first half of a
+      // double-tap. If a second tap comes in the branch above wins.
+      window.setTimeout(() => {
+        if (lastTapAt.current === now) {
+          mute.toggle();
+          lastTapAt.current = 0;
+        }
+      }, DOUBLE_TAP_MS + 10);
+    },
+    [isBinary, isResolved, market.id, market.yesProb, mute, parlay, popHeart]
+  );
 
   return (
     <article className="relative h-[100dvh] w-full overflow-hidden bg-ink-900 snap-start">
@@ -38,6 +160,29 @@ export function FeedCard({ market }: Props) {
         fit="cover"
       />
       <div className="pointer-events-none absolute inset-0 feed-overlay" />
+
+      {/*
+       * Gesture layer — sits ABOVE the video but BELOW the rail / CTAs /
+       * top bar. Captures taps and swipes on the "empty" video area
+       * without swallowing interactions with the action buttons. The
+       * z-index hierarchy below:
+       *   video           : z-0 (implicit)
+       *   gesture layer   : z-[1]
+       *   top bar         : z-10
+       *   right rail      : z-10
+       *   bottom content  : z-10
+       *   heart overlay   : z-20 (must be above bottom content to be seen)
+       * Because every interactive control has z-10+, they remain
+       * clickable — the gesture layer only catches taps on the otherwise
+       * bare video space.
+       */}
+      <div
+        className="absolute inset-0 z-[1]"
+        style={{ touchAction: 'pan-y' }}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+        aria-hidden="true"
+      />
 
       {/* Top bar — category + live */}
       <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-4 pt-[env(safe-area-inset-top,1rem)]">
@@ -57,6 +202,25 @@ export function FeedCard({ market }: Props) {
             </>
           )}
         </div>
+        {/* v2.10 — compact mute chip to replace the global FAB on /feed.
+            Sits top-right so it doesn't fight the rail or title. */}
+        <button
+          type="button"
+          onClick={mute.toggle}
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-ink-900/70 text-bone-muted backdrop-blur hover:text-bone"
+          aria-label={mute.muted ? 'Unmute' : 'Mute'}
+          aria-pressed={!mute.muted}
+        >
+          {mute.muted ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 10v4h4l5 4V6L7 10H3zm13.59 2L19 14.41 20.41 13l-2.41-2.41 2.41-2.42L19 6.76l-2.41 2.41L14.17 6.76 12.76 8.17 15.17 10.59 12.76 13l1.41 1.41z" />
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M3 10v4h4l5 4V6L7 10H3zm13.5 2c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77S18.01 4.14 14 3.23z" />
+            </svg>
+          )}
+        </button>
       </div>
 
       {/* Right rail actions */}
@@ -149,11 +313,23 @@ export function FeedCard({ market }: Props) {
         </div>
       </div>
 
-      {/* Swipe-hint — only on first card */}
-      <div className="pointer-events-none absolute inset-x-0 top-1/2 z-0 flex -translate-y-1/2 justify-center opacity-0 md:opacity-0">
-        <span className="rounded-full border border-white/10 bg-ink-900/70 px-3 py-1 text-[11px] text-bone-muted backdrop-blur">
-          {t('feed.long_swipe')}
-        </span>
+      {/*
+       * Heart-burst overlay. One <span> per active tap, positioned
+       * relative to the card so the heart appears exactly under the
+       * finger. `pointer-events-none` so it never swallows follow-up taps.
+       * The actual animation is a simple scale/translate/opacity keyframe
+       * declared in globals.css as `.heart-burst`.
+       */}
+      <div className="pointer-events-none absolute inset-0 z-20" aria-hidden="true">
+        {hearts.map((h) => (
+          <span
+            key={h.id}
+            className="heart-burst absolute -translate-x-1/2 -translate-y-1/2 text-5xl"
+            style={{ left: h.x, top: h.y }}
+          >
+            ♥
+          </span>
+        ))}
       </div>
     </article>
   );

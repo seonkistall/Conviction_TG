@@ -35,13 +35,33 @@ export function FeedClient({ markets }: Props) {
     return () => io.disconnect();
   }, [markets.length]);
 
+  const progressPct = markets.length > 1
+    ? ((idx + 1) / markets.length) * 100
+    : 100;
+
   return (
-    // `relative` is load-bearing: the top overlay + progress rail use
-    // `absolute` and must anchor to this wrapper rather than the nearest
-    // positioned ancestor (which, without this, would be the fixed Header's
-    // initial containing block — causing the back-button chip to float over
-    // the site Header on mobile).
-    <div className="relative -mt-16 h-[100dvh] w-full">
+    // v2.10 — no more `-mt-16`: the site Header is hidden on /feed by
+    // ChromeShell, so this wrapper already sits at the top of the
+    // viewport. `relative` is still load-bearing for the absolute
+    // positioned children below (progress bar, back chip, dot rail).
+    <div className="relative h-[100dvh] w-full">
+      {/*
+       * Top progress rail. 2px volt bar that fills left→right as the
+       * reader advances through the feed. Sits above the safe-area
+       * inset so it's always visible even on notch/pill devices.
+       * `will-change: width` keeps the animation on the compositor.
+       */}
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 z-30 h-[2px] bg-white/10"
+        style={{ marginTop: 'env(safe-area-inset-top)' }}
+        aria-hidden="true"
+      >
+        <div
+          className="h-full bg-volt shadow-[0_0_8px_rgba(198,255,61,0.6)] transition-[width] duration-300 ease-out"
+          style={{ width: `${progressPct}%`, willChange: 'width' }}
+        />
+      </div>
+
       {/* Top overlay — back to grid */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),1rem)]">
         <Link
@@ -57,7 +77,7 @@ export function FeedClient({ markets }: Props) {
         </div>
       </div>
 
-      {/* Progress dots — right side, desktop */}
+      {/* Progress dots — right side, desktop only */}
       <div className="pointer-events-none absolute right-1 top-1/2 z-10 hidden -translate-y-1/2 flex-col items-center gap-1 md:flex">
         {markets.map((_, i) => (
           <span
