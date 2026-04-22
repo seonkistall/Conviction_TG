@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { getMarket } from '@/lib/markets';
 import { decodeSharedParlay, computePayout } from '@/lib/parlayShare';
 import { formatUSD } from '@/lib/format';
-import { CopyShareButton } from '@/components/CopyShareButton';
+import { ShareStrip } from '@/components/ShareStrip';
 import { JsonLd } from '@/components/JsonLd';
 
 const SITE_URL = 'https://conviction-fe.vercel.app';
@@ -180,23 +180,7 @@ export default function ParlayReceiptPage({ params, searchParams }: PageProps) {
           </dl>
 
           {/* Share strip */}
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            <CopyShareButton url={shareUrl} />
-            <a
-              href={twitterIntent}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-ink-800 px-4 py-2.5 text-sm font-semibold text-bone transition hover:border-volt/40 hover:text-volt"
-            >
-              Share on X →
-            </a>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-volt to-volt-dark px-4 py-2.5 text-sm font-bold text-ink-900 transition hover:brightness-105"
-            >
-              Build your own →
-            </Link>
-          </div>
+          <ShareStrip shareUrl={shareUrl} twitterIntent={twitterIntent} />
         </section>
 
         {/* Legs */}

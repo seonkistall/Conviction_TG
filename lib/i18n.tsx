@@ -185,6 +185,40 @@ const EN: Dict = {
 
   'lang.toggle': 'KO',
   'lang.toggle_en': 'EN',
+
+  // Discovery / catalog
+  'discover.search_placeholder': 'Search markets, tags, narratives…',
+  'discover.search_aria': 'Search markets',
+  'discover.clear_search_aria': 'Clear search',
+  'discover.tags_label': 'Tags',
+  'discover.showing_prefix': 'Showing',
+  'discover.showing_of': 'of',
+  'discover.no_matches': 'No markets match these filters.',
+  'discover.clear_filters': 'Clear filters',
+
+  // Sort chips
+  'sort.trending': '🔥 Trending',
+  'sort.volume': '$ Volume',
+  'sort.closing': '⏱ Closing',
+  'sort.edge': '⚡ Edge',
+  'sort.ai': '🧠 AI conf',
+
+  // Status toggle
+  'status.live': 'Live',
+  'status.settled': 'Settled',
+  'status.all': 'All',
+
+  // Live ticker
+  'ticker.aria': 'Live market tape',
+
+  // Share / parlay receipt
+  'share.copy_link': 'Copy link',
+  'share.copied': 'Copied ✓',
+  'share.share_on_x': 'Share on X →',
+  'share.build_your_own': 'Build your own →',
+
+  // Settled state on cards
+  'market.settled_final': 'Settled · final ¢',
 };
 
 const KO: Dict = {
@@ -359,6 +393,40 @@ const KO: Dict = {
 
   'lang.toggle': 'EN',
   'lang.toggle_en': 'KO',
+
+  // Discovery / catalog
+  'discover.search_placeholder': '마켓 · 태그 · 내러티브 검색…',
+  'discover.search_aria': '마켓 검색',
+  'discover.clear_search_aria': '검색 초기화',
+  'discover.tags_label': '태그',
+  'discover.showing_prefix': '표시 중',
+  'discover.showing_of': '/',
+  'discover.no_matches': '조건에 맞는 마켓이 없어요.',
+  'discover.clear_filters': '필터 초기화',
+
+  // Sort chips
+  'sort.trending': '🔥 인기',
+  'sort.volume': '$ 거래량',
+  'sort.closing': '⏱ 마감',
+  'sort.edge': '⚡ 엣지',
+  'sort.ai': '🧠 AI 신뢰도',
+
+  // Status toggle
+  'status.live': '라이브',
+  'status.settled': '결제',
+  'status.all': '전체',
+
+  // Live ticker
+  'ticker.aria': '실시간 마켓 시세',
+
+  // Share / parlay receipt
+  'share.copy_link': '링크 복사',
+  'share.copied': '복사됨 ✓',
+  'share.share_on_x': 'X에 공유 →',
+  'share.build_your_own': '나도 만들기 →',
+
+  // Settled state on cards
+  'market.settled_final': '결제 완료 · 최종 ¢',
 };
 
 const DICTS: Record<Locale, Dict> = { en: EN, ko: KO };

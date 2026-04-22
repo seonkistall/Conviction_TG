@@ -5,6 +5,7 @@ import { AutoVideo } from './AutoVideo';
 import { EdgeBadge } from './EdgeBadge';
 import { OutcomeBar } from './OutcomeBar';
 import { ResolvedBanner } from './ResolvedBanner';
+import { SettledChip } from './SettledChip';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 
 interface Props {
@@ -112,9 +113,7 @@ export function MarketCard({ market, size = 'md' }: Props) {
         {/* Quick actions — binary YES/NO or multi outcome strip */}
         <div className="mt-3">
           {isResolved ? (
-            <div className="rounded-lg border border-white/5 bg-ink-900/60 px-3 py-2 text-[11px] font-semibold uppercase tracking-widest text-bone-muted backdrop-blur">
-              Settled · final ¢{Math.round((market.closePrice ?? 0) * 100)}
-            </div>
+            <SettledChip closePrice={market.closePrice ?? 0} />
           ) : isMulti ? (
             <OutcomeBar market={market} compact />
           ) : (

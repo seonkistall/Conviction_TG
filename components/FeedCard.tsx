@@ -112,7 +112,8 @@ export function FeedCard({ market }: Props) {
         {/* YES/NO quick-bet for binary, outcome bar for multi, or settled banner */}
         {isResolved ? (
           <div className="mt-4 rounded-xl border border-white/10 bg-ink-900/60 px-4 py-3 text-[12px] font-semibold uppercase tracking-widest text-bone-muted backdrop-blur">
-            Settled · final ¢{Math.round((market.closePrice ?? 0) * 100)}
+            {t('market.settled_final')}
+            {Math.round((market.closePrice ?? 0) * 100)}
           </div>
         ) : market.kind === 'binary' ? (
           <div className="mt-4 grid grid-cols-2 gap-2">

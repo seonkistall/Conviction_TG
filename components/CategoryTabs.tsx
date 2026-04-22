@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import { CATEGORIES } from '@/lib/markets';
 import { MarketCard } from './MarketCard';
 import type { Market } from '@/lib/types';
+import { useT } from '@/lib/i18n';
 
 type SortKey = 'trending' | 'volume' | 'closing' | 'edge' | 'ai';
 type StatusFilter = 'live' | 'resolved' | 'all';
@@ -23,6 +24,7 @@ type StatusFilter = 'live' | 'resolved' | 'all';
  * keeps a "clear filters" affordance so users never get stuck.
  */
 export function CategoryTabs({ markets }: { markets: Market[] }) {
+  const t = useT();
   const [active, setActive] = useState<string>('all');
   const [sort, setSort] = useState<SortKey>('trending');
   const [query, setQuery] = useState('');
@@ -88,16 +90,16 @@ export function CategoryTabs({ markets }: { markets: Market[] }) {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search markets, tags, narratives…"
+            placeholder={t('discover.search_placeholder')}
             className="w-full rounded-full border border-white/10 bg-ink-900 py-2.5 pl-10 pr-4 text-sm text-bone placeholder:text-bone-muted focus:border-volt/60 focus:outline-none"
-            aria-label="Search markets"
+            aria-label={t('discover.search_aria')}
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery('')}
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-[11px] text-bone-muted hover:text-bone"
-              aria-label="Clear search"
+              aria-label={t('discover.clear_search_aria')}
             >
               ✕
             </button>
@@ -132,11 +134,11 @@ export function CategoryTabs({ markets }: { markets: Market[] }) {
 
         <div className="flex items-center gap-1 rounded-full border border-white/10 bg-ink-800 p-1 text-xs">
           {[
-            { k: 'trending' as const, l: '🔥 Trending' },
-            { k: 'volume' as const, l: '$ Volume' },
-            { k: 'closing' as const, l: '⏱ Closing' },
-            { k: 'edge' as const, l: '⚡ Edge' },
-            { k: 'ai' as const, l: '🧠 AI conf' },
+            { k: 'trending' as const, l: t('sort.trending') },
+            { k: 'volume' as const, l: t('sort.volume') },
+            { k: 'closing' as const, l: t('sort.closing') },
+            { k: 'edge' as const, l: t('sort.edge') },
+            { k: 'ai' as const, l: t('sort.ai') },
           ].map((s) => (
             <button
               key={s.k}
@@ -158,7 +160,7 @@ export function CategoryTabs({ markets }: { markets: Market[] }) {
       {tags.length > 0 && (
         <div className="no-scrollbar mt-4 flex items-center gap-2 overflow-x-auto pb-1">
           <span className="text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
-            Tags
+            {t('discover.tags_label')}
           </span>
           {tag && (
             <button
@@ -186,8 +188,9 @@ export function CategoryTabs({ markets }: { markets: Market[] }) {
 
       <div className="mt-2 flex items-center justify-between text-[11px] text-bone-muted">
         <span>
-          Showing <span className="font-mono text-bone">{filtered.length}</span> of{' '}
-          {markets.length}
+          {t('discover.showing_prefix')}{' '}
+          <span className="font-mono text-bone">{filtered.length}</span>{' '}
+          {t('discover.showing_of')} {markets.length}
         </span>
         {hasFilters && (
           <button
@@ -195,7 +198,7 @@ export function CategoryTabs({ markets }: { markets: Market[] }) {
             onClick={clearFilters}
             className="rounded-full px-2 py-1 text-bone-muted underline-offset-2 hover:text-bone hover:underline"
           >
-            Clear filters
+            {t('discover.clear_filters')}
           </button>
         )}
       </div>
@@ -208,14 +211,14 @@ export function CategoryTabs({ markets }: { markets: Market[] }) {
 
       {filtered.length === 0 && (
         <div className="mt-12 flex min-h-[280px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/10 px-6 text-center text-bone-muted">
-          <span>No markets match these filters.</span>
+          <span>{t('discover.no_matches')}</span>
           {hasFilters && (
             <button
               type="button"
               onClick={clearFilters}
               className="rounded-full border border-white/10 bg-ink-800 px-4 py-2 text-sm font-semibold text-bone hover:border-white/30"
             >
-              Clear filters
+              {t('discover.clear_filters')}
             </button>
           )}
         </div>
@@ -231,10 +234,11 @@ function StatusToggle({
   value: StatusFilter;
   onChange: (v: StatusFilter) => void;
 }) {
+  const t = useT();
   const opts: { k: StatusFilter; l: string }[] = [
-    { k: 'live', l: 'Live' },
-    { k: 'resolved', l: 'Settled' },
-    { k: 'all', l: 'All' },
+    { k: 'live', l: t('status.live') },
+    { k: 'resolved', l: t('status.settled') },
+    { k: 'all', l: t('status.all') },
   ];
   return (
     <div className="flex items-center gap-1 rounded-full border border-white/10 bg-ink-800 p-1 text-xs">

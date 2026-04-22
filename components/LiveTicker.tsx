@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import clsx from 'clsx';
 import type { Market } from '@/lib/types';
+import { useT } from '@/lib/i18n';
 
 /**
  * <LiveTicker /> — a horizontally scrolling tape of "live" market price
@@ -23,6 +24,7 @@ interface Props {
 }
 
 export function LiveTicker({ markets, limit = 16 }: Props) {
+  const t = useT();
   const seed = useMemo(
     () => markets.filter((m) => m.status !== 'resolved').slice(0, limit),
     [markets, limit]
@@ -58,7 +60,7 @@ export function LiveTicker({ markets, limit = 16 }: Props) {
     <div
       className="border-y border-white/5 bg-ink-900/60 py-2.5 backdrop-blur"
       role="marquee"
-      aria-label="Live market tape"
+      aria-label={t('ticker.aria')}
     >
       <div className="ticker-track">
         {row.map((m, i) => {
