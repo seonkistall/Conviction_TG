@@ -132,7 +132,11 @@ export function CategoryTabs({ markets }: { markets: Market[] }) {
           ))}
         </div>
 
-        <div className="flex items-center gap-1 rounded-full border border-white/10 bg-ink-800 p-1 text-xs">
+        <div
+          role="group"
+          aria-label={t('discover.sort_group_aria')}
+          className="flex items-center gap-1 rounded-full border border-white/10 bg-ink-800 p-1 text-xs"
+        >
           {[
             { k: 'trending' as const, l: t('sort.trending') },
             { k: 'volume' as const, l: t('sort.volume') },
@@ -142,7 +146,9 @@ export function CategoryTabs({ markets }: { markets: Market[] }) {
           ].map((s) => (
             <button
               key={s.k}
+              type="button"
               onClick={() => setSort(s.k)}
+              aria-pressed={sort === s.k}
               className={clsx(
                 'rounded-full px-3 py-1 font-medium transition',
                 sort === s.k
@@ -241,12 +247,17 @@ function StatusToggle({
     { k: 'all', l: t('status.all') },
   ];
   return (
-    <div className="flex items-center gap-1 rounded-full border border-white/10 bg-ink-800 p-1 text-xs">
+    <div
+      role="group"
+      aria-label={t('discover.status_group_aria')}
+      className="flex items-center gap-1 rounded-full border border-white/10 bg-ink-800 p-1 text-xs"
+    >
       {opts.map((o) => (
         <button
           key={o.k}
           type="button"
           onClick={() => onChange(o.k)}
+          aria-pressed={value === o.k}
           className={clsx(
             'rounded-full px-3 py-1 font-medium transition',
             value === o.k

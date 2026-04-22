@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { useT } from '@/lib/i18n';
-import { LangToggle } from './LangToggle';
 import { TimezoneCluster } from './TimezoneCluster';
 
 export function Header() {
@@ -15,6 +14,7 @@ export function Header() {
     { label: t('nav.markets'), href: '/' },
     { label: t('nav.feed'), href: '/feed' },
     { label: t('nav.new'), href: '/markets/new' },
+    { label: t('nav.methodology'), href: '/methodology' },
     { label: t('nav.leaderboard'), href: '/leaderboard' },
     { label: t('nav.portfolio'), href: '/portfolio' },
   ];
@@ -67,7 +67,6 @@ export function Header() {
             <kbd className="rounded border border-white/10 px-1 text-[10px] text-bone-muted">/</kbd>
           </div>
           <TimezoneCluster />
-          <LangToggle />
           <button className="hidden items-center gap-2 rounded-md border border-white/10 bg-ink-800 px-3 py-1.5 text-sm text-bone hover:bg-ink-700 sm:flex">
             <span className="live-dot" />
             {t('nav.live')}

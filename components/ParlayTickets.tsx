@@ -7,20 +7,10 @@ import type { ParlayReceipt } from '@/lib/parlay';
 import { readTickets } from '@/lib/parlay';
 import { getMarket } from '@/lib/markets';
 import { formatUSD } from '@/lib/format';
-import { useT, useI18n } from '@/lib/i18n';
+import { useT } from '@/lib/i18n';
 
-function relativeTime(ts: number, now: number, locale: 'en' | 'ko'): string {
+function relativeTime(ts: number, now: number): string {
   const s = Math.max(0, Math.floor((now - ts) / 1000));
-  if (locale === 'ko') {
-    if (s < 30) return '방금';
-    if (s < 60) return `${s}초 전`;
-    const m = Math.floor(s / 60);
-    if (m < 60) return `${m}분 전`;
-    const h = Math.floor(m / 60);
-    if (h < 24) return `${h}시간 전`;
-    const d = Math.floor(h / 24);
-    return `${d}일 전`;
-  }
   if (s < 30) return 'just now';
   if (s < 60) return `${s}s ago`;
   const m = Math.floor(s / 60);
@@ -33,7 +23,6 @@ function relativeTime(ts: number, now: number, locale: 'en' | 'ko'): string {
 
 export function ParlayTickets() {
   const t = useT();
-  const { locale } = useI18n();
   const [tickets, setTickets] = useState<ParlayReceipt[]>([]);
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -63,13 +52,19 @@ export function ParlayTickets() {
           {t('portfolio.tickets')}
         </h3>
         <span className="text-xs text-bone-muted">
-          {mounted ? `${tickets.length} ticket${tickets.length === 1 ? '' : 's'}` : '—'}
+          {mounted
+            ? `${tickets.length} ${
+                tickets.length === 1
+                  ? t('portfolio.ticket_count_one')
+                  : t('portfolio.ticket_count_many')
+              }`
+            : '—'}
         </span>
       </div>
 
       {!mounted ? (
         <div className="mt-4 rounded-2xl border border-white/10 bg-ink-800 p-8 text-center text-sm text-bone-muted">
-          Loading tickets…
+          {t('portfolio.loading')}
         </div>
       ) : tickets.length === 0 ? (
         <div className="mt-4 rounded-2xl border border-dashed border-white/10 bg-ink-800/40 p-8 text-center text-sm text-bone-muted">
@@ -117,7 +112,7 @@ export function ParlayTickets() {
                     {formatUSD(ticket.maxPayout)}
                   </div>
                   <div className="text-[11px] text-bone-muted">
-                    {formatUSD(ticket.stake)} stake
+                    {formatUSD(ticket.stake)} {t('portfolio.ticket_stake_suffix')}
                   </div>
                 </div>
               </div>
@@ -166,14 +161,14 @@ export function ParlayTickets() {
                 })}
                 {ticket.legs.length > 4 && (
                   <li className="pl-2 text-[11px] text-bone-muted">
-                    +{ticket.legs.length - 4} more legs
+                    +{ticket.legs.length - 4} {t('portfolio.more_legs')}
                   </li>
                 )}
               </ul>
 
               <div className="mt-3 flex items-center justify-between text-[11px] text-bone-muted">
                 <span>
-                  {t('portfolio.ticket_placed')} · {relativeTime(ticket.placedAt, now, locale)}
+                  {t('portfolio.ticket_placed')} · {relativeTime(ticket.placedAt, now)}
                 </span>
                 <span className="font-mono">
                   {t('parlay.block')} #{ticket.blockNum.toLocaleString()}
@@ -186,7 +181,7 @@ export function ParlayTickets() {
                     href={ticket.sharePath}
                     className="rounded-full border border-white/10 bg-ink-900/60 px-3 py-1.5 text-[11px] font-semibold text-bone transition hover:border-volt/40 hover:text-volt"
                   >
-                    View receipt →
+                    {t('parlay.view_receipt')}
                   </Link>
                   <span className="font-mono text-[11px] text-bone-muted">
                     {ticket.id}

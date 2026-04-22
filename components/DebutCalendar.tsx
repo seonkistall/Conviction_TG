@@ -14,10 +14,10 @@ const COMPANY_TINT: Record<string, string> = {
   Other: 'bg-white/5 text-bone-muted border-white/10',
 };
 
-function fmtDate(iso: string, locale: string) {
+function fmtDate(iso: string) {
   const d = new Date(iso);
   const day = d.getUTCDate();
-  const month = d.toLocaleString(locale === 'ko' ? 'ko' : 'en-US', {
+  const month = d.toLocaleString('en-US', {
     month: 'short',
     timeZone: 'UTC',
   });
@@ -47,7 +47,7 @@ export function DebutCalendar() {
       <div className="relative -mx-6 overflow-x-auto pb-4 no-scrollbar">
         <div className="flex gap-4 px-6">
           {DEBUT_EVENTS.map((d) => {
-            const { day, month } = fmtDate(d.dropsAt, 'en');
+            const { day, month } = fmtDate(d.dropsAt);
             const n = daysUntil(d.dropsAt);
             const linked = d.marketId ? getMarket(d.marketId) : null;
             return (

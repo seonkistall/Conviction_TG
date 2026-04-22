@@ -678,9 +678,16 @@ function CalibrationCurve({
       <svg
         viewBox={`0 0 ${W} ${H}`}
         role="img"
-        aria-label="Calibration curve: predicted probability vs. actual win rate"
+        aria-labelledby="calibration-title calibration-desc"
         className="w-full"
       >
+        <title id="calibration-title">Calibration curve</title>
+        <desc id="calibration-desc">
+          Scatter of predicted probability (x-axis) versus actual win rate
+          (y-axis) across {points.length} probability buckets. The dashed
+          diagonal represents perfect calibration. Dot size is proportional to
+          the number of resolved markets in the bucket.
+        </desc>
         {/* grid */}
         {gridTicks.map((t) => (
           <g key={`gx-${t}`}>

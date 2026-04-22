@@ -1,7 +1,14 @@
 /**
- * Re-export the opengraph-image implementation for Twitter Cards.
+ * Twitter-card image for /narratives/[slug] reuses the OG renderer.
  *
- * Twitter's summary_large_image card renders the same 1200x630 frame,
- * so sharing the exact asset keeps Twitter and OpenGraph fully aligned.
+ * Next's metadata scanner requires string-literal exports for runtime/
+ * size/contentType in this file — a re-export of those fields produces
+ * a build-time warning and falls back to the default runtime.
  */
-export { default, runtime, alt, size, contentType, generateImageMetadata } from './opengraph-image';
+
+export { default, generateImageMetadata } from './opengraph-image';
+
+export const runtime = 'edge';
+export const alt = 'Conviction Narrative Index';
+export const size = { width: 1200, height: 630 };
+export const contentType = 'image/png';
