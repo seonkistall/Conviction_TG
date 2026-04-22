@@ -2,15 +2,25 @@
 
 import { useState } from 'react';
 import clsx from 'clsx';
+import { usePositions } from '@/lib/positions';
+import { useToast } from '@/lib/toast';
 
 interface Props {
   yesProb: number;
+  /** Passed by the market detail page so the toast can link back. */
+  marketId?: string;
+  marketTitle?: string;
+  /** Fallback callback if a parent wants to override the buy handler. */
   onBuy?: (side: 'YES' | 'NO', shares: number, price: number) => void;
 }
 
-export function OrderBook({ yesProb }: Props) {
+export function OrderBook({ yesProb, marketId, marketTitle, onBuy }: Props) {
   const [side, setSide] = useState<'YES' | 'NO'>('YES');
   const [shares, setShares] = useState(100);
+  const [pulse, setPulse] = useState(false);
+
+  const positions = usePositions();
+  const { push } = useToast();
 
   const price = side === 'YES' ? yesProb : 1 - yesProb;
   const cost = shares * price;
@@ -18,6 +28,28 @@ export function OrderBook({ yesProb }: Props) {
 
   const yesCents = Math.round(yesProb * 100);
   const noCents = 100 - yesCents;
+
+  // User's existing position on the selected side (if any) — used for the
+  // "You hold N shares @ ¢X" hint that nudges averaging-down/up behavior.
+  const existing = marketId ? positions.positionOn(marketId, side) : null;
+
+  function handleBuy() {
+    if (onBuy) onBuy(side, shares, price);
+    if (marketId) {
+      positions.buy({ marketId, side, shares, price });
+      push({
+        kind: 'trade',
+        title: `Bought ${side} · ${shares.toLocaleString()} shares${
+          marketTitle ? ` · ${marketTitle}` : ''
+        }`,
+        body: `Filled @ ¢${Math.round(price * 100)} · Max return $${maxReturn.toFixed(2)}`,
+        amount: `-$${cost.toFixed(2)}`,
+        cta: { href: '/portfolio', label: 'View position' },
+      });
+      setPulse(true);
+      window.setTimeout(() => setPulse(false), 400);
+    }
+  }
 
   return (
     <div className="rounded-2xl border border-white/10 bg-ink-800 p-5">
@@ -73,6 +105,7 @@ export function OrderBook({ yesProb }: Props) {
           <button
             onClick={() => setShares((x) => Math.max(1, x - 10))}
             className="text-xl text-bone-muted hover:text-bone"
+            aria-label="Decrease shares by 10"
           >
             −
           </button>
@@ -81,10 +114,12 @@ export function OrderBook({ yesProb }: Props) {
             value={shares}
             onChange={(e) => setShares(Math.max(1, +e.target.value || 1))}
             className="flex-1 bg-transparent py-3 text-center font-mono text-xl tabular-nums text-bone focus:outline-none"
+            aria-label="Number of shares"
           />
           <button
             onClick={() => setShares((x) => x + 10)}
             className="text-xl text-bone-muted hover:text-bone"
+            aria-label="Increase shares by 10"
           >
             +
           </button>
@@ -117,19 +152,33 @@ export function OrderBook({ yesProb }: Props) {
         />
       </div>
 
+      {existing && (
+        <div className="mt-3 rounded-lg border border-white/10 bg-ink-900/60 px-3 py-2 text-[11px] text-bone-muted">
+          You already hold{' '}
+          <span className="font-mono text-bone">
+            {existing.shares.toLocaleString()}
+          </span>{' '}
+          {side} shares @ ¢{Math.round(existing.avgPrice * 100)}. New buy will
+          average in.
+        </div>
+      )}
+
       <button
+        type="button"
+        onClick={handleBuy}
         className={clsx(
           'mt-5 w-full rounded-lg py-3.5 text-sm font-bold uppercase tracking-widest transition',
           side === 'YES'
             ? 'bg-yes text-ink-900 hover:bg-yes/90'
-            : 'bg-no text-ink-900 hover:bg-no/90'
+            : 'bg-no text-ink-900 hover:bg-no/90',
+          pulse && 'scale-[0.98]'
         )}
       >
         Buy {side} · ${cost.toFixed(2)}
       </button>
 
       <p className="mt-3 text-center text-[11px] text-bone-muted">
-        Connect wallet to trade · KRW/JPY/USDT on-ramps live
+        Mock fills · positions persist locally · on-chain settlement post-MVP
       </p>
     </div>
   );

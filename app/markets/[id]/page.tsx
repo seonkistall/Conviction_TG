@@ -285,7 +285,11 @@ export default function MarketDetailPage({
                 </p>
               </div>
             ) : (
-              <OrderBook yesProb={m.yesProb} />
+              <OrderBook
+                yesProb={m.yesProb}
+                marketId={m.id}
+                marketTitle={m.title}
+              />
             )}
             <AIOracleCard market={m} />
           </div>

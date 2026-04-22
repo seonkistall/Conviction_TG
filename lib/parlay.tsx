@@ -16,6 +16,8 @@ import {
   useReducer,
 } from 'react';
 import type { ParlayLeg } from './types';
+import { usePositions } from './positions';
+import { useToast } from './toast';
 
 export interface ParlayReceipt {
   txHash: string;
@@ -158,6 +160,11 @@ export function readTickets(): ParlayReceipt[] {
 
 export function ParlayProvider({ children }: { children: React.ReactNode }) {
   const [s, dispatch] = useReducer(reducer, INITIAL);
+  // Parlay settlement hooks: when a parlay is placed we optimistically
+  // materialize each leg as a ("parlay share") position and emit a toast.
+  // This is the glue between /feed's one-tap-to-parlay and /portfolio.
+  const positions = usePositions();
+  const { push: pushToast } = useToast();
 
   // hydrate from localStorage
   useEffect(() => {
@@ -239,8 +246,34 @@ export function ParlayProvider({ children }: { children: React.ReactNode }) {
         );
       } catch {}
       dispatch({ type: 'PLACED', receipt });
+
+      // Materialize each leg as a position. For binary markets the pick is
+      // 'YES' or 'NO'; for multi markets the pick is an outcome id — we
+      // represent those as a YES position on the market priced at the leg
+      // price, which is a fine MVP approximation (the real book would mint
+      // outcome-specific shares). Stake is split evenly across legs.
+      const perLegStake = s.stake / Math.max(1, s.legs.length);
+      for (const leg of s.legs) {
+        const side: 'YES' | 'NO' =
+          leg.pick === 'NO' ? 'NO' : 'YES';
+        const sharesFloat = perLegStake / Math.max(0.005, leg.price);
+        const sharesInt = Math.max(1, Math.round(sharesFloat));
+        positions.buy({
+          marketId: leg.marketId,
+          side,
+          shares: sharesInt,
+          price: leg.price,
+        });
+      }
+      pushToast({
+        kind: 'parlay',
+        title: `Parlay placed · ${s.legs.length} legs`,
+        body: `Stake $${s.stake.toFixed(2)} · Max payout $${maxPayout.toFixed(2)}`,
+        amount: `×${multiplier.toFixed(2)}`,
+        cta: { href: '/portfolio', label: 'View tickets' },
+      });
     }, 1300);
-  }, [s.placing, s.legs, s.stake, multiplier, maxPayout]);
+  }, [s.placing, s.legs, s.stake, multiplier, maxPayout, positions, pushToast]);
 
   const dismissReceipt = useCallback(
     () => dispatch({ type: 'DISMISS_RECEIPT' }),

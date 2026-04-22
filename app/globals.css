@@ -188,6 +188,15 @@ html, body {
   background: linear-gradient(180deg, rgba(5,6,10,0.1) 0%, rgba(5,6,10,0.0) 20%, rgba(5,6,10,0.65) 70%, rgba(5,6,10,0.9) 100%);
 }
 
+/* Toast slide-in-from-right. Kept short so receipts don't feel spammy. */
+@keyframes toast-in {
+  0%   { transform: translateX(18px); opacity: 0; }
+  100% { transform: translateX(0);     opacity: 1; }
+}
+.toast-in {
+  animation: toast-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
 /*
  * Global focus-visible policy.
  *

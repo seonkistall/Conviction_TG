@@ -1,20 +1,41 @@
+'use client';
+
 import Link from 'next/link';
+import { useMemo } from 'react';
 import {
-  PORTFOLIO,
   ACTIVITY,
   CURRENT_USER,
   MARKETS,
   getMarket,
 } from '@/lib/markets';
-import { formatUSD, pct } from '@/lib/format';
+import { formatUSD } from '@/lib/format';
 import { PriceChart } from '@/components/PriceChart';
 import { ParlayTickets } from '@/components/ParlayTickets';
+import { usePositions } from '@/lib/positions';
+import { useToast } from '@/lib/toast';
 
 export default function PortfolioPage() {
-  const totalPnL = PORTFOLIO.reduce((a, p) => a + p.pnl, 0);
-  const totalValue =
-    PORTFOLIO.reduce((a, p) => a + p.shares * p.currentPrice, 0) +
-    CURRENT_USER.available;
+  const { positions, closed, hydrated, close } = usePositions();
+  const { push } = useToast();
+
+  // While the positions provider is still hydrating from localStorage we
+  // deliberately render the stat row + table using an empty list (and show
+  // a subtle "syncing…" hint) — this avoids a flash of seed values for
+  // returning users who have a different set of trades in their browser.
+  const totalPnL = useMemo(
+    () => positions.reduce((a, p) => a + p.pnl, 0),
+    [positions]
+  );
+  const totalValue = useMemo(
+    () =>
+      positions.reduce((a, p) => a + p.shares * p.currentPrice, 0) +
+      CURRENT_USER.available,
+    [positions]
+  );
+  const realizedPnL = useMemo(
+    () => closed.reduce((a, f) => a + f.pnl, 0),
+    [closed]
+  );
 
   return (
     <div className="mx-auto max-w-[1440px] px-6 pt-8">
@@ -55,7 +76,9 @@ export default function PortfolioPage() {
         <BigStat
           label="Open P&L"
           value={`${totalPnL >= 0 ? '+' : ''}${formatUSD(totalPnL)}`}
-          sub={`${PORTFOLIO.length} active positions`}
+          sub={`${positions.length} active positions${
+            hydrated ? '' : ' · syncing…'
+          }`}
           accent={totalPnL >= 0 ? 'text-yes' : 'text-no'}
         />
         <BigStat
@@ -64,9 +87,10 @@ export default function PortfolioPage() {
           sub="KRW · JPY · USDT on-ramps live"
         />
         <BigStat
-          label="All-time P&L"
-          value={`+${formatUSD(CURRENT_USER.pnlAllTime)}`}
-          sub="Winrate 63% · 142 trades"
+          label="Realized P&L"
+          value={`${realizedPnL >= 0 ? '+' : ''}${formatUSD(realizedPnL)}`}
+          sub={`${closed.length} closed · session`}
+          accent={realizedPnL >= 0 ? 'text-yes' : 'text-no'}
         />
       </div>
 
@@ -97,88 +121,163 @@ export default function PortfolioPage() {
           <div className="flex items-center justify-between">
             <h3 className="font-display text-3xl text-bone">Open positions</h3>
             <div className="text-xs text-bone-muted">
-              Sorted by · P&L ↓
+              {positions.length > 0
+                ? 'Sorted by · P&L ↓'
+                : hydrated
+                ? 'No open positions yet'
+                : 'Syncing…'}
             </div>
           </div>
+
           <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-ink-800">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-ink-900 text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
-                <tr>
-                  <Th>Market</Th>
-                  <Th>Side</Th>
-                  <Th className="text-right">Shares</Th>
-                  <Th className="text-right">Avg · Now</Th>
-                  <Th className="text-right">P&L</Th>
-                  <Th className="w-10"></Th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {PORTFOLIO.map((p) => {
-                  const mk = getMarket(p.marketId) ?? MARKETS[0];
-                  const pnlPct = (p.currentPrice / p.avgPrice - 1) * 100;
+            {positions.length === 0 && hydrated ? (
+              <EmptyState />
+            ) : (
+              <table className="w-full text-left text-sm">
+                <thead className="bg-ink-900 text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
+                  <tr>
+                    <Th>Market</Th>
+                    <Th>Side</Th>
+                    <Th className="text-right">Shares</Th>
+                    <Th className="text-right">Avg · Now</Th>
+                    <Th className="text-right">P&L</Th>
+                    <Th className="w-10"></Th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {positions
+                    .slice()
+                    .sort((a, b) => b.pnl - a.pnl)
+                    .map((p) => {
+                      const mk = getMarket(p.marketId) ?? MARKETS[0];
+                      // Use the live market's yesProb as the mark price so
+                      // "now" reflects the app's current state rather than
+                      // the stale currentPrice we wrote at buy time.
+                      const mark =
+                        p.side === 'YES' ? mk.yesProb : 1 - mk.yesProb;
+                      const livePnl = p.shares * (mark - p.avgPrice);
+                      const pnlPct = (mark / p.avgPrice - 1) * 100;
+                      return (
+                        <tr
+                          key={`${p.marketId}-${p.side}`}
+                          className="hover:bg-ink-700/50"
+                        >
+                          <td className="p-4">
+                            <Link
+                              href={`/markets/${mk.slug}`}
+                              className="flex items-center gap-3"
+                            >
+                              <img
+                                src={mk.media.poster}
+                                alt=""
+                                className="h-10 w-10 rounded-md object-cover"
+                              />
+                              <div>
+                                <div className="font-medium text-bone line-clamp-1">
+                                  {mk.title}
+                                </div>
+                                <div className="text-[11px] text-bone-muted">
+                                  {mk.category}
+                                </div>
+                              </div>
+                            </Link>
+                          </td>
+                          <td className="p-4">
+                            <span
+                              className={`rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-widest ${
+                                p.side === 'YES'
+                                  ? 'bg-yes-soft text-yes'
+                                  : 'bg-no-soft text-no'
+                              }`}
+                            >
+                              {p.side}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right font-mono tabular-nums text-bone">
+                            {p.shares.toLocaleString()}
+                          </td>
+                          <td className="p-4 text-right font-mono text-sm tabular-nums text-bone-muted">
+                            ¢{Math.round(p.avgPrice * 100)} →{' '}
+                            <span className="text-bone">
+                              ¢{Math.round(mark * 100)}
+                            </span>
+                          </td>
+                          <td
+                            className={`p-4 text-right font-mono tabular-nums ${
+                              livePnl >= 0 ? 'text-yes' : 'text-no'
+                            }`}
+                          >
+                            {livePnl >= 0 ? '+' : ''}
+                            ${livePnl.toFixed(2)}
+                            <div className="text-[11px] opacity-70">
+                              {pnlPct >= 0 ? '+' : ''}
+                              {pnlPct.toFixed(1)}%
+                            </div>
+                          </td>
+                          <td className="p-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                close(p.marketId, p.side, mark);
+                                push({
+                                  kind: 'trade',
+                                  title: `Closed ${p.side} · ${p.shares.toLocaleString()} shares`,
+                                  body: `${mk.title} · Realized ${
+                                    livePnl >= 0 ? '+' : ''
+                                  }$${livePnl.toFixed(2)}`,
+                                  amount: `¢${Math.round(mark * 100)}`,
+                                });
+                              }}
+                              className="rounded-md border border-white/10 bg-ink-900 px-2.5 py-1 text-[11px] text-bone hover:bg-ink-700"
+                            >
+                              Close
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+            )}
+          </div>
+
+          {/* Closed positions (realized) — lightweight, only if non-empty */}
+          {closed.length > 0 && (
+            <div className="mt-6">
+              <h4 className="font-display text-xl text-bone">
+                Recently closed
+              </h4>
+              <ul className="mt-3 space-y-2">
+                {closed.slice(0, 5).map((f) => {
+                  const mk = getMarket(f.marketId);
                   return (
-                    <tr key={p.marketId} className="hover:bg-ink-700/50">
-                      <td className="p-4">
-                        <Link
-                          href={`/markets/${mk.slug}`}
-                          className="flex items-center gap-3"
-                        >
-                          <img
-                            src={mk.media.poster}
-                            alt=""
-                            className="h-10 w-10 rounded-md object-cover"
-                          />
-                          <div>
-                            <div className="font-medium text-bone line-clamp-1">
-                              {mk.title}
-                            </div>
-                            <div className="text-[11px] text-bone-muted">
-                              {mk.category}
-                            </div>
-                          </div>
-                        </Link>
-                      </td>
-                      <td className="p-4">
-                        <span
-                          className={`rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-widest ${
-                            p.side === 'YES'
-                              ? 'bg-yes-soft text-yes'
-                              : 'bg-no-soft text-no'
-                          }`}
-                        >
-                          {p.side}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right font-mono tabular-nums text-bone">
-                        {p.shares}
-                      </td>
-                      <td className="p-4 text-right font-mono text-sm tabular-nums text-bone-muted">
-                        ¢{Math.round(p.avgPrice * 100)} →{' '}
-                        <span className="text-bone">¢{Math.round(p.currentPrice * 100)}</span>
-                      </td>
-                      <td
-                        className={`p-4 text-right font-mono tabular-nums ${
-                          p.pnl >= 0 ? 'text-yes' : 'text-no'
+                    <li
+                      key={`${f.marketId}-${f.side}-${f.closedAt}`}
+                      className="flex items-center justify-between rounded-xl border border-white/5 bg-ink-800 p-3 text-sm"
+                    >
+                      <div className="min-w-0">
+                        <div className="line-clamp-1 text-bone">
+                          {mk?.title ?? f.marketId}
+                        </div>
+                        <div className="text-[11px] text-bone-muted">
+                          {f.side} · {f.shares.toLocaleString()} @ ¢
+                          {Math.round(f.avgPrice * 100)} → ¢
+                          {Math.round(f.closePrice * 100)}
+                        </div>
+                      </div>
+                      <div
+                        className={`font-mono tabular-nums ${
+                          f.pnl >= 0 ? 'text-yes' : 'text-no'
                         }`}
                       >
-                        {p.pnl >= 0 ? '+' : ''}
-                        ${p.pnl.toFixed(2)}
-                        <div className="text-[11px] opacity-70">
-                          {pnlPct >= 0 ? '+' : ''}
-                          {pnlPct.toFixed(1)}%
-                        </div>
-                      </td>
-                      <td className="p-4 text-right">
-                        <button className="rounded-md border border-white/10 bg-ink-900 px-2.5 py-1 text-[11px] text-bone hover:bg-ink-700">
-                          Close
-                        </button>
-                      </td>
-                    </tr>
+                        {f.pnl >= 0 ? '+' : ''}${f.pnl.toFixed(2)}
+                      </div>
+                    </li>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Activity */}
@@ -278,4 +377,26 @@ function Th({
   className?: string;
 }) {
   return <th className={`p-4 font-semibold ${className}`}>{children}</th>;
+}
+
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center gap-3 p-10 text-center">
+      <div className="text-3xl">🗂️</div>
+      <div className="font-display text-xl text-bone">
+        No positions yet
+      </div>
+      <p className="max-w-sm text-sm text-bone-muted">
+        Tap YES or NO on any market to add it to a parlay, or open a market
+        and place a direct trade. Your positions will appear here and
+        persist in this browser.
+      </p>
+      <Link
+        href="/feed"
+        className="mt-1 rounded-full bg-volt px-5 py-2 text-sm font-semibold text-ink-900 hover:bg-volt-dark"
+      >
+        Browse the feed →
+      </Link>
+    </div>
+  );
 }

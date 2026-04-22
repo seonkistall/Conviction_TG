@@ -16,6 +16,9 @@ import { Footer } from '@/components/Footer';
 import { I18nProvider } from '@/lib/i18n';
 import { MuteProvider } from '@/lib/mute';
 import { ParlayProvider } from '@/lib/parlay';
+import { PositionsProvider } from '@/lib/positions';
+import { ToastProvider } from '@/lib/toast';
+import { Toaster } from '@/components/Toaster';
 import { ParlaySlip } from '@/components/ParlaySlip';
 import { GlobalMuteFAB } from '@/components/GlobalMuteFAB';
 import { MobileNav } from '@/components/MobileNav';
@@ -179,21 +182,26 @@ export default function RootLayout({
         </a>
         <I18nProvider>
           <MuteProvider>
-            <ParlayProvider>
-              <Header />
-              <main
-                id="main-content"
-                tabIndex={-1}
-                className="pt-16 pb-24 md:pb-0"
-              >
-                {children}
-              </main>
-              <Footer />
-              <ParlaySlip />
-              <GlobalMuteFAB />
-              <MobileNav />
-              <OnboardingIntro />
-            </ParlayProvider>
+            <ToastProvider>
+              <PositionsProvider>
+                <ParlayProvider>
+                  <Header />
+                  <main
+                    id="main-content"
+                    tabIndex={-1}
+                    className="pt-16 pb-24 md:pb-0"
+                  >
+                    {children}
+                  </main>
+                  <Footer />
+                  <ParlaySlip />
+                  <GlobalMuteFAB />
+                  <MobileNav />
+                  <OnboardingIntro />
+                  <Toaster />
+                </ParlayProvider>
+              </PositionsProvider>
+            </ToastProvider>
           </MuteProvider>
         </I18nProvider>
         <Analytics />
