@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import type { MediaSource } from '@/lib/types';
 import { useMute } from '@/lib/mute';
 
@@ -9,25 +9,41 @@ interface Props {
   className?: string;
   /** autoplay only when visible in viewport (default true) */
   lazy?: boolean;
-  /** play on hover only, pause when leaving */
+  /** play on hover only, pause when leaving (mp4 only) */
   hoverOnly?: boolean;
   /** rounded cover fit */
   fit?: 'cover' | 'contain';
+  /** displayed on the gradient placeholder if all posters 404 */
+  title?: string;
 }
 
 /**
- * <AutoVideo /> — the heart of a worm.wtf-style card.
+ * Poster loading state machine:
+ *   'max'       → try media.poster (usually maxresdefault.jpg)
+ *   'hq'        → fallback to hqdefault.jpg (guaranteed to exist for any YT video)
+ *   'fallback'  → both 404'd → draw a brand gradient + optional title
+ */
+type PosterState = 'max' | 'hq' | 'fallback';
+
+/**
+ * <AutoVideo /> — a worm.wtf-style autoplay media card.
  *
- * For `mp4`: uses a native <video> tag with autoplay/muted/loop, and
- * only starts loading when in the viewport (or on hover).
+ * Key behaviors
+ * -------------
+ * 1. **Single-audio policy** — every instance registers with the global
+ *    <MuteProvider>, reports its IntersectionObserver ratio, and the
+ *    provider picks ONE player as the current audio owner. Only the owner
+ *    unmutes when the user toggles the global mute FAB. Everyone else
+ *    stays silent. This prevents the 3-K-pop-MV-cacophony effect on the
+ *    home page.
  *
- * For `youtube`: injects the IFrame Player API with `enablejsapi=1`
- * so we can postMessage mute/unMute commands when the global FAB toggles.
+ * 2. **Viewport-lazy mount** — the underlying <video>/<iframe> isn't
+ *    created until the card enters the viewport (+200px rootMargin).
+ *    Until then we paint only the poster <img>.
  *
- * Both subscribe to the global useMute() context — toggling the FAB
- * propagates to every mounted player, including ones lazily mounted later.
- *
- * Both fall back to the provided poster image until the player is ready.
+ * 3. **Poster fallback chain** — maxresdefault.jpg → hqdefault.jpg →
+ *    gradient+title. YouTube only guarantees hqdefault for every video
+ *    and some niche uploads only have hq; maxres is a 404 for them.
  */
 export function AutoVideo({
   media,
@@ -35,87 +51,133 @@ export function AutoVideo({
   lazy = true,
   hoverOnly = false,
   fit = 'cover',
+  title,
 }: Props) {
-  const ref = useRef<HTMLDivElement>(null);
+  const rawId = useId();
+  const playerId = `pl-${rawId}`;
+  const containerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [active, setActive] = useState(!lazy);
   const [playing, setPlaying] = useState(false);
-  const { muted } = useMute();
+  const [posterState, setPosterState] = useState<PosterState>('max');
+
+  const {
+    muted,
+    audioOwnerId,
+    registerPlayer,
+    unregisterPlayer,
+    reportVisibility,
+  } = useMute();
+
+  /** This player produces audio iff the user globally unmuted AND we own audio. */
+  const effectiveAudio = !muted && audioOwnerId === playerId;
+
   const fitClass = fit === 'cover' ? 'object-cover' : 'object-contain';
 
-  // Viewport activation
+  // Register lifecycle with the mute coordinator.
   useEffect(() => {
-    if (!lazy || active) return;
-    const el = ref.current;
+    registerPlayer(playerId);
+    return () => unregisterPlayer(playerId);
+  }, [playerId, registerPlayer, unregisterPlayer]);
+
+  // IntersectionObserver — activates lazy mount AND reports visibility ratio.
+  useEffect(() => {
+    const el = containerRef.current;
     if (!el) return;
+
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
-          if (e.isIntersecting) {
-            setActive(true);
-            io.disconnect();
-          }
+          if (lazy && e.isIntersecting && !active) setActive(true);
+          reportVisibility(playerId, e.intersectionRatio);
         });
       },
-      { rootMargin: '200px 0px', threshold: 0.1 }
+      {
+        // Multi-threshold so we get smooth ratio updates as cards scroll past.
+        threshold: [0, 0.25, 0.4, 0.5, 0.6, 0.75, 0.9, 1.0],
+        rootMargin: '0px',
+      }
     );
     io.observe(el);
-    return () => io.disconnect();
-  }, [lazy, active]);
 
-  // Apply mute state to mp4 <video> element whenever it changes or video re-mounts.
-  // After unmuting, attempt to resume play() — Chrome sometimes pauses on unmute
-  // if the original autoplay was conditional on muted=true.
+    return () => {
+      io.disconnect();
+      // Drop our ratio to 0 so we don't keep audio ownership after unmount.
+      reportVisibility(playerId, 0);
+    };
+  }, [playerId, lazy, active, reportVisibility]);
+
+  // Apply single-audio policy to the mp4 <video> element.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    v.muted = muted;
-    if (!muted && !hoverOnly) {
-      v.play().catch(() => {
-        // Autoplay-with-sound was blocked. The user gesture from the FAB click
-        // counts as activation, but if the video was previously paused for any
-        // reason the browser may still refuse. No-op fallback.
-      });
+    v.muted = !effectiveAudio;
+    if (effectiveAudio && !hoverOnly) {
+      // Chrome sometimes pauses when the muted flag flips; resume gracefully.
+      v.play().catch(() => {});
     }
-  }, [muted, active, hoverOnly]);
+  }, [effectiveAudio, active, hoverOnly]);
 
-  // mp4 hover handling
   const onEnter = () => {
-    if (hoverOnly && videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    }
+    if (hoverOnly && videoRef.current) videoRef.current.play().catch(() => {});
   };
   const onLeave = () => {
-    if (hoverOnly && videoRef.current) {
-      videoRef.current.pause();
-    }
+    if (hoverOnly && videoRef.current) videoRef.current.pause();
   };
+
+  // Compute poster URL based on fallback state.
+  const posterSrc =
+    posterState === 'max'
+      ? media.poster
+      : posterState === 'hq'
+      ? media.poster.replace(/\/maxresdefault\.(jpg|png|webp)$/i, '/hqdefault.$1')
+      : null;
 
   return (
     <div
-      ref={ref}
+      ref={containerRef}
       className={`relative overflow-hidden bg-ink-700 ${className}`}
       onMouseEnter={onEnter}
       onMouseLeave={onLeave}
+      data-player-id={playerId}
     >
-      {/* Poster (always rendered underneath for instant paint) */}
-      <img
-        src={media.poster}
-        alt=""
-        className={`absolute inset-0 h-full w-full ${fitClass} transition-opacity duration-500 ${
-          playing ? 'opacity-0' : 'opacity-100'
-        }`}
-        loading="lazy"
-      />
+      {/* Tier-3 fallback: brand gradient + optional title. Always rendered
+          behind the <img> so it's instantly visible if the <img> fails. */}
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-gradient-to-br from-ink-800 via-ink-700 to-ink-900"
+      >
+        <div className="absolute inset-0 narrative-grad opacity-70" />
+        {title && posterState === 'fallback' && (
+          <div className="absolute inset-0 flex items-center justify-center px-6 text-center font-display text-2xl leading-tight text-bone">
+            {title}
+          </div>
+        )}
+      </div>
+
+      {/* Tier-1/2 poster with error-chained fallback. */}
+      {posterSrc && (
+        <img
+          src={posterSrc}
+          alt=""
+          className={`absolute inset-0 h-full w-full ${fitClass} transition-opacity duration-500 ${
+            playing ? 'opacity-0' : 'opacity-100'
+          }`}
+          loading="lazy"
+          onError={() =>
+            setPosterState((s) => (s === 'max' ? 'hq' : 'fallback'))
+          }
+        />
+      )}
 
       {active && media.kind === 'mp4' && (
         <video
           ref={videoRef}
           className={`absolute inset-0 h-full w-full ${fitClass}`}
           src={media.src}
-          poster={media.poster}
+          poster={posterSrc ?? undefined}
           autoPlay={!hoverOnly}
-          muted={muted}
+          muted={!effectiveAudio}
           loop
           playsInline
           preload="metadata"
@@ -128,9 +190,11 @@ export function AutoVideo({
         <YouTubeEmbed
           videoId={media.src}
           start={media.start}
-          muted={muted}
+          audio={effectiveAudio}
           onPlay={() => setPlaying(true)}
-          className={`absolute inset-0 h-full w-full ${fit === 'cover' ? 'scale-[1.35]' : ''}`}
+          className={`absolute inset-0 h-full w-full ${
+            fit === 'cover' ? 'scale-[1.35]' : ''
+          }`}
         />
       )}
     </div>
@@ -140,13 +204,14 @@ export function AutoVideo({
 function YouTubeEmbed({
   videoId,
   start = 0,
-  muted,
+  audio,
   onPlay,
   className = '',
 }: {
   videoId: string;
   start?: number;
-  muted: boolean;
+  /** True iff this player currently owns audio. */
+  audio: boolean;
   onPlay?: () => void;
   className?: string;
 }) {
@@ -158,7 +223,7 @@ function YouTubeEmbed({
     return () => clearTimeout(t);
   }, []);
 
-  // Send mute/unMute commands via postMessage whenever global mute changes.
+  // Send mute/unMute via postMessage whenever audio ownership changes.
   // Requires enablejsapi=1 in the iframe URL.
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -171,17 +236,18 @@ function YouTubeEmbed({
         );
       } catch {}
     };
-    if (muted) {
-      post('mute');
-    } else {
+    if (audio) {
       post('unMute');
       post('setVolume', [100]);
       post('playVideo');
+    } else {
+      post('mute');
     }
-  }, [muted, mounted]);
+  }, [audio, mounted]);
 
-  // Iframe URL — start muted so autoplay is allowed; we unmute via postMessage
-  // after the user gesture. enablejsapi=1 is REQUIRED for postMessage commands.
+  // Always start muted so autoplay works on load; we'll unmute via postMessage
+  // once we become the audio owner (the mute FAB click is a user gesture that
+  // activates the page, so subsequent unMute is allowed).
   const params = new URLSearchParams({
     autoplay: '1',
     mute: '1',
