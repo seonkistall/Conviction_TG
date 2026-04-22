@@ -9,15 +9,39 @@ import { ParlaySlip } from '@/components/ParlaySlip';
 import { GlobalMuteFAB } from '@/components/GlobalMuteFAB';
 import { MobileNav } from '@/components/MobileNav';
 import { OnboardingIntro } from '@/components/OnboardingIntro';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+
+const SITE_URL = 'https://conviction-fe.vercel.app';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'Conviction — Asia Native Prediction Markets',
   description:
     'The first Asia-native, AI-powered prediction market. Bet on culture, sports, K-pop, esports, and every APAC narrative before it trends. Vertical-first feed, agentic traders, evidence-graded oracle.',
   openGraph: {
     title: 'Conviction — Asia Native Prediction Markets',
-    description: 'Trade conviction on the moments that matter.',
+    description:
+      'Trade conviction on the moments that move APAC. Priced by AI, graded by a 23-source evidence swarm.',
+    url: SITE_URL,
+    siteName: 'Conviction',
     type: 'website',
+    locale: 'en_US',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Conviction — Asia-native prediction markets, priced by AI',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Conviction — Asia Native Prediction Markets',
+    description:
+      'Trade conviction on the moments that move APAC. Priced by AI, graded by a 23-source evidence swarm.',
+    images: ['/og-image.png'],
   },
 };
 
@@ -50,6 +74,8 @@ export default function RootLayout({
             </ParlayProvider>
           </MuteProvider>
         </I18nProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

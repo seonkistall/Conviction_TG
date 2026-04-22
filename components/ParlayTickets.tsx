@@ -7,10 +7,21 @@ import type { ParlayReceipt } from '@/lib/parlay';
 import { readTickets } from '@/lib/parlay';
 import { getMarket } from '@/lib/markets';
 import { formatUSD } from '@/lib/format';
-import { useT } from '@/lib/i18n';
+import { useT, useI18n } from '@/lib/i18n';
 
-function relativeTime(ts: number, now: number): string {
+function relativeTime(ts: number, now: number, locale: 'en' | 'ko'): string {
   const s = Math.max(0, Math.floor((now - ts) / 1000));
+  if (locale === 'ko') {
+    if (s < 30) return '방금';
+    if (s < 60) return `${s}초 전`;
+    const m = Math.floor(s / 60);
+    if (m < 60) return `${m}분 전`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}시간 전`;
+    const d = Math.floor(h / 24);
+    return `${d}일 전`;
+  }
+  if (s < 30) return 'just now';
   if (s < 60) return `${s}s ago`;
   const m = Math.floor(s / 60);
   if (m < 60) return `${m}m ago`;
@@ -22,6 +33,7 @@ function relativeTime(ts: number, now: number): string {
 
 export function ParlayTickets() {
   const t = useT();
+  const { locale } = useI18n();
   const [tickets, setTickets] = useState<ParlayReceipt[]>([]);
   const [mounted, setMounted] = useState(false);
   const [now, setNow] = useState(() => Date.now());
@@ -161,7 +173,7 @@ export function ParlayTickets() {
 
               <div className="mt-3 flex items-center justify-between text-[11px] text-bone-muted">
                 <span>
-                  {t('portfolio.ticket_placed')} · {relativeTime(ticket.placedAt, now)}
+                  {t('portfolio.ticket_placed')} · {relativeTime(ticket.placedAt, now, locale)}
                 </span>
                 <span className="font-mono">
                   {t('parlay.block')} #{ticket.blockNum.toLocaleString()}

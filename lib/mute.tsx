@@ -38,12 +38,24 @@ export function MuteProvider({ children }: { children: React.ReactNode }) {
     try {
       sessionStorage.setItem('cv_mute', muted ? '1' : '0');
     } catch {}
-    // Apply to all <video> elements currently mounted
-    if (typeof document !== 'undefined') {
-      document.querySelectorAll('video').forEach((v) => {
-        v.muted = muted;
+    if (typeof document === 'undefined') return;
+    // Apply to all <video> elements currently mounted (safety net — AutoVideo
+    // also subscribes via context, but this catches any stragglers).
+    document.querySelectorAll('video').forEach((v) => {
+      v.muted = muted;
+    });
+    // Also broadcast to YouTube iframes via postMessage (requires
+    // enablejsapi=1 in the iframe URL — which AutoVideo always sets).
+    document
+      .querySelectorAll<HTMLIFrameElement>('iframe[src*="youtube"]')
+      .forEach((frame) => {
+        try {
+          const cmd = muted
+            ? { event: 'command', func: 'mute', args: [] }
+            : { event: 'command', func: 'unMute', args: [] };
+          frame.contentWindow?.postMessage(JSON.stringify(cmd), '*');
+        } catch {}
       });
-    }
   }, [muted]);
 
   const toggle = useCallback(() => setMuted((m) => !m), []);
