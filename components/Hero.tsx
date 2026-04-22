@@ -77,16 +77,21 @@ export function Hero({ markets }: { markets: Market[] }) {
             graded by a 23-source AI evidence swarm.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          {/*
+           * On phones the two CTAs stack full-width so each gets a comfortable
+           * tap target without awkward wrapping. From sm (≥640px) we inline
+           * them with auto width, matching the editorial desktop layout.
+           */}
+          <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <Link
               href={`/markets/${m.slug}`}
-              className="rounded-full bg-volt px-5 py-2.5 text-sm font-semibold text-ink-900 transition hover:bg-volt-dark sm:px-6 sm:py-3"
+              className="block rounded-full bg-volt px-5 py-3 text-center text-sm font-semibold text-ink-900 transition hover:bg-volt-dark sm:inline-block sm:w-auto sm:px-6"
             >
               Explore markets →
             </Link>
             <a
               href="#how"
-              className="rounded-full border border-white/10 bg-ink-800 px-5 py-2.5 text-sm font-semibold text-bone hover:bg-ink-700 sm:px-6 sm:py-3"
+              className="block rounded-full border border-white/10 bg-ink-800 px-5 py-3 text-center text-sm font-semibold text-bone hover:bg-ink-700 sm:inline-block sm:w-auto sm:px-6"
             >
               How it resolves
             </a>
@@ -120,15 +125,27 @@ export function Hero({ markets }: { markets: Market[] }) {
                   ✨ Featured
                 </span>
               </div>
-              <div className="flex gap-1">
+              {/*
+               * Pagination dots: the visible indicator stays slim (1px tall)
+               * for the editorial look, but the clickable hit area is padded
+               * out to 32x32 via an invisible wrapper button so it meets
+               * mobile tap-target guidance (WCAG 2.5.5 min 24x24, we exceed).
+               */}
+              <div className="flex gap-0">
                 {featured.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setI(idx)}
-                    className={`h-1 rounded-full transition-all ${
-                      idx === i ? 'w-6 bg-volt' : 'w-2 bg-white/30'
-                    }`}
-                  />
+                    aria-label={`Show featured market ${idx + 1} of ${featured.length}`}
+                    aria-current={idx === i ? 'true' : undefined}
+                    className="group flex h-8 w-8 items-center justify-center"
+                  >
+                    <span
+                      className={`h-1 rounded-full transition-all ${
+                        idx === i ? 'w-6 bg-volt' : 'w-2 bg-white/30 group-hover:bg-white/60'
+                      }`}
+                    />
+                  </button>
                 ))}
               </div>
             </div>
