@@ -198,6 +198,38 @@ html, body {
 }
 
 /*
+ * Price flicker — used by usePriceFlicker() to flash a span green / red
+ * for ~600ms when its value moves. The .flicker-up / .flicker-down classes
+ * are added briefly and then removed, letting the natural color return.
+ */
+@keyframes flicker-up {
+  0%   { background-color: rgba(34, 197, 94, 0.35); }
+  100% { background-color: transparent; }
+}
+@keyframes flicker-down {
+  0%   { background-color: rgba(239, 68, 68, 0.35); }
+  100% { background-color: transparent; }
+}
+.flicker-up   { animation: flicker-up 0.6s ease-out; border-radius: 4px; padding: 0 2px; margin: 0 -2px; }
+.flicker-down { animation: flicker-down 0.6s ease-out; border-radius: 4px; padding: 0 2px; margin: 0 -2px; }
+
+/*
+ * LiveTicker — horizontally scrolling tape of recent trades / price moves
+ * shown above the homepage feed. Loops infinitely via translateX.
+ */
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-track {
+  display: flex;
+  gap: 2.5rem;
+  width: max-content;
+  animation: ticker-scroll 60s linear infinite;
+}
+.ticker-track:hover { animation-play-state: paused; }
+
+/*
  * Global focus-visible policy.
  *
  * We strip the UA outline for mouse clicks (via :focus-visible, which only
