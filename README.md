@@ -1,9 +1,9 @@
 # Conviction — Frontend (v2)
 
-The first **Asia-native, AI-powered prediction market**. The frontend takes
-worm.wtf's "living card" aesthetic — every market auto-plays immersive video
-of the actual narrative (K-pop MV, LCK highlight, KBO swing, crypto B-roll)
-— and layers on the things Worm doesn't have:
+The first **Asia-native, AI-powered prediction market**. Every market is
+a "living card": immersive video of the actual narrative auto-plays in-line
+(K-pop MV, LCK highlight, KBO swing, crypto B-roll), and Conviction layers
+on the things a prediction market for Asia actually needs:
 
 - a **TikTok-style vertical feed** tuned for mobile-first APAC traffic,
 - **multi-outcome markets + parlays** so you can stack cultural theses,
@@ -47,7 +47,7 @@ npm run dev
 | `/portfolio`       | Holdings, PnL, activity feed                                              |
 | `/leaderboard`     | Top traders — human + agentic                                             |
 
-## v2 highlights (differentiators vs. Worm / Polymarket)
+## v2 highlights (what Conviction ships)
 
 ### Vertical Feed (`/feed`)
 Full-bleed `100dvh` cards with CSS scroll-snap (`snap-feed` utility). Each

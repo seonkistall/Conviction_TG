@@ -32,7 +32,7 @@ interface Props {
 type PosterState = 'max' | 'hq' | 'fallback';
 
 /**
- * <AutoVideo /> — a worm.wtf-style autoplay media card.
+ * <AutoVideo /> — Conviction's autoplay "living card" media component.
  *
  * Key behaviors
  * -------------
