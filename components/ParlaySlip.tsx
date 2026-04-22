@@ -360,11 +360,11 @@ export function ParlaySlip() {
             {t('parlay.place_another')}
           </button>
           <Link
-            href="/portfolio"
+            href={receipt.sharePath}
             onClick={dismissReceipt}
             className="flex flex-1 items-center justify-center rounded-full bg-gradient-to-r from-volt to-volt-dark px-4 py-3 text-sm font-bold text-ink-900 hover:brightness-105"
           >
-            {t('parlay.view_portfolio')}
+            {t('parlay.view_receipt')}
           </Link>
         </div>
       </div>

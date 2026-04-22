@@ -67,6 +67,7 @@ const EN: Dict = {
   'parlay.tx': 'Tx',
   'parlay.block': 'Block',
   'parlay.view_portfolio': 'View in portfolio →',
+  'parlay.view_receipt': 'View receipt →',
   'parlay.place_another': 'Build another',
 
   'portfolio.tickets': 'Parlay tickets',
@@ -240,6 +241,7 @@ const KO: Dict = {
   'parlay.tx': '트랜잭션',
   'parlay.block': '블록',
   'parlay.view_portfolio': '포트폴리오에서 보기 →',
+  'parlay.view_receipt': '영수증 보기 →',
   'parlay.place_another': '또 만들기',
 
   'portfolio.tickets': '파레이 티켓',

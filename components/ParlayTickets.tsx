@@ -179,6 +179,20 @@ export function ParlayTickets() {
                   {t('parlay.block')} #{ticket.blockNum.toLocaleString()}
                 </span>
               </div>
+
+              {ticket.sharePath && (
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <Link
+                    href={ticket.sharePath}
+                    className="rounded-full border border-white/10 bg-ink-900/60 px-3 py-1.5 text-[11px] font-semibold text-bone transition hover:border-volt/40 hover:text-volt"
+                  >
+                    View receipt →
+                  </Link>
+                  <span className="font-mono text-[11px] text-bone-muted">
+                    {ticket.id}
+                  </span>
+                </div>
+              )}
             </li>
           ))}
         </ul>

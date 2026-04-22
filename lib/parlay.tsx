@@ -18,8 +18,14 @@ import {
 import type { ParlayLeg } from './types';
 import { usePositions } from './positions';
 import { useToast } from './toast';
+import {
+  encodeSharedParlay,
+  ticketIdFromTxHash,
+} from './parlayShare';
 
 export interface ParlayReceipt {
+  /** Short, URL-friendly ticket id, e.g. "cv-a7b3c9d1". */
+  id: string;
   txHash: string;
   blockNum: number;
   placedAt: number;
@@ -28,6 +34,8 @@ export interface ParlayReceipt {
   multiplier: number;
   maxPayout: number;
   status: 'OPEN' | 'WON' | 'LOST';
+  /** Relative path to the shareable receipt, including base64url payload. */
+  sharePath: string;
 }
 
 interface ParlayState {
@@ -152,7 +160,20 @@ export function readTickets(): ParlayReceipt[] {
   try {
     const raw = localStorage.getItem(TICKETS_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as ParlayReceipt[];
+    const parsed = JSON.parse(raw) as ParlayReceipt[];
+    // Backfill id/sharePath on tickets written by earlier versions that
+    // didn't set them. Keeps old tickets shareable without a migration.
+    return parsed.map((t) => {
+      if (t.id && t.sharePath) return t;
+      const id = t.id ?? ticketIdFromTxHash(t.txHash);
+      const query = encodeSharedParlay({
+        id,
+        legs: t.legs,
+        stake: t.stake,
+        placedAt: t.placedAt,
+      });
+      return { ...t, id, sharePath: `/parlays/${id}?d=${query}` };
+    });
   } catch {
     return [];
   }
@@ -227,15 +248,26 @@ export function ParlayProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'PLACING' });
     // Simulate on-chain confirmation
     window.setTimeout(() => {
+      const txHash = '0x' + randHex(40);
+      const id = ticketIdFromTxHash(txHash);
+      const placedAt = Date.now();
+      const shareQuery = encodeSharedParlay({
+        id,
+        legs: s.legs,
+        stake: s.stake,
+        placedAt,
+      });
       const receipt: ParlayReceipt = {
-        txHash: '0x' + randHex(40),
+        id,
+        txHash,
         blockNum: 18_920_000 + Math.floor(Math.random() * 80_000),
-        placedAt: Date.now(),
+        placedAt,
         legs: s.legs,
         stake: s.stake,
         multiplier,
         maxPayout,
         status: 'OPEN',
+        sharePath: `/parlays/${id}?d=${shareQuery}`,
       };
       // Persist to tickets ledger
       try {
@@ -270,7 +302,7 @@ export function ParlayProvider({ children }: { children: React.ReactNode }) {
         title: `Parlay placed · ${s.legs.length} legs`,
         body: `Stake $${s.stake.toFixed(2)} · Max payout $${maxPayout.toFixed(2)}`,
         amount: `×${multiplier.toFixed(2)}`,
-        cta: { href: '/portfolio', label: 'View tickets' },
+        cta: { href: receipt.sharePath, label: 'View receipt' },
       });
     }, 1300);
   }, [s.placing, s.legs, s.stake, multiplier, maxPayout, positions, pushToast]);
