@@ -30,7 +30,11 @@ const CLIP = { x: 0, y: 0, width: 0, height: 0 }; // width filled per-test below
 
 test.describe('visual · landing surfaces', () => {
   test('landing page hero + ticker baseline', async ({ page, viewport }) => {
-    await page.goto('/');
+    // v2.11: mobile UAs hitting `/` are now 307-redirected to `/feed` by
+    // middleware. This test baselines the marketing landing itself, so we
+    // use the `?desktop=1` escape hatch to force the landing render on
+    // mobile projects. See middleware.ts for the carve-out.
+    await page.goto('/?desktop=1');
     await page.waitForLoadState('networkidle');
     // Let the font-swap and shimmer settle one more frame.
     await page.waitForTimeout(400);
