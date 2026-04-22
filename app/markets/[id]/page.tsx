@@ -63,43 +63,71 @@ export default function MarketDetailPage({
 
   const seed = m.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
 
-  // JSON-LD: expose the market as an Event with offers keyed to the YES side.
-  // Schema.org/Event is the closest native match for "question that resolves
-  // at time T"; we use additionalType to hint it's a prediction-market question.
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Event',
-    additionalType: 'https://schema.org/FinancialProduct',
-    name: m.title,
-    description: m.description,
-    url: `${SITE_URL}/markets/${m.slug}`,
-    image: m.media.poster,
-    startDate: new Date().toISOString(),
-    endDate: m.endsAt,
-    eventStatus:
-      m.status === 'resolved'
-        ? 'https://schema.org/EventCompleted'
-        : 'https://schema.org/EventScheduled',
-    eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
-    location: {
-      '@type': 'VirtualLocation',
-      url: SITE_URL,
-    },
-    organizer: {
-      '@type': 'Organization',
-      name: 'Conviction',
-      url: SITE_URL,
-    },
-    offers: {
-      '@type': 'Offer',
-      name: `YES · ${m.title}`,
-      priceCurrency: 'USD',
-      price: m.yesProb.toFixed(4),
-      availability: 'https://schema.org/InStock',
+  // JSON-LD: two-graph payload.
+  //   1. Event: expose the market as a scheduled question with a YES-side
+  //      Offer. Schema.org/Event is the closest native match for "question
+  //      that resolves at time T"; additionalType hints at FinancialProduct.
+  //   2. FAQPage: surface the resolution criteria as a Q&A entry so Google's
+  //      rich results carousel can show "How does this resolve?" directly
+  //      under our search result. Big SEO/trust win for a prediction market.
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Event',
+      additionalType: 'https://schema.org/FinancialProduct',
+      name: m.title,
+      description: m.description,
       url: `${SITE_URL}/markets/${m.slug}`,
+      image: m.media.poster,
+      startDate: new Date().toISOString(),
+      endDate: m.endsAt,
+      eventStatus:
+        m.status === 'resolved'
+          ? 'https://schema.org/EventCompleted'
+          : 'https://schema.org/EventScheduled',
+      eventAttendanceMode: 'https://schema.org/OnlineEventAttendanceMode',
+      location: {
+        '@type': 'VirtualLocation',
+        url: SITE_URL,
+      },
+      organizer: {
+        '@type': 'Organization',
+        name: 'Conviction',
+        url: SITE_URL,
+      },
+      offers: {
+        '@type': 'Offer',
+        name: `YES · ${m.title}`,
+        priceCurrency: 'USD',
+        price: m.yesProb.toFixed(4),
+        availability: 'https://schema.org/InStock',
+        url: `${SITE_URL}/markets/${m.slug}`,
+      },
+      keywords: m.tags.join(', '),
     },
-    keywords: m.tags.join(', '),
-  };
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: `How does "${m.title}" resolve?`,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: `${m.description} Trading closes at ${new Date(m.endsAt).toISOString()} and the market settles at ${new Date(m.resolvesAt).toISOString()} via Conviction's AI Oracle.`,
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What does the YES price mean?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: `The YES side is currently trading at ${pct(m.yesProb)}, which the market is pricing as the probability the event resolves YES. 1 YES share pays $1 if the event occurs.`,
+          },
+        },
+      ],
+    },
+  ];
 
   return (
     <div className="mx-auto max-w-[1440px] px-6 pt-8">

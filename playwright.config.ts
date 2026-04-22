@@ -29,9 +29,10 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-      // Desktop project skips the mobile-fit spec — mobile viewports are
-      // handled by the phone-device projects below.
-      testIgnore: /mobile\.spec\.ts/,
+      // Desktop project skips the mobile-fit + visual-regression specs —
+      // those run exclusively on the phone-device projects below since their
+      // baselines are viewport-specific.
+      testIgnore: /(mobile|visual)\.spec\.ts/,
     },
     /*
      * v2.6.2 — explicit mobile viewports. We emulate three common APAC-market
@@ -47,17 +48,17 @@ export default defineConfig({
     {
       name: 'mobile-iphone-se',
       use: { ...devices['iPhone SE'], browserName: 'chromium' }, // 375 × 667
-      testMatch: /mobile\.spec\.ts/,
+      testMatch: /(mobile|visual)\.spec\.ts/,
     },
     {
       name: 'mobile-iphone-14',
       use: { ...devices['iPhone 14'], browserName: 'chromium' }, // 390 × 844
-      testMatch: /mobile\.spec\.ts/,
+      testMatch: /(mobile|visual)\.spec\.ts/,
     },
     {
       name: 'mobile-pixel-5',
       use: { ...devices['Pixel 5'], browserName: 'chromium' }, // 393 × 851
-      testMatch: /mobile\.spec\.ts/,
+      testMatch: /(mobile|visual)\.spec\.ts/,
     },
   ],
   webServer: isProduction

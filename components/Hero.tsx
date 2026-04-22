@@ -151,7 +151,10 @@ export function Hero({ markets }: { markets: Market[] }) {
             </div>
 
             <div className="absolute inset-x-0 bottom-0 p-5">
-              <div className="text-[11px] font-medium uppercase tracking-widest text-bone-muted">
+              <div
+                className="text-[11px] font-medium uppercase tracking-widest text-bone-muted"
+                data-hero-countdown
+              >
                 {/*
                  * `endsLabel` is null on the server and first client render
                  * (same markup → no hydration warning), then populated from

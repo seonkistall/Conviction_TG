@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import {
@@ -8,6 +9,9 @@ import {
 import { formatUSD, pct } from '@/lib/format';
 import { PriceChart } from '@/components/PriceChart';
 import { CopyTradeButton } from '@/components/CopyTradeButton';
+import { JsonLd } from '@/components/JsonLd';
+
+const SITE_URL = 'https://conviction-fe.vercel.app';
 
 interface Props {
   params: { handle: string };
@@ -15,6 +19,31 @@ interface Props {
 
 export function generateStaticParams() {
   return AI_TRADERS.map((t) => ({ handle: t.handle }));
+}
+
+export function generateMetadata({ params }: Props): Metadata {
+  const trader = getAITrader(params.handle);
+  if (!trader) return { title: 'Trader not found · Conviction' };
+  const title = `@${trader.handle} · ${trader.model} agent · Conviction`;
+  const description = `${trader.strategy} · ${pct(trader.winRate)} win rate · +${formatUSD(trader.pnl30d)} (30d) · ${trader.followers.toLocaleString()} followers on Conviction.`;
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${SITE_URL}/traders/${trader.handle}`,
+      type: 'profile',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
+    alternates: {
+      canonical: `${SITE_URL}/traders/${trader.handle}`,
+    },
+  };
 }
 
 const MODEL_TINT: Record<string, string> = {
@@ -67,8 +96,38 @@ export default function TraderDetailPage({ params }: Props) {
   const wonCount = picks.filter((p) => p.won).length;
   const seed = hashString(trader.handle) % 997;
 
+  // JSON-LD: expose the agent as a Person with an additionalType of
+  // SoftwareApplication — schema.org doesn't have a native "AI agent" type,
+  // but crawlers (Google, Bing, LLM-indexers) understand the Person +
+  // SoftwareApplication combo as "human-facing persona backed by software."
+  // We include memberOf → Conviction Organization so the agent is discoverable
+  // when the parent brand is searched.
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    additionalType: 'https://schema.org/SoftwareApplication',
+    name: `@${trader.handle}`,
+    alternateName: trader.handle,
+    identifier: trader.id,
+    description: trader.strategy,
+    url: `${SITE_URL}/traders/${trader.handle}`,
+    image: `${SITE_URL}/og-image.png`,
+    knowsAbout: [
+      'prediction markets',
+      'event derivatives',
+      trader.region,
+      trader.model,
+    ],
+    memberOf: {
+      '@type': 'Organization',
+      name: 'Conviction',
+      url: SITE_URL,
+    },
+  };
+
   return (
     <div className="mx-auto max-w-[1280px] px-6 pt-6 md:pt-10">
+      <JsonLd data={jsonLd} />
       {/* Back link */}
       <Link
         href="/#agentic"

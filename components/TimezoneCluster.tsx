@@ -47,7 +47,10 @@ export function TimezoneCluster() {
   const placeholder = !now;
 
   return (
-    <div className="hidden items-center gap-2.5 rounded-md border border-white/10 bg-ink-800 px-3 py-1.5 xl:flex">
+    <div
+      className="hidden items-center gap-2.5 rounded-md border border-white/10 bg-ink-800 px-3 py-1.5 xl:flex"
+      data-clock-cluster
+    >
       {ZONES.map((z) => (
         <div
           key={z.tz}

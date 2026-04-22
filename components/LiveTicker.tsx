@@ -61,6 +61,7 @@ export function LiveTicker({ markets, limit = 16 }: Props) {
       className="overflow-hidden border-y border-white/5 bg-ink-900/60 py-2.5 backdrop-blur"
       role="marquee"
       aria-label={t('ticker.aria')}
+      data-ticker
     >
       {/*
        * `ticker-track` has `width: max-content` and scrolls a duplicated row
