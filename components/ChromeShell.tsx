@@ -4,9 +4,11 @@ import { usePathname } from 'next/navigation';
 import { Header } from './Header';
 import { Footer } from './Footer';
 import { MobileNav } from './MobileNav';
+import { SideRail } from './SideRail';
 
 /**
  * v2.10 — Pathname-aware site chrome shell.
+ * v2.11 — Added SideRail for desktop /feed.
  *
  * `/feed` is an immersive, TikTok-style surface: each card is a full-bleed
  * 100dvh video with tap/double-tap/swipe gestures. The global site chrome
@@ -16,9 +18,14 @@ import { MobileNav } from './MobileNav';
  * portrait viewports (Galaxy S25 Ultra class, aspect ~0.45).
  *
  * On any /feed route we:
- *   - Skip rendering Header, Footer, and MobileNav entirely.
+ *   - Skip rendering Header, Footer, and mobile bottom-nav.
  *   - Drop the `<main>` top/bottom padding that exists solely to make room
  *     for the two fixed chrome bars. Feed cards snap into the full dvh.
+ *   - On desktop (md+), render the left vertical SideRail (72px) so the
+ *     user can still navigate without the top Header. Mobile keeps full
+ *     immersion because SideRail internally uses `hidden md:flex`.
+ *   - Offset `<main>` by 72px on the left on desktop immersive routes so
+ *     feed cards don't render under the rail.
  *
  * The ParlaySlip drawer itself is NOT rendered here — it stays mounted at
  * the layout level so feed-card gestures (swipe-right) can still open it
@@ -35,10 +42,15 @@ export function ChromeShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       {!immersive && <Header />}
+      {immersive && <SideRail />}
       <main
         id="main-content"
         tabIndex={-1}
-        className={immersive ? '' : 'pt-16 pb-24 md:pb-0'}
+        className={
+          immersive
+            ? 'md:pl-[72px]' // desktop rail width offset; mobile gets nothing
+            : 'pt-16 pb-24 md:pb-0'
+        }
       >
         {children}
       </main>

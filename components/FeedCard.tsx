@@ -8,6 +8,7 @@ import { AutoVideo } from './AutoVideo';
 import { EdgeBadge } from './EdgeBadge';
 import { OutcomeBar } from './OutcomeBar';
 import { ResolvedBanner } from './ResolvedBanner';
+import { FeedDetailSheet } from './FeedDetailSheet';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 import { useParlay } from '@/lib/parlay';
 import { useMute } from '@/lib/mute';
@@ -63,6 +64,10 @@ export function FeedCard({ market }: Props) {
   const [hearts, setHearts] = useState<
     Array<{ id: number; x: number; y: number }>
   >([]);
+
+  // v2.11 — detail sheet open state. Controlled here (not in FeedClient)
+  // because opening/closing is per-card and shouldn't bubble up.
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const popHeart = useCallback((x: number, y: number) => {
     const id = Date.now() + Math.random();
@@ -227,6 +232,28 @@ export function FeedCard({ market }: Props) {
       <div className="absolute right-3 bottom-[22dvh] z-10 flex flex-col items-center gap-4 md:right-6 md:bottom-[18dvh]">
         <RailButton icon="♥" label={market.traders.toLocaleString()} />
         <RailButton icon="💬" label={Math.round(market.traders / 7).toLocaleString()} />
+        {/*
+         * v2.11 — Info button. Dev feedback #2: a single button that opens
+         * the market's detail as a blurred sheet so the user can read
+         * structured info without leaving the feed. Positioned between the
+         * comment count and the parlay + button so the "information density"
+         * stack reads: engage → discuss → inspect → act.
+         */}
+        <button
+          type="button"
+          onClick={() => setInfoOpen(true)}
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-ink-900/70 text-bone backdrop-blur transition hover:bg-ink-900"
+          aria-label="View market details"
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <line x1="12" y1="8" x2="12" y2="8" />
+            <line x1="12" y1="12" x2="12" y2="16" />
+          </svg>
+        </button>
+        <span className="-mt-3 text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
+          Info
+        </span>
         {!isResolved && (
           <>
             <button
@@ -331,6 +358,17 @@ export function FeedCard({ market }: Props) {
           </span>
         ))}
       </div>
+
+      {/*
+       * v2.11 — Detail sheet. Rendered per-card but only mounts its DOM
+       * when open (the component returns null otherwise). This keeps the
+       * feed list light — N cards do NOT mean N always-mounted dialogs.
+       */}
+      <FeedDetailSheet
+        market={market}
+        open={infoOpen}
+        onClose={() => setInfoOpen(false)}
+      />
     </article>
   );
 }

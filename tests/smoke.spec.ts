@@ -135,3 +135,75 @@ test.describe('smoke · SEO artifacts', () => {
     expect(body).toMatch(/Sitemap:\s*https?:\/\/.+\/sitemap\.xml/);
   });
 });
+
+/*
+ * v2.11 — Desktop /feed vertical rail + centered shorts column.
+ *
+ * Dev feedback #4 (desktop): "웹버전에서는 feed에서도 틱톡처럼 세로형 숏츠
+ * 기반으로 하고 네비게이션 바도 세로로 두면 어떨까 해요. 노트북 양쪽으로
+ * 커서를 왔다갔다하니 조금 어려운 느낌."
+ *
+ * The chromium (desktop) project is the one that runs this suite, so these
+ * assertions validate the non-mobile codepath of ChromeShell:
+ *   - On immersive routes the top <Header> is replaced by a left <SideRail>
+ *     (fixed 72px column, aria-label="Primary desktop").
+ *   - FeedClient is wrapped in `md:max-w-[420px] md:mx-auto` so the video
+ *     column is centered (YouTube-Shorts style) in the remaining desktop
+ *     viewport instead of stretching edge-to-edge.
+ *
+ * We check semantic landmarks + geometry rather than class names so the
+ * test survives future styling refactors.
+ */
+test.describe('smoke · v2.11 desktop /feed chrome', () => {
+  // Dismiss the first-visit OnboardingIntro modal which is `fixed inset-0
+  // z-[80]` and intercepts pointer events until gated by `cv_onboarded_v1`
+  // in localStorage. We want the tests to exercise the real immersive
+  // surface, not the welcome modal.
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        window.localStorage.setItem('cv_onboarded_v1', '1');
+      } catch {
+        /* noop */
+      }
+    });
+  });
+
+  test('SideRail is visible on desktop /feed, Header is not', async ({ page }) => {
+    await page.goto('/feed');
+    // SideRail exposes a named navigation landmark.
+    await expect(
+      page.getByRole('navigation', { name: /Primary desktop/i })
+    ).toBeVisible();
+    // Header (role=banner) must NOT render on /feed — same rule as mobile.
+    await expect(page.getByRole('banner')).toHaveCount(0);
+  });
+
+  test('Feed column is centered at ≤420px on desktop', async ({ page, viewport }) => {
+    test.skip(!viewport || viewport.width < 768, 'desktop viewport required');
+    await page.goto('/feed');
+    await page.waitForLoadState('networkidle');
+
+    // The immediate parent of the feed cards is the 100dvh wrapper; its
+    // first <article> child is the first feed card. We measure the card's
+    // width directly because that's what the user sees.
+    const firstCard = page.locator('article').first();
+    await expect(firstCard).toBeVisible();
+    const box = await firstCard.boundingBox();
+    expect(box, 'first feed card bounding box').not.toBeNull();
+    // On desktop the column is capped at 420px (md:max-w-[420px]).
+    // Allow a small fudge for border/scrollbar subpixel effects.
+    expect(
+      box!.width,
+      `Desktop feed card should be ≤420px wide, got ${box!.width}px — md:max-w-[420px] broken?`
+    ).toBeLessThanOrEqual(424);
+
+    // And the card must NOT be at x=0 — it should be horizontally centered
+    // in the viewport minus the 72px SideRail. A properly centered column
+    // leaves >= ~100px of gutter on each side at 1280px viewport width.
+    expect(
+      box!.x,
+      `Desktop feed card x=${box!.x}px — expected it to be centered, not pinned to the rail`
+    ).toBeGreaterThan(72);
+  });
+});

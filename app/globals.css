@@ -255,6 +255,35 @@ html, body {
 }
 
 /*
+ * v2.11 — FeedDetailSheet slide-up animation.
+ *
+ * 220ms upward glide + opacity, same easing as toast-in so the motion
+ * language across the app stays consistent. Dismissal is instantaneous
+ * (unmount) because the backdrop handles the perceived fade; doing a
+ * reverse animation forces us to track a closing state and stalls the
+ * next user tap.
+ *
+ * Desktop variant (md+) uses `translate(-50%, ...)` for horizontal
+ * centering because the sheet is `left-1/2 -translate-x-1/2` in that
+ * viewport. The mobile keyframe only moves Y, so on desktop we override
+ * the keyframe so transform at 100% resolves to `translate(-50%, 0)`
+ * instead of clearing the -50% offset.
+ */
+@keyframes sheet-up {
+  0%   { transform: translateY(24px); opacity: 0; }
+  100% { transform: translateY(0);     opacity: 1; }
+}
+.sheet-up {
+  animation: sheet-up 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (min-width: 768px) {
+  @keyframes sheet-up {
+    0%   { transform: translate(-50%, 24px); opacity: 0; }
+    100% { transform: translate(-50%, 0);     opacity: 1; }
+  }
+}
+
+/*
  * LiveTicker — horizontally scrolling tape of recent trades / price moves
  * shown above the homepage feed. Loops infinitely via translateX.
  */

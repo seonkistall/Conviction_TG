@@ -6,6 +6,7 @@ import { EdgeBadge } from './EdgeBadge';
 import { OutcomeBar } from './OutcomeBar';
 import { ResolvedBanner } from './ResolvedBanner';
 import { SettledChip } from './SettledChip';
+import { QuickBetActions } from './QuickBetActions';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 
 interface Props {
@@ -117,10 +118,12 @@ export function MarketCard({ market, size = 'md' }: Props) {
           ) : isMulti ? (
             <OutcomeBar market={market} compact />
           ) : (
-            <div className="grid grid-cols-2 gap-2">
-              <QuickAction side="YES" price={market.yesProb} />
-              <QuickAction side="NO" price={1 - market.yesProb} />
-            </div>
+            /*
+             * v2.11 — real YES/NO buttons (not decorative). One tap adds to
+             * Parlay Slip without navigating to market detail. Mobile-first
+             * 10–20s judgment loop.
+             */
+            <QuickBetActions marketId={market.id} yesProb={market.yesProb} />
           )}
         </div>
       </div>
@@ -148,22 +151,6 @@ function Badge({
     >
       {children}
     </span>
-  );
-}
-
-function QuickAction({ side, price }: { side: 'YES' | 'NO'; price: number }) {
-  return (
-    <div
-      className={clsx(
-        'flex items-center justify-between rounded-lg border px-3 py-2 text-xs font-semibold backdrop-blur transition group-hover:scale-[1.02]',
-        side === 'YES'
-          ? 'border-yes/30 bg-yes-soft text-yes'
-          : 'border-no/30 bg-no-soft text-no'
-      )}
-    >
-      <span>{side}</span>
-      <span className="font-mono tabular-nums">¢{(price * 100).toFixed(0)}</span>
-    </div>
   );
 }
 

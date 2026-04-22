@@ -40,11 +40,19 @@ export function FeedClient({ markets }: Props) {
     : 100;
 
   return (
-    // v2.10 — no more `-mt-16`: the site Header is hidden on /feed by
-    // ChromeShell, so this wrapper already sits at the top of the
-    // viewport. `relative` is still load-bearing for the absolute
-    // positioned children below (progress bar, back chip, dot rail).
-    <div className="relative h-[100dvh] w-full">
+    /*
+     * v2.11 — On desktop we center the feed at 420px wide (YouTube Shorts
+     * style). Chrome elements (progress rail, back chip, dot rail) align
+     * to this same column because they're absolute-positioned relative to
+     * THIS wrapper. The `md:mx-auto` pushes the whole column toward center
+     * of the visible area to the right of the 72px SideRail that
+     * ChromeShell mounts on desktop immersive routes.
+     *
+     * Mobile: full viewport — pure immersion, no side chrome.
+     * Desktop: 420px column centered in the remaining viewport after the
+     * 72px left rail.
+     */
+    <div className="relative mx-auto h-[100dvh] w-full md:max-w-[420px]">
       {/*
        * Top progress rail. 2px volt bar that fills left→right as the
        * reader advances through the feed. Sits above the safe-area
@@ -62,10 +70,11 @@ export function FeedClient({ markets }: Props) {
         />
       </div>
 
-      {/* Top overlay — back to grid */}
+      {/* Top overlay — back to grid. `?desktop=1` guards against the mobile
+          middleware redirecting us back to /feed on edge emulation cases. */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),1rem)]">
         <Link
-          href="/"
+          href="/?desktop=1"
           className="rounded-full border border-white/10 bg-ink-900/70 px-3 py-1.5 text-[11px] font-semibold text-bone backdrop-blur"
         >
           ← {t('nav.markets')}
