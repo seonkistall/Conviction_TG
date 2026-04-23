@@ -112,7 +112,18 @@ export function LivePricesProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    if (!document.hidden) start();
+    // v2.17: Always start the interval on mount, regardless of the
+    // initial document.hidden value. Playwright's headless Chromium
+    // sometimes reports `document.hidden = true` through the first
+    // navigation → effect run, and then never fires a visibilitychange
+    // (because the tab WAS already "visible" from the browser's
+    // perspective — we just read the wrong snapshot). Gating on the
+    // initial value meant the ticker could fail to start at all for
+    // the test harness, producing a confusing "nothing ever ticks"
+    // failure even though the code looked right. The pause-on-hidden
+    // behavior we actually want is preserved by the
+    // visibilitychange → stop() branch below.
+    start();
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);

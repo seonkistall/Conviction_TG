@@ -343,6 +343,21 @@ test.describe('smoke · v2.16 live ticker', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
+    // v2.17: Scroll the markets grid into view before sampling. The
+    // grid lives below the Hero, and on a 1280x720 desktop viewport it
+    // starts around y=900 — just outside the IntersectionObserver's
+    // 200px rootMargin window. LiveMarketGrid then (correctly) freezes
+    // the displayed prices to seed values while off-screen, which
+    // means the test would see "no ticks" even though the provider is
+    // firing. We scroll the first market-card link into the center of
+    // the viewport before reading, which mirrors what a real user sees
+    // as they scroll down to trade.
+    const firstCard = page
+      .locator('a[href^="/markets/"]')
+      .filter({ has: page.locator('span.font-mono.tabular-nums') })
+      .first();
+    await firstCard.scrollIntoViewIfNeeded();
+
     // Sample the price text from the first 8 visible market cards. The
     // selector targets the font-mono price span inside MarketCard.
     const priceLocator = page.locator(
