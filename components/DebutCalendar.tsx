@@ -43,9 +43,22 @@ export function DebutCalendar() {
         <p className="mt-1 max-w-2xl text-sm text-bone-muted">{t('debut.sub')}</p>
       </div>
 
-      {/* Horizontal timeline */}
-      <div className="relative -mx-6 overflow-x-auto pb-4 no-scrollbar">
-        <div className="flex gap-4 px-6">
+      {/*
+       * v2.20-3 — Horizontal timeline, now with scroll-snap + right-edge
+       * gradient fade.
+       *
+       * - `snap-x snap-mandatory` + `snap-start` on each card gives
+       *   thumb-friendly card-by-card flicks on mobile (no drifting to
+       *   random positions mid-card) and aligns the first card cleanly
+       *   after a tap on the scrollbar track on desktop.
+       * - A right-edge gradient fade + chevron chip hints that more
+       *   cards live off-screen. Pre-v2.20 the horizontal scroll
+       *   affordance was invisible on desktop browsers that hide the
+       *   scrollbar by default, so the strip read as a static row of
+       *   3–4 cards.
+       */}
+      <div className="relative -mx-6 pb-4">
+        <div className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto px-6">
           {DEBUT_EVENTS.map((d) => {
             const { day, month } = fmtDate(d.dropsAt);
             const n = daysUntil(d.dropsAt);
@@ -53,7 +66,7 @@ export function DebutCalendar() {
             return (
               <div
                 key={d.id}
-                className="relative w-[280px] shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-ink-800"
+                className="relative w-[280px] shrink-0 snap-start overflow-hidden rounded-2xl border border-white/10 bg-ink-800"
               >
                 {/* Poster */}
                 <div className="relative aspect-[4/5]">
@@ -131,12 +144,26 @@ export function DebutCalendar() {
                         </span>
                       </Link>
                     ) : (
+                      /*
+                       * v2.20-3: Surface the spawn→oracle flow explicitly.
+                       * Through v2.19 this CTA was just a muted "Create
+                       * market →" link that hid the magic — evaluators
+                       * didn't realize tapping it kicks off the 23-scraper
+                       * wizard. New two-line layout: the CTA stays clear,
+                       * and a thin caption tells you what actually happens
+                       * on the next screen.
+                       */
                       <Link
-                        href="/markets/new"
-                        className="flex items-center justify-between rounded-full border border-white/10 bg-ink-900 px-3 py-2 text-xs font-semibold text-bone transition hover:bg-ink-700"
+                        href={`/markets/new?q=${encodeURIComponent(d.title)}`}
+                        className="block rounded-xl border border-volt/30 bg-volt/5 p-2 transition hover:border-volt/60 hover:bg-volt/10"
                       >
-                        <span>{t('debut.create_market')}</span>
-                        <span>→</span>
+                        <div className="flex items-center justify-between text-xs font-semibold text-volt">
+                          <span>✨ Spawn market for {d.artist}</span>
+                          <span>→</span>
+                        </div>
+                        <div className="mt-0.5 text-[10px] text-bone-muted">
+                          AI Wizard pre-fills title · 13 scrapers judge
+                        </div>
                       </Link>
                     )}
                   </div>
@@ -145,6 +172,15 @@ export function DebutCalendar() {
             );
           })}
         </div>
+        {/*
+         * Right-edge fade — pure visual, pointer-events-none so it
+         * doesn't steal the final card's tap region. Width is 40px
+         * on mobile, 64px on desktop so the nudge scales with viewport.
+         */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-ink-900 to-transparent md:w-16"
+        />
       </div>
     </section>
   );

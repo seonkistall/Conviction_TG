@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import { useT } from '@/lib/i18n';
 
@@ -33,9 +34,21 @@ const SCRAPERS = [
 
 export function NewMarketClient() {
   const t = useT();
+  const searchParams = useSearchParams();
   const [q, setQ] = useState('');
   const [phase, setPhase] = useState<Phase>('idle');
   const timerRef = useRef<number | null>(null);
+
+  // v2.20-3: Pre-fill from ?q=… so deep-link entries (DebutCalendar's
+  // "Spawn market for {artist}" CTA, future share-a-question URLs) hand
+  // the question straight into the textarea instead of making the user
+  // retype it. Unwrap on mount only; subsequent edits stay controlled
+  // by the user.
+  useEffect(() => {
+    const seed = searchParams?.get('q');
+    if (seed && !q) setQ(seed);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => () => {
     if (timerRef.current) window.clearTimeout(timerRef.current);
