@@ -340,11 +340,34 @@ export default function MarketDetailPage({
         </div>
       </div>
 
-      {/* Related */}
-      <section className="mt-16">
-        <h3 className="mb-4 font-display text-3xl text-bone">
-          More {m.category}
-        </h3>
+      {/* v2.18-2 — Related markets.
+       *
+       * Added `id="related"` scroll anchor so the PostTradeCard's
+       * "Find similar ↓" CTA can deep-link to this section without
+       * requiring a router navigation — smooth scroll keeps the
+       * just-placed position visible above the fold for a moment.
+       *
+       * Pulled the section head up with a stronger label ("More like
+       * this · {category}") and a subtitle explaining what the grid
+       * is, so returning users who scrolled down before buying still
+       * understand this isn't another copy of the current market. */}
+      <section id="related" className="mt-16 scroll-mt-24">
+        <div className="mb-4 flex items-end justify-between">
+          <div>
+            <h3 className="font-display text-3xl text-bone">
+              More like this · {m.category}
+            </h3>
+            <p className="mt-1 text-sm text-bone-muted">
+              Same region + category. All tradable right now.
+            </p>
+          </div>
+          <Link
+            href="/"
+            className="hidden rounded-full border border-white/10 bg-ink-800 px-3 py-1.5 text-[11px] font-semibold text-bone-muted hover:text-bone md:inline-flex"
+          >
+            All markets →
+          </Link>
+        </div>
         <LiveMarketGrid
           markets={related}
           className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
