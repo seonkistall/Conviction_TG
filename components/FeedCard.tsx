@@ -299,6 +299,53 @@ export function FeedCard({ market }: Props) {
             </span>
           ))}
         </div>
+
+        {/*
+         * v2.21-3 — "Proposed by @handle · 23-source AI {conf}%"
+         * micro-byline.
+         *
+         * Double purpose:
+         *   1. Surfaces the permissionless UGC story inline ("this
+         *      market was proposed by someone, not us") on every feed
+         *      card, so the "anyone-can-create" moat is legible
+         *      without needing the ProposeInterstitial to be visible.
+         *   2. Reinforces the 23-source AI oracle trust signal right
+         *      next to the market title — no extra tap needed.
+         *
+         * The handle is a deterministic pick from a small pool hashed
+         * on market.id so the same card consistently shows the same
+         * proposer across re-renders. When real UGC ships the derivation
+         * becomes a real field; the slot + visual shape stay identical.
+         */}
+        <div
+          className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-bone-muted"
+          aria-label={`Proposed by ${feedProposerHandle(market.id)}, AI confidence ${Math.round(
+            market.aiConfidence * 100
+          )} percent`}
+        >
+          <span className="font-mono text-bone-muted">
+            Proposed by{' '}
+            <Link
+              href={`/traders/${feedProposerHandle(market.id)}`}
+              className="text-bone hover:text-volt"
+              onClick={(e) => e.stopPropagation()}
+            >
+              @{feedProposerHandle(market.id)}
+            </Link>
+          </span>
+          <span aria-hidden="true" className="text-bone-muted/60">
+            ·
+          </span>
+          <Link
+            href={`/markets/${market.slug}?evidence=open`}
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center gap-1 rounded-full border border-conviction/30 bg-conviction/10 px-1.5 py-0.5 font-mono text-[10px] text-conviction hover:bg-conviction/20"
+          >
+            <span aria-hidden="true" className="h-1 w-1 rounded-full bg-conviction" />
+            23-src AI · {Math.round(market.aiConfidence * 100)}%
+          </Link>
+        </div>
+
         <Link
           href={`/markets/${market.slug}`}
           className="mt-2 block font-display text-2xl leading-[1.1] text-bone md:text-4xl"
@@ -444,4 +491,39 @@ function QuickBet({
       <span className="font-mono tabular-nums">¢{Math.round(price * 100)}</span>
     </button>
   );
+}
+
+/**
+ * v2.21-3 — Deterministic proposer handle for the FeedCard byline.
+ *
+ * Picks from a fixed pool of real AI_TRADERS + TRADERS handles
+ * already seeded in lib/markets.ts so the @handle links to a real
+ * profile page. When real UGC ships, swap this for `market.proposer`
+ * on the Market type — the call site stays identical.
+ *
+ * FNV-1a 32-bit hash keeps the picks stable across reloads: the same
+ * market always shows the same proposer. Collisions are fine — multiple
+ * markets can legitimately share a proposer (and the leaderboard will
+ * eventually want to roll those up).
+ */
+const PROPOSER_POOL = [
+  'ai.oracle.kr',
+  'allora.lck',
+  'qwen.drama',
+  'sonnet.macro',
+  'anime.signal.jp',
+  'culturebae_',
+  'lck.sharp',
+  'seoulquant',
+  'tokyo.macro',
+  'shanghai.bull',
+];
+
+function feedProposerHandle(seed: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < seed.length; i++) {
+    hash ^= seed.charCodeAt(i);
+    hash = (hash * 0x01000193) >>> 0;
+  }
+  return PROPOSER_POOL[hash % PROPOSER_POOL.length];
 }
