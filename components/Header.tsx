@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { useT } from '@/lib/i18n';
 import { TimezoneCluster } from './TimezoneCluster';
@@ -17,6 +17,17 @@ export function Header() {
   // notify hook so evaluators see the intent without wondering why
   // nothing happened.
   const [connectOpen, setConnectOpen] = useState(false);
+
+  // v2.21-7: Any component can open the Connect modal by dispatching
+  // a `cv:connect:open` CustomEvent on window. Used by the Portfolio
+  // page's demo Deposit/Withdraw CTAs so those buttons route into the
+  // same "sign-in coming soon" surface as the Header button —
+  // evaluators see one consistent expectation for money-movement.
+  useEffect(() => {
+    const onOpen = () => setConnectOpen(true);
+    window.addEventListener('cv:connect:open', onOpen);
+    return () => window.removeEventListener('cv:connect:open', onOpen);
+  }, []);
 
   const NAV = [
     { label: t('nav.markets'), href: '/' },

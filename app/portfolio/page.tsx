@@ -58,13 +58,18 @@ export default function PortfolioPage() {
             </div>
           </div>
         </div>
-        <div className="flex gap-3">
-          <button className="rounded-full border border-white/10 bg-ink-800 px-5 py-2.5 text-sm font-semibold text-bone hover:bg-ink-700">
-            Deposit
-          </button>
-          <button className="rounded-full bg-volt px-5 py-2.5 text-sm font-semibold text-ink-900 hover:bg-volt-dark">
-            Withdraw
-          </button>
+        {/*
+         * v2.21-7 — Deposit / Withdraw buttons now route into the
+         * Connect modal (v2.20-1) via the header. Money-movement is
+         * a wallet-connect + HOGC oracle concern and won't work
+         * until we ship sign-in, so the CTAs set expectations
+         * honestly rather than sitting dead. The "Demo" pill makes
+         * the state explicit for a VC evaluator so they don't wait
+         * for a modal that was never going to open.
+         */}
+        <div className="relative flex gap-3">
+          <DemoCta label="Deposit" variant="outline" />
+          <DemoCta label="Withdraw" variant="primary" />
         </div>
       </div>
 
@@ -407,6 +412,40 @@ function Th({
   className?: string;
 }) {
   return <th className={`p-4 font-semibold ${className}`}>{children}</th>;
+}
+
+/**
+ * v2.21-7 — Demo CTA chip. Dispatches a synthetic ⌘K-style key event
+ * to a `cv:connect:open` custom event that Header's ConnectModal
+ * listens for (wired below). Keeps the buttons visually identical
+ * to real actions but surfaces the "coming soon" expectation.
+ */
+function DemoCta({
+  label,
+  variant,
+}: {
+  label: string;
+  variant: 'outline' | 'primary';
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (typeof window === 'undefined') return;
+        window.dispatchEvent(new CustomEvent('cv:connect:open'));
+      }}
+      className={
+        variant === 'primary'
+          ? 'press relative rounded-full bg-volt px-5 py-2.5 text-sm font-semibold text-ink-900 hover:bg-volt-dark'
+          : 'press relative rounded-full border border-white/10 bg-ink-800 px-5 py-2.5 text-sm font-semibold text-bone hover:bg-ink-700'
+      }
+    >
+      <span className="absolute -top-2 right-2 rounded-full border border-white/15 bg-ink-900 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-bone-muted">
+        Soon
+      </span>
+      {label}
+    </button>
+  );
 }
 
 function EmptyState() {

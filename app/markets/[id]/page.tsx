@@ -12,6 +12,10 @@ import { AIOracleCard } from '@/components/AIOracleCard';
 import { LiveMarketGrid } from '@/components/LiveMarketGrid';
 import { JsonLd } from '@/components/JsonLd';
 import { ResolvedBanner } from '@/components/ResolvedBanner';
+import {
+  MarketHeroShare,
+  PriceChartWithRange,
+} from '@/components/MarketHeroActions';
 
 const SITE_URL = 'https://conviction-fe.vercel.app';
 
@@ -196,9 +200,7 @@ export default function MarketDetailPage({
                   <EdgeBadge pp={m.edgePP} size="md" />
                 )}
               </div>
-              <button className="rounded-full border border-white/10 bg-ink-900/80 px-3 py-1.5 text-xs font-semibold text-bone backdrop-blur hover:bg-ink-900">
-                Share
-              </button>
+              <MarketHeroShare title={m.title} slug={m.slug} />
             </div>
             <div className="absolute inset-x-0 bottom-0 p-6">
               <h1 className="font-display text-3xl leading-[1.05] text-bone md:text-5xl">
@@ -225,26 +227,20 @@ export default function MarketDetailPage({
             <Stat label="Traders" value={m.traders.toLocaleString()} />
           </div>
 
-          {/* Price chart */}
+          {/* Price chart — v2.21-7: range tabs now actually switch
+              the chart's days prop. Client component wraps both the
+              tabs + the chart below; the surrounding detail page
+              stays server-rendered. */}
           <div className="rounded-2xl border border-white/10 bg-ink-800 p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-display text-2xl text-bone">Price history</h3>
-              <div className="flex items-center gap-1 rounded-full border border-white/10 bg-ink-900 p-1 text-[11px]">
-                {['1D', '1W', '1M', 'ALL'].map((r, i) => (
-                  <button
-                    key={r}
-                    className={`rounded-full px-3 py-1 font-semibold ${
-                      i === 2 ? 'bg-white/10 text-bone' : 'text-bone-muted hover:text-bone'
-                    }`}
-                  >
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="h-64 chart-grid-bg">
-              <PriceChart seed={seed} days={30} />
-            </div>
+            <PriceChartWithRange
+              seed={seed}
+              Chart={PriceChart}
+              heading={
+                <h3 className="font-display text-2xl text-bone">
+                  Price history
+                </h3>
+              }
+            />
           </div>
 
           {/* Resolution criteria */}
