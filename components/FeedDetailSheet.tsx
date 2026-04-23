@@ -43,9 +43,13 @@ interface Props {
 export function FeedDetailSheet({ market, open, onClose }: Props) {
   const parlay = useParlay();
   const toast = useToast();
-  // "Share" button state. We flash a "Copied!" label for 1.4s after a
-  // clipboard-path share so the user has a visible acknowledgement even
-  // when no native Web Share chooser opened.
+  // "Share" button state. We flash a "Copied!" label after a clipboard-path
+  // share so the user has a visible acknowledgement even when no native
+  // Web Share chooser opened. v2.17: Extended from 1400ms → 2800ms.
+  // 1.4s is shorter than the phone-shake-to-see-result reaction time on
+  // slower connections — users reported missing the flash. 2.8s is still
+  // snappy enough that rapid-fire shares don't feel laggy (and a fresh
+  // share cancels the prior timer anyway).
   const [shareLabel, setShareLabel] = useState<'default' | 'copied' | 'shared'>(
     'default'
   );
@@ -61,7 +65,7 @@ export function FeedDetailSheet({ market, open, onClose }: Props) {
     shareResetTimer.current = window.setTimeout(() => {
       setShareLabel('default');
       shareResetTimer.current = null;
-    }, 1400);
+    }, 2800);
   };
   useEffect(() => {
     return () => {

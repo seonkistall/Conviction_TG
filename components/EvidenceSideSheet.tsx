@@ -21,6 +21,21 @@ const PROVIDER_TINT: Record<string, string> = {
   RAG: 'bg-white/10 text-bone',
 };
 
+// v2.17 — Native `title` hover tooltip explaining *why* each source is in
+// the APAC swarm. Pre-v2.17 the side sheet listed provider names with no
+// context — users saw "Brave · Exa · CoinGecko · Naver · Weverse" and had
+// no way to know whether these were credible or ad hoc. The one-line
+// explanation per source anchors the value prop without adding UI weight.
+const PROVIDER_WHY: Record<string, string> = {
+  Brave: 'Privacy-first web index — goes wide across APAC publishers without filter bubbles.',
+  Exa: 'Semantic neural search — pulls long-tail primary sources Google buries.',
+  CoinGecko: 'Crypto market data — BTC / ETH / APAC altcoin pricing + listings.',
+  TheSportsDB: 'Sports roster, fixture, and historical result feed (NPB, KBO, LCK, LPL, K-League).',
+  Naver: 'Korea-first search — captures Korean-language signal Google misses.',
+  Weverse: 'K-pop + J-pop fan-community heat — comeback sentiment the press lags on.',
+  RAG: 'Retrieval-augmented generation over our own historical market + resolution corpus.',
+};
+
 export function EvidenceSideSheet({ bundle, open, onClose }: Props) {
   const t = useT();
 
@@ -126,6 +141,7 @@ export function EvidenceSideSheet({ bundle, open, onClose }: Props) {
                           'rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest',
                           PROVIDER_TINT[s.provider] ?? 'bg-white/10 text-bone'
                         )}
+                        title={PROVIDER_WHY[s.provider] ?? s.provider}
                       >
                         {s.provider}
                       </span>
