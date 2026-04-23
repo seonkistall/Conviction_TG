@@ -115,13 +115,34 @@ function HeroCard({
           <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
             <Link
               href={`/markets/${m.slug}`}
-              className="block rounded-full bg-volt px-5 py-3 text-center text-sm font-semibold text-ink-900 transition hover:bg-volt-dark sm:inline-block sm:w-auto sm:px-6"
+              className="block rounded-full bg-volt px-5 py-3 text-center text-sm font-semibold text-ink-900 transition hover:bg-volt-dark active:scale-[0.98] sm:inline-block sm:w-auto sm:px-6"
             >
               Explore markets →
             </Link>
+            {/*
+             * v2.21-4 — Permissionless creation as a front-door CTA.
+             * Conviction's core differentiator vs Polymarket / Kalshi
+             * in APAC is "anyone proposes, AI verifies + publishes."
+             * Pre-v2.21 the only door was /markets/new linked from the
+             * mobile-nav plus icon — invisible to a Tier-1 VC evaluator
+             * on desktop. This sends a clear secondary-CTA signal at
+             * the top of the landing fold: not just browse, propose.
+             */}
+            <Link
+              href="/markets/new"
+              className="group flex items-center justify-center gap-2 rounded-full border border-conviction/40 bg-conviction/10 px-5 py-3 text-center text-sm font-semibold text-conviction transition hover:bg-conviction/20 active:scale-[0.98] sm:inline-flex sm:w-auto sm:px-6"
+            >
+              <span aria-hidden="true">✨</span> Propose a market
+              <span
+                aria-hidden="true"
+                className="hidden text-conviction/70 md:inline"
+              >
+                · AI verifies
+              </span>
+            </Link>
             <a
               href="#how"
-              className="block rounded-full border border-white/10 bg-ink-800 px-5 py-3 text-center text-sm font-semibold text-bone hover:bg-ink-700 sm:inline-block sm:w-auto sm:px-6"
+              className="block rounded-full border border-white/10 bg-ink-800 px-5 py-3 text-center text-sm font-semibold text-bone hover:bg-ink-700 active:scale-[0.98] sm:inline-block sm:w-auto sm:px-6"
             >
               How it resolves
             </a>

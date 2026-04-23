@@ -6,6 +6,7 @@ import { NarrativeIndices } from '@/components/NarrativeIndices';
 import { AgenticTraders } from '@/components/AgenticTraders';
 import { VibeMeter } from '@/components/VibeMeter';
 import { DebutCalendar } from '@/components/DebutCalendar';
+import { PermissionlessSection } from '@/components/PermissionlessSection';
 import { HowItWorks } from '@/components/HowItWorks';
 import { AllMarketsHeading } from '@/components/AllMarketsHeading';
 import { LiveTicker } from '@/components/LiveTicker';
@@ -22,6 +23,14 @@ export default function LandingPage() {
       <AgenticTraders />
       <VibeMeter />
       <DebutCalendar />
+
+      {/*
+       * v2.21-4 — Permissionless creation as the 5th moat block.
+       * Elevates the core differentiator (anyone proposes, AI
+       * verifies) to a first-class landing section alongside the
+       * other four Asia-native moats.
+       */}
+      <PermissionlessSection />
 
       {/* Evidence-graded — the Conviction thesis */}
       <HowItWorks />
