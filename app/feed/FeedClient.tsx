@@ -2,12 +2,41 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Market } from '@/lib/types';
 import { FeedCard } from '@/components/FeedCard';
+import { ProposeInterstitial } from '@/components/ProposeInterstitial';
 import { useT } from '@/lib/i18n';
 import { useParlay } from '@/lib/parlay';
 import { useToast } from '@/lib/toast';
+
+/**
+ * v2.21-2 — Feed item union. Through v2.20 the feed rendered a flat
+ * `markets.map(<FeedCard>)` — the permissionless market-creation story
+ * (Conviction AI's core differentiator) never surfaced mid-scroll.
+ *
+ * We now interleave a `ProposeInterstitial` after every 5 markets,
+ * keeping the scroll-snap behavior intact (each interstitial is a
+ * 100dvh snap-start child). The rest of the component tracks `idx`
+ * against `items.length` — current market for keyboard Y/N shortcuts
+ * resolves to `null` on an interstitial, which the handlers no-op.
+ */
+type FeedItem =
+  | { kind: 'market'; market: Market }
+  | { kind: 'propose' };
+
+function buildItems(markets: Market[]): FeedItem[] {
+  const out: FeedItem[] = [];
+  markets.forEach((m, i) => {
+    out.push({ kind: 'market', market: m });
+    // Insert after positions 4, 9, 14, … (every 5 markets).
+    // Skip the trailing insert so we don't end on an interstitial.
+    if ((i + 1) % 5 === 0 && i !== markets.length - 1) {
+      out.push({ kind: 'propose' });
+    }
+  });
+  return out;
+}
 
 interface Props {
   markets: Market[];
@@ -21,6 +50,9 @@ export function FeedClient({ markets }: Props) {
   const router = useRouter();
   const parlay = useParlay();
   const toast = useToast();
+
+  // v2.21-2: items interleaves FeedCard + ProposeInterstitial.
+  const items = useMemo(() => buildItems(markets), [markets]);
 
   // IntersectionObserver on children to track currently-visible card
   useEffect(() => {
@@ -40,7 +72,7 @@ export function FeedClient({ markets }: Props) {
     );
     cards.forEach((c) => io.observe(c));
     return () => io.disconnect();
-  }, [markets.length]);
+  }, [items.length]);
 
   const scrollTo = useCallback((i: number) => {
     const scroller = ref.current;
@@ -73,7 +105,10 @@ export function FeedClient({ markets }: Props) {
       // Avoid double-handling when the ⌘K palette is open.
       if (document.querySelector('[aria-label="Command palette"]')) return;
 
-      const current = markets[idx];
+      // v2.21-2: idx now tracks `items` (markets + interstitials). Y/N
+      // shortcuts only apply to actual market cards.
+      const currentItem = items[idx];
+      const current = currentItem?.kind === 'market' ? currentItem.market : null;
       switch (e.key) {
         case 'ArrowDown':
         case 'j':
@@ -136,10 +171,10 @@ export function FeedClient({ markets }: Props) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [idx, markets, parlay, router, scrollTo, showHelp, toast]);
+  }, [idx, items, markets, parlay, router, scrollTo, showHelp, toast]);
 
-  const progressPct = markets.length > 1
-    ? ((idx + 1) / markets.length) * 100
+  const progressPct = items.length > 1
+    ? ((idx + 1) / items.length) * 100
     : 100;
 
   return (
@@ -192,17 +227,23 @@ export function FeedClient({ markets }: Props) {
         <div className="flex items-center gap-1 rounded-full border border-white/10 bg-ink-900/70 px-2 py-1 text-[10px] text-bone-muted backdrop-blur">
           <span className="font-mono tabular-nums text-bone">{idx + 1}</span>
           <span>/</span>
-          <span className="font-mono tabular-nums">{markets.length}</span>
+          <span className="font-mono tabular-nums">{items.length}</span>
         </div>
       </div>
 
-      {/* Progress dots — right side, desktop only */}
+      {/* Progress dots — right side, desktop only. v2.21-2: dots reflect
+          items (markets + interstitials) so the user can see at a glance
+          where the Propose-a-market slots land in the scroll. */}
       <div className="pointer-events-none absolute right-1 top-1/2 z-10 hidden -translate-y-1/2 flex-col items-center gap-1 md:flex">
-        {markets.map((_, i) => (
+        {items.map((it, i) => (
           <span
             key={i}
             className={`block h-5 w-0.5 rounded-full transition ${
-              i === idx ? 'bg-volt' : 'bg-white/15'
+              i === idx
+                ? 'bg-volt'
+                : it.kind === 'propose'
+                  ? 'bg-conviction/50'
+                  : 'bg-white/15'
             }`}
           />
         ))}
@@ -212,9 +253,13 @@ export function FeedClient({ markets }: Props) {
         ref={ref}
         className="snap-feed no-scrollbar h-full overflow-y-scroll"
       >
-        {markets.map((m) => (
-          <FeedCard key={m.id} market={m} />
-        ))}
+        {items.map((it, i) =>
+          it.kind === 'market' ? (
+            <FeedCard key={`m-${it.market.id}`} market={it.market} />
+          ) : (
+            <ProposeInterstitial key={`p-${i}`} />
+          )
+        )}
       </div>
 
       {/* Desktop-only keyboard-nav hint + help overlay. Hidden on touch. */}
