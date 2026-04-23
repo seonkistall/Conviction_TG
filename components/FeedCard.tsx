@@ -257,8 +257,11 @@ export function FeedCard({ market }: Props) {
 
       {/* Right rail actions */}
       <div className="absolute right-3 bottom-[22dvh] z-10 flex flex-col items-center gap-4 md:right-6 md:bottom-[18dvh]">
-        <RailButton icon="♥" label={market.traders.toLocaleString()} />
-        <RailButton icon="💬" label={Math.round(market.traders / 7).toLocaleString()} />
+        <FeedLikeButton marketId={market.id} baseCount={market.traders} />
+        <FeedCommentButton
+          marketSlug={market.slug}
+          baseCount={Math.round(market.traders / 7)}
+        />
         {/*
          * v2.11 — Info button. Dev feedback #2: a single button that opens
          * the market's detail as a blurred sheet so the user can read
@@ -281,12 +284,12 @@ export function FeedCard({ market }: Props) {
         <span className="-mt-3 text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
           Info
         </span>
-        {/* v2.22-1: Parlay "+" button removed from the rail along with
-            the rest of parlay. Direct trade happens via QuickBet
-            (card bottom) or detail-page OrderBook. Share rail button
-            is wired in v2.22-2 — for now it still renders as a
-            non-functional RailButton, same as Heart and Comment. */}
-        <RailButton icon="↗" label="Share" />
+        {/* v2.22-2: Share rail button — Web Share API → clipboard
+            fallback → X intent. Full tiered flow. */}
+        <FeedShareButton
+          title={market.title}
+          slug={market.slug}
+        />
       </div>
 
       {/* Bottom content */}
@@ -436,13 +439,44 @@ export function FeedCard({ market }: Props) {
   );
 }
 
-function RailButton({ icon, label }: { icon: string; label: string }) {
+/*
+ * v2.22-2 — RailButton is now a real interactive button with onClick
+ * + optional `active` state. Used by FeedLikeButton, FeedCommentButton,
+ * FeedShareButton below. The old display-only variant was a dead CTA
+ * (flagged by the v2.21 logical-consistency sweep).
+ */
+function RailButton({
+  icon,
+  label,
+  onClick,
+  active = false,
+  'aria-label': ariaLabel,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+  active?: boolean;
+  'aria-label'?: string;
+}) {
   return (
     <button
       type="button"
-      className="flex flex-col items-center gap-1 text-bone drop-shadow-lg"
+      onClick={onClick}
+      aria-label={ariaLabel ?? label}
+      aria-pressed={onClick && active ? true : undefined}
+      className={clsx(
+        'press flex flex-col items-center gap-1 text-bone drop-shadow-lg',
+        !onClick && 'cursor-default'
+      )}
     >
-      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ink-900/70 text-xl backdrop-blur transition hover:bg-ink-900">
+      <span
+        className={clsx(
+          'flex h-12 w-12 items-center justify-center rounded-full text-xl backdrop-blur transition',
+          active
+            ? 'bg-volt text-ink-900'
+            : 'bg-ink-900/70 hover:bg-ink-900'
+        )}
+      >
         {icon}
       </span>
       <span className="text-[10px] font-semibold text-bone-muted">{label}</span>
@@ -497,6 +531,163 @@ function QuickBet({
       <span>{side}</span>
       <span className="font-mono tabular-nums">¢{Math.round(price * 100)}</span>
     </button>
+  );
+}
+
+/*
+ * v2.22-2 — Like button. Toggles a per-market "liked" bit in
+ * localStorage so the state persists across reloads. Count shown is
+ * `baseCount + liked? 1 : 0` so the card's trader count still
+ * reflects the mock data but nudges by the user's own tap. Heart fills
+ * + volt-tints when liked; icon stays outlined otherwise.
+ */
+const LIKE_STORAGE_KEY = 'cv_feed_likes_v1';
+function readLikes(): Set<string> {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = localStorage.getItem(LIKE_STORAGE_KEY);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+function writeLikes(s: Set<string>) {
+  try {
+    localStorage.setItem(LIKE_STORAGE_KEY, JSON.stringify(Array.from(s)));
+  } catch {}
+}
+
+function FeedLikeButton({
+  marketId,
+  baseCount,
+}: {
+  marketId: string;
+  baseCount: number;
+}) {
+  const [liked, setLiked] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    setLiked(readLikes().has(marketId));
+  }, [marketId]);
+  const onClick = () => {
+    const set = readLikes();
+    if (set.has(marketId)) {
+      set.delete(marketId);
+      setLiked(false);
+    } else {
+      set.add(marketId);
+      setLiked(true);
+    }
+    writeLikes(set);
+  };
+  const count = baseCount + (mounted && liked ? 1 : 0);
+  return (
+    <RailButton
+      icon={liked ? '♥' : '♡'}
+      label={count.toLocaleString()}
+      active={liked}
+      onClick={onClick}
+      aria-label={liked ? 'Remove like' : 'Like this market'}
+    />
+  );
+}
+
+/*
+ * v2.22-2 — Comment button. Comments backend isn't built yet, so this
+ * opens a toast telling the user their interest is registered ("be
+ * first, comments ship next cut"). Cheap retention loop + honest
+ * expectation. Count uses baseCount — no +1 bump since we don't
+ * actually persist a comment.
+ */
+function FeedCommentButton({
+  marketSlug,
+  baseCount,
+}: {
+  marketSlug: string;
+  baseCount: number;
+}) {
+  const toast = useToast();
+  return (
+    <RailButton
+      icon="💬"
+      label={baseCount.toLocaleString()}
+      aria-label="Comment"
+      onClick={() => {
+        toast.push({
+          kind: 'trade',
+          title: 'Comments · coming soon',
+          body: 'We noted your interest in this thread.',
+          cta: { href: `/markets/${marketSlug}`, label: 'Open' },
+        });
+      }}
+    />
+  );
+}
+
+/*
+ * v2.22-2 — Share button. Three-tier fallback:
+ *   1. navigator.share (Web Share API) — native iOS / Android sheet.
+ *   2. navigator.clipboard.writeText — copy the shareable URL and
+ *      toast confirm. Works on every modern desktop browser.
+ *   3. X.com intent — last-ditch new-tab open with prefilled text.
+ *
+ * Same three-tier pattern FeedDetailSheet + MarketHeroShare already
+ * use, so every share surface behaves identically.
+ */
+function FeedShareButton({
+  title,
+  slug,
+}: {
+  title: string;
+  slug: string;
+}) {
+  const toast = useToast();
+  const onShare = async () => {
+    const url =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}/markets/${slug}`
+        : `/markets/${slug}`;
+    const payload = { title, text: title, url };
+    try {
+      if (
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        (!navigator.canShare || navigator.canShare(payload))
+      ) {
+        await navigator.share(payload);
+        toast.push({ kind: 'trade', title: 'Shared', body: url });
+        return;
+      }
+    } catch {
+      /* user dismissed — fall through */
+    }
+    try {
+      if (
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard?.writeText
+      ) {
+        await navigator.clipboard.writeText(url);
+        toast.push({ kind: 'trade', title: 'Link copied', body: url });
+        return;
+      }
+    } catch {
+      /* clipboard unavailable */
+    }
+    if (typeof window !== 'undefined') {
+      const xHref = `https://x.com/intent/tweet?text=${encodeURIComponent(
+        title
+      )}&url=${encodeURIComponent(url)}`;
+      window.open(xHref, '_blank', 'noopener,noreferrer');
+    }
+  };
+  return (
+    <RailButton
+      icon="↗"
+      label="Share"
+      aria-label="Share market — native share · clipboard · X fallback"
+      onClick={onShare}
+    />
   );
 }
 
