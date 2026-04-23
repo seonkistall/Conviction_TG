@@ -178,6 +178,43 @@ For pages that need a per-card overlay (e.g. the `% leg` chip on
 plain ReactNodes serialize across the server-to-client boundary, so server
 pages can hand them in without a `"use client"` directive.
 
+## v2.16 — Polish pass: live ticker hardening, OG determinism, a11y
+
+Eight small commits, each shipped independently and CI-verified.
+
+**Live ticker behaves on real devices.** `useLivePrices` now pauses on
+`document.visibilitychange → hidden` and re-arms (with one immediate catch-up
+tick) when the tab returns — Chrome only throttles background `setInterval`
+to ≥1Hz, doesn't stop it. `LiveMarketGrid` adds an `IntersectionObserver`
+gate per grid: stacked grids on `/worlds-2026` and `/narratives/[slug]` no
+longer reconcile every card on every tick while scrolled offscreen.
+
+**OG renderer no longer falls back at runtime.** The `▲` logo glyph
+triggered `next/og`'s dynamic-font fetch (Status 400 — not on Google Fonts),
+producing different fallback shapes between local and Vercel. Replaced with
+a CSS-drawn border triangle (Satori renders borders natively, no font
+lookup). The `Failed to load dynamic font for ▲` warning is gone, OG
+snapshot tolerance tightened from 5% → 3%, baselines expanded 5 → 8 to
+cover NewJeans (long Hangul), BYD (numeric edge in green), KBO Kiwoom
+(player-prop layout).
+
+**Accessibility cleanup.** Per-card `aria-live="polite"` on every
+`MarketCard` price was queueing one announcement per card per tick — a flood
+across a 12-card grid. Removed. `LiveMarketGrid` now owns one sr-only live
+region per grid that emits a debounced summary ("BLACKPINK Reunion moved up
+4 cents to ¢42") only when a market moves ≥3pp, rate-limited to 8s.
+`CommandPalette` input renamed `aria-label="Search"` → `"Command palette
+search"` so it's distinct from `CategoryTabs`' "Search markets" — both for
+SR users and our test selectors.
+
+**Tests assert the ticker actually ticks.** New smoke that samples 8 card
+prices, waits 12s (~3 ticks), asserts at least one moved. Catches the silent
+class of failure where every other assertion passes but the demo looks dead.
+
+**CI live.** `.github/workflows/ci.yml` runs `next build` + chromium
+Playwright suite on every PR + push to main, with `~/.cache/ms-playwright`
+cached across runs.
+
 ## File layout (the interesting parts)
 
 ```
