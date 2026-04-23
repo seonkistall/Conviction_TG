@@ -68,6 +68,31 @@ export function Header() {
            * clicking / tabbing into it dispatches a synthetic ⌘K event
            * so every entry point routes through one focus trap.
            */}
+          {/*
+           * v2.17 — Added a compact mobile/tablet search icon (<lg). The
+           * full search bar only renders at lg+ (≥1024px) due to space
+           * constraints, but through v2.16 sub-lg viewports had *no*
+           * visible entry point into the command palette at all — ⌘K
+           * was pure power-user lore you had to read the source to find.
+           * Phones now see a 40x40 square icon button that dispatches
+           * the same synthetic keydown.
+           */}
+          <button
+            type="button"
+            onClick={() =>
+              window.dispatchEvent(
+                new KeyboardEvent('keydown', {
+                  key: 'k',
+                  metaKey: true,
+                  bubbles: true,
+                })
+              )
+            }
+            className="flex h-10 w-10 items-center justify-center rounded-md border border-white/10 bg-ink-800 transition hover:border-white/20 lg:hidden"
+            aria-label="Open search"
+          >
+            <SearchIcon />
+          </button>
           <button
             type="button"
             onClick={() =>
