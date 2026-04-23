@@ -174,13 +174,20 @@ export function FeedClient({ markets }: Props) {
       </div>
 
       {/* Top overlay — back to grid. `?desktop=1` guards against the mobile
-          middleware redirecting us back to /feed on edge emulation cases. */}
+          middleware redirecting us back to /feed on edge emulation cases.
+          v2.17: Bumped padding (py-1.5→py-2, px-3→px-3.5) so the tap
+          target clears the iOS recommended 44×44 minimum — it was 32px
+          tall in v2.16, hard to hit reliably with a thumb while the
+          rest of the screen is already listening for swipe/double-tap.
+          Added aria-label so SR users don't just hear "Markets" and
+          wonder what they're backing out to. */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 pt-[max(env(safe-area-inset-top),1rem)]">
         <Link
           href="/?desktop=1"
-          className="rounded-full border border-white/10 bg-ink-900/70 px-3 py-1.5 text-[11px] font-semibold text-bone backdrop-blur"
+          aria-label="Exit feed, back to markets grid"
+          className="flex items-center gap-1 rounded-full border border-white/10 bg-ink-900/80 px-3.5 py-2 text-xs font-semibold text-bone backdrop-blur transition hover:bg-ink-900 active:scale-95"
         >
-          ← {t('nav.markets')}
+          <span aria-hidden="true">←</span> {t('nav.markets')}
         </Link>
         <div className="flex items-center gap-1 rounded-full border border-white/10 bg-ink-900/70 px-2 py-1 text-[10px] text-bone-muted backdrop-blur">
           <span className="font-mono tabular-nums text-bone">{idx + 1}</span>
