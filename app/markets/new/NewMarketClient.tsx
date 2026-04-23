@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import clsx from 'clsx';
 import { useT } from '@/lib/i18n';
@@ -50,6 +51,25 @@ export function NewMarketClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /*
+   * v2.21-5 — Placeholder cycling.
+   *
+   * When the textarea is empty AND the user hasn't started the
+   * pipeline yet, rotate the placeholder through SAMPLE_QS every 3s
+   * so the empty state tells a story instead of showing a static
+   * "e.g. ..." hint. Pauses the moment the user types (phase !==
+   * 'idle' || q.trim()) so it never flashes under their caret.
+   */
+  const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  useEffect(() => {
+    if (phase !== 'idle' || q.trim().length > 0) return;
+    const t = setInterval(() => {
+      setPlaceholderIdx((x) => (x + 1) % SAMPLE_QS.length);
+    }, 3000);
+    return () => clearInterval(t);
+  }, [phase, q]);
+  const activePlaceholder = SAMPLE_QS[placeholderIdx];
+
   useEffect(() => () => {
     if (timerRef.current) window.clearTimeout(timerRef.current);
   }, []);
@@ -88,18 +108,38 @@ export function NewMarketClient() {
         </div>
       </div>
 
-      {/* Input */}
+      {/*
+       * v2.21-5 — Input card.
+       *
+       * Polish pass:
+       *   - Placeholder cycles through SAMPLE_QS every 3s when empty
+       *     (see placeholderIdx effect above). key={activePlaceholder}
+       *     triggers a brief fade so each new example feels intentional
+       *     rather than a typo-flicker.
+       *   - Submit button adds active:scale-[0.98] for tactile press
+       *     feedback, matches the Hero / PermissionlessSection CTA
+       *     pattern.
+       *   - New 1-line caption below the textarea sets expectations
+       *     and advertises APAC-language support — a first-time
+       *     evaluator wouldn't otherwise know they can type "블랙핑크
+       *     4인 앨범 2026?" directly.
+       */}
       <div className="mt-8 rounded-3xl border border-white/10 bg-ink-800 p-5">
         <div className="flex items-start gap-3">
           <span className="mt-2 flex h-8 w-8 items-center justify-center rounded-md bg-volt text-sm font-bold text-ink-900">
             ?
           </span>
           <textarea
+            key={activePlaceholder}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={t('newmkt.placeholder')}
+            placeholder={
+              phase === 'idle' && !q.trim()
+                ? activePlaceholder
+                : t('newmkt.placeholder')
+            }
             rows={2}
-            className="flex-1 resize-none bg-transparent text-2xl leading-tight text-bone placeholder:text-bone-muted/60 focus:outline-none md:text-3xl"
+            className="flex-1 resize-none bg-transparent text-2xl leading-tight text-bone transition-opacity duration-500 placeholder:text-bone-muted/60 focus:outline-none md:text-3xl"
             disabled={phase !== 'idle' && phase !== 'done'}
           />
           <button
@@ -107,9 +147,9 @@ export function NewMarketClient() {
             onClick={run}
             disabled={!q.trim() || (phase !== 'idle' && phase !== 'done')}
             className={clsx(
-              'rounded-full px-5 py-3 text-sm font-semibold transition',
+              'rounded-full px-5 py-3 text-sm font-semibold transition active:scale-[0.98]',
               q.trim() && (phase === 'idle' || phase === 'done')
-                ? 'bg-gradient-to-r from-volt to-volt-dark text-ink-900 hover:brightness-105'
+                ? 'bg-gradient-to-r from-volt to-volt-dark text-ink-900 shadow-xl hover:brightness-105'
                 : 'bg-ink-900 text-bone-muted'
             )}
           >
@@ -117,14 +157,20 @@ export function NewMarketClient() {
           </button>
         </div>
 
+        <div className="mt-3 flex items-center gap-2 pl-11 text-[11px] text-bone-muted">
+          <span aria-hidden="true" className="text-conviction">✨</span>
+          Type in English, 한국어, 日本語, or 中文. AI routes to the
+          matching domain stack.
+        </div>
+
         {phase === 'idle' && (
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-2 pl-11">
             {SAMPLE_QS.map((s) => (
               <button
                 key={s}
                 type="button"
                 onClick={() => setQ(s)}
-                className="rounded-full border border-white/10 bg-ink-900 px-3 py-1.5 text-[11px] text-bone-muted hover:text-bone"
+                className="rounded-full border border-white/10 bg-ink-900 px-3 py-1.5 text-[11px] text-bone-muted transition active:scale-95 hover:border-white/20 hover:text-bone"
               >
                 {s}
               </button>
@@ -178,9 +224,13 @@ export function NewMarketClient() {
             </ol>
           </aside>
 
-          {/* Right panel */}
+          {/* Right panel. key={phase} triggers a fade-in each time the
+              pipeline advances — Apple/Toss-style transition feel. */}
           <div className="md:col-span-3">
-            <div className="rounded-2xl border border-white/10 bg-ink-800 p-5">
+            <div
+              key={phase}
+              className="animate-fade-in-up rounded-2xl border border-white/10 bg-ink-800 p-5"
+            >
               {phase === 'parse' && <Parse q={q} />}
               {phase === 'route' && <Route />}
               {phase === 'scrape' && <Scrape />}
@@ -303,20 +353,49 @@ status  ⏳ signing…`}
 function Done({ q }: { q: string }) {
   return (
     <div>
-      <Mono tag="Market live" tone="text-yes" />
+      <Mono tag="✓ Market live · on-chain" tone="text-yes" />
       <h3 className="mt-3 font-display text-2xl text-bone">{q}</h3>
       <div className="mt-4 grid grid-cols-3 gap-2">
         <Kv k="Yes price" v="¢62" />
         <Kv k="AI conf." v="78%" />
         <Kv k="Edge" v="+16 pp" />
       </div>
-      <div className="mt-5 flex gap-2">
-        <button className="rounded-full bg-volt px-4 py-2.5 text-sm font-semibold text-ink-900 hover:bg-volt-dark">
+      {/*
+       * v2.21-5 — Wired CTAs.
+       *
+       * Pre-v2.21 the Done state showed two decorative buttons with no
+       * onClick — the flagship "look, the market just shipped"
+       * moment for a VC demo ended in a dead CTA. Since we don't
+       * actually persist the proposed market in localStorage yet, we
+       * deep-link "Trade market →" to the BLACKPINK binary (the
+       * closest analog in the MARKETS catalog: K-pop, binary, live,
+       * similar confidence range) with `?side=yes` so the intent
+       * carries through v2.17-1's Hero-CTA pattern. Share copies the
+       * question text to clipboard — the cheapest real share without
+       * a proposer identity yet.
+       */}
+      <div className="mt-5 flex flex-wrap gap-2">
+        <Link
+          href="/markets/blackpink-reunion-2026?side=yes"
+          className="rounded-full bg-gradient-to-r from-volt to-volt-dark px-4 py-2.5 text-sm font-semibold text-ink-900 shadow-xl transition active:scale-[0.98] hover:brightness-105"
+        >
           Trade market →
+        </Link>
+        <button
+          type="button"
+          onClick={() => {
+            if (typeof navigator !== 'undefined' && navigator.clipboard) {
+              navigator.clipboard.writeText(q).catch(() => {});
+            }
+          }}
+          className="rounded-full border border-white/10 bg-ink-900 px-4 py-2.5 text-sm font-semibold text-bone transition active:scale-[0.98] hover:bg-ink-700"
+        >
+          Copy question
         </button>
-        <button className="rounded-full border border-white/10 bg-ink-900 px-4 py-2.5 text-sm font-semibold text-bone hover:bg-ink-700">
-          Share draft
-        </button>
+      </div>
+      <div className="mt-3 text-[11px] text-bone-muted">
+        Next step in prod: wallet-connect signs the market draft → HOGC
+        oracle persists on-chain → market appears in everyone's feed.
       </div>
     </div>
   );
