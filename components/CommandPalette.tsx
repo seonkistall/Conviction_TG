@@ -313,7 +313,9 @@ export function CommandPalette() {
             onKeyDown={onInputKey}
             placeholder="Search markets, traders, narratives…"
             className="flex-1 bg-transparent text-sm text-bone placeholder:text-bone-muted/60 focus:outline-none"
-            aria-label="Search"
+            // v2.16: Distinct from CategoryTabs' "Search markets" so screen
+            // readers and our smoke selectors can tell the two apart.
+            aria-label="Command palette search"
             aria-controls="cmdk-list"
             aria-activedescendant={
               hits[sel] ? `cmdk-item-${sel}` : undefined
