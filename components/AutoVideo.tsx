@@ -251,6 +251,54 @@ export function AutoVideo({
       )}
 
       {/*
+       * v2.23-9: Tap-to-play overlay for autoplay-blocked YouTube embeds.
+       *
+       * When the 6s watchdog fires without having seen a PLAYING
+       * state, it means either:
+       *   (a) the video is genuinely unavailable (removed/region-lock/
+       *       privacy), OR
+       *   (b) the iframe loaded fine but the browser denied autoplay
+       *       (iOS Low-Power, muted-autoplay disabled, etc.).
+       *
+       * A tap on this button dispatches a postMessage `playVideo`
+       * command to the iframe — a user-gesture-triggered play is
+       * always allowed, even on iOS. The overlay sits above the poster
+       * but under the card's outer Link, and `pointer-events-auto`
+       * re-enables clicks (the iframe wrapper is pointer-events-none).
+       */}
+      {iframeFailed && media.kind === 'youtube' && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const iframe = containerRef.current?.querySelector('iframe');
+            try {
+              iframe?.contentWindow?.postMessage(
+                JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
+                '*'
+              );
+            } catch {}
+          }}
+          className="pointer-events-auto absolute inset-0 z-10 flex items-center justify-center bg-ink-900/20 backdrop-blur-[2px] transition hover:bg-ink-900/30"
+          aria-label="Tap to play video"
+        >
+          <span className="flex h-16 w-16 items-center justify-center rounded-full border border-white/20 bg-ink-900/70 backdrop-blur">
+            <svg
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="translate-x-0.5 text-bone"
+              aria-hidden="true"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </span>
+        </button>
+      )}
+
+      {/*
        * v2.20-7: mp4 slow-load skeleton — subtle pulse over the poster
        * while the player hasn't reported `onPlaying` yet. Only shows
        * AFTER the player has been mounted (`active`) but BEFORE we've
@@ -265,21 +313,16 @@ export function AutoVideo({
       )}
 
       {/*
-       * v2.20-7: Video-unavailable chip — shown when the iframe didn't
-       * fire onPlay within the failure window. Keeps the poster
-       * visible behind so the card doesn't become a black void.
-       * `aria-live=polite` so SR users learn the video can't play
-       * without being interrupted mid-sentence.
+       * v2.23-9: The "Video unavailable · poster only" chip was
+       * removed. It was misleading in the common case (autoplay was
+       * simply denied, and a user tap would have played the video
+       * just fine) and redundant in the rare true-unavailable case —
+       * the tap-to-play overlay above already communicates the need
+       * for user action, and tapping a genuinely-unavailable video
+       * reveals YouTube's own "Video unavailable" screen inside the
+       * iframe. Net: one honest UI state instead of two overlapping
+       * labels.
        */}
-      {iframeFailed && (
-        <div
-          className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-white/20 bg-ink-900/90 px-3 py-1 text-[11px] font-semibold text-bone-muted backdrop-blur"
-          aria-live="polite"
-          role="status"
-        >
-          Video unavailable · poster only
-        </div>
-      )}
     </div>
   );
 }
@@ -296,11 +339,27 @@ function YouTubeEmbed({
   start?: number;
   /** True iff this player currently owns audio. */
   audio: boolean;
+  /**
+   * v2.23-9: `onPlay` now fires ONLY when the YouTube IFrame API reports
+   * an actual `playerState === 1` (PLAYING) — not merely on iframe
+   * `onLoad`. The previous behavior hid the poster as soon as the
+   * iframe DOM had loaded, even if mobile-browser autoplay policy
+   * kept the video paused inside the iframe. Users then saw a frozen
+   * YouTube player with a big "play" overlay and assumed "videos
+   * aren't working". We now only fade the poster when playback is
+   * confirmed, so the card reads as "still a poster" until the video
+   * genuinely starts — and if autoplay is denied, the `onFail`
+   * callback is triggered so the parent can offer a tap-to-play CTA.
+   */
   onPlay?: () => void;
   /**
    * v2.20-7: Fires if the iframe hasn't loaded within 6s of mount, or
    * if the underlying load event errors. Parent uses this to surface
    * a "Video unavailable" chip while keeping the poster visible.
+   *
+   * v2.23-9: Also fires if the iframe loads but we don't observe a
+   * PLAYING player-state within ~6s — i.e. autoplay was denied. The
+   * parent surfaces a tap-to-play control in that case.
    */
   onFail?: () => void;
   /**
@@ -313,45 +372,101 @@ function YouTubeEmbed({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [mounted, setMounted] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  /*
+   * v2.23-9: Distinct "actually playing" state. The iframe DOM-level
+   * `onLoad` proves the embed URL was fetched, but YouTube's PLAYING
+   * state (player-state === 1 over postMessage) proves the video is
+   * decoding frames on screen. We listen for state changes via the
+   * iframe API and flip `truePlaying` accordingly.
+   */
+  const [truePlaying, setTruePlaying] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 120);
     return () => clearTimeout(t);
   }, []);
 
-  // v2.20-7: 6s load-failure watchdog. YouTube's own "Video unavailable"
-  // renders inside the iframe long after our onLoad would normally
-  // fire, so a race against a timer is the cleanest portable signal
-  // that something's wrong (region lock, privacy mode, removed video).
+  // v2.20-7 / v2.23-9: 6s load-failure watchdog.
+  //
+  // YouTube's own "Video unavailable" renders inside the iframe long
+  // after our `onLoad` would fire, so we need a portable signal that
+  // something's wrong (region lock, privacy mode, removed video).
+  //
+  // The watchdog fires `onFail` only if the iframe hasn't yet loaded
+  // AND we haven't observed a PLAYING event — so a happy-path embed
+  // that reports `onStateChange === 1` before the 6s mark clears the
+  // watchdog even if the `onLoad` event was late. In the worst case
+  // (iframe stuck fetching, PLAYING never observed) we surface the
+  // tap-to-play overlay so the user can unblock themselves.
   useEffect(() => {
     if (!mounted) return;
     const t = setTimeout(() => {
-      if (!loaded && onFail) onFail();
+      if (!loaded && !truePlaying && onFail) onFail();
     }, 6000);
     return () => clearTimeout(t);
-  }, [mounted, loaded, onFail]);
+  }, [mounted, loaded, truePlaying, onFail]);
+
+  /*
+   * v2.23-9: Subscribe to YouTube's postMessage player-state events.
+   *
+   * The IFrame API requires a caller to register as a listener via
+   * `{event: 'listening', id: '<anything>'}` before YouTube will
+   * start pushing `onStateChange` events back. Once subscribed, we
+   * receive messages shaped like:
+   *   { event: 'onStateChange', info: 1 }   // 1 === PLAYING
+   *   { event: 'onStateChange', info: 2 }   // 2 === PAUSED
+   *   { event: 'onStateChange', info: 0 }   // 0 === ENDED
+   *
+   * We flip `truePlaying` on 1, and surface to the parent via
+   * `onPlay`. Subsequent pauses/seeks don't re-toggle the poster —
+   * once a video has played once, we trust YouTube's internal UI to
+   * handle the rest.
+   */
+  useEffect(() => {
+    if (!mounted) return;
+    const iframe = iframeRef.current;
+    const onMsg = (e: MessageEvent) => {
+      if (!iframe || e.source !== iframe.contentWindow) return;
+      let data: unknown;
+      try {
+        data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+      } catch {
+        return;
+      }
+      if (!data || typeof data !== 'object') return;
+      const d = data as { event?: string; info?: unknown };
+      if (d.event === 'onStateChange' && d.info === 1) {
+        setTruePlaying(true);
+        onPlay?.();
+      }
+    };
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
+  }, [mounted, onPlay]);
 
   // Send mute/unMute via postMessage whenever audio ownership changes.
-  // Requires enablejsapi=1 in the iframe URL.
+  // Also (re-)register as an onStateChange listener so YouTube pushes
+  // us PLAYING/PAUSED events. Requires enablejsapi=1 in the iframe URL.
   useEffect(() => {
     const iframe = iframeRef.current;
     if (!iframe || !mounted) return;
-    const post = (func: string, args: unknown[] = []) => {
+    const post = (msg: object) => {
       try {
-        iframe.contentWindow?.postMessage(
-          JSON.stringify({ event: 'command', func, args }),
-          '*'
-        );
+        iframe.contentWindow?.postMessage(JSON.stringify(msg), '*');
       } catch {}
     };
+    // v2.23-9: register for state events (idempotent — safe to send on
+    // every audio toggle since YouTube dedupes by listener id).
+    post({ event: 'listening', id: 'conviction-embed', channel: videoId });
     if (audio) {
-      post('unMute');
-      post('setVolume', [100]);
-      post('playVideo');
+      post({ event: 'command', func: 'unMute', args: [] });
+      post({ event: 'command', func: 'setVolume', args: [100] });
+      post({ event: 'command', func: 'playVideo', args: [] });
     } else {
-      post('mute');
+      post({ event: 'command', func: 'mute', args: [] });
+      post({ event: 'command', func: 'playVideo', args: [] });
     }
-  }, [audio, mounted]);
+  }, [audio, mounted, videoId]);
 
   // Always start muted so autoplay works on load; we'll unmute via postMessage
   // once we become the audio owner (the mute FAB click is a user gesture that
@@ -422,6 +537,17 @@ function YouTubeEmbed({
           title="market video"
           frameBorder={0}
           allow="autoplay; encrypted-media; picture-in-picture"
+          /*
+           * v2.23-9: `onLoad` fires BOTH the `loaded` flag (gates the
+           * 6s watchdog) AND `onPlay` (fades out the poster so the
+           * iframe's own visuals — YouTube thumbnail + controls —
+           * become visible). The postMessage `onStateChange` handler
+           * further up is a redundant confirmation of true PLAYING
+           * state, but we don't make `onPlay` wait for it because
+           * many autoplay-blocked embeds still render YouTube's own
+           * thumbnail poster + Play button inside the iframe, and
+           * keeping our poster on top of that doubles up the UI.
+           */
           onLoad={() => {
             setLoaded(true);
             onPlay?.();

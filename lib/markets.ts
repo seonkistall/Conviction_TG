@@ -1120,8 +1120,8 @@ export const MARKETS: Market[] = [
     kind: 'binary',
     media: {
       kind: 'youtube',
-      src: 'V37TaRdVUjg',
-      poster: 'https://i.ytimg.com/vi/V37TaRdVUjg/maxresdefault.jpg',
+      src: 'V37TaRdVUQY',
+      poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/maxresdefault.jpg',
     },
     tags: ['K-Pop', 'IVE', 'MAMA', 'Daesang', 'Starship'],
     status: 'live',
@@ -1540,7 +1540,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'KR',
     dropsAt: '2026-11-28T12:00:00Z',
     heat: 0.78,
-    poster: 'https://i.ytimg.com/vi/V37TaRdVUjg/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/maxresdefault.jpg',
   },
   {
     id: 'db_05',
@@ -1638,7 +1638,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'JP',
     dropsAt: '2026-08-02T10:00:00Z',
     heat: 0.64,
-    poster: 'https://i.ytimg.com/vi/V37TaRdVUjg/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/maxresdefault.jpg',
   },
 ];
 
