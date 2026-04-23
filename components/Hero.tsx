@@ -11,9 +11,16 @@ import { pct, formatUSD, timeUntil } from '@/lib/format';
 export function Hero({ markets }: { markets: Market[] }) {
   // Hero rotates through binary markets with the cleanest YES/NO narrative.
   // Always exclude resolved markets — the hero is for live action only.
+  // v2.19-4: Expanded from 4 → 6. APAC surface now covers K/J/C/IN
+  // explicitly (post-v2.17 copy reframing), and 4 slots meant 2/3 of
+  // any visit showed only K-pop + esports featured cards even when
+  // trending NPB / Bollywood / macro markets existed. Six is wide
+  // enough to surface regional diversity on any given visit, narrow
+  // enough that the rotation cycle (7s/slide × 6 = 42s) still feels
+  // like curation rather than a ticker.
   const featured = markets
     .filter((m) => m.kind === 'binary' && m.trending && m.status !== 'resolved')
-    .slice(0, 4);
+    .slice(0, 6);
   const [i, setI] = useState(0);
 
   useEffect(() => {
@@ -160,9 +167,25 @@ function HeroCard({
                * for the editorial look, but the clickable hit area is padded
                * out to 32x32 via an invisible wrapper button so it meets
                * mobile tap-target guidance (WCAG 2.5.5 min 24x24, we exceed).
+               *
+               * v2.19-4 — Added a compact "N of M" counter to the left of
+               * the dots. The dots alone communicate position but don't
+               * advertise depth — a reader who glanced at the hero for 2s
+               * on a visit where slot 1 didn't land couldn't tell whether
+               * there were 3 more to scroll through or 30. The counter
+               * makes the catalog feel deeper without adding UI weight.
                */}
-              <div className="flex gap-0">
-                {featured.map((_, idx) => (
+              <div className="flex items-center gap-2">
+                <span
+                  className="rounded-full bg-ink-900/80 px-2 py-0.5 font-mono text-[10px] tabular-nums text-bone-muted backdrop-blur"
+                  aria-hidden="true"
+                >
+                  <span className="text-bone">{i + 1}</span>
+                  <span className="mx-0.5">/</span>
+                  <span>{featured.length}</span>
+                </span>
+                <div className="flex gap-0">
+                  {featured.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => setI(idx)}
@@ -176,7 +199,8 @@ function HeroCard({
                       }`}
                     />
                   </button>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
 
