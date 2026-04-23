@@ -2,13 +2,21 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 import clsx from 'clsx';
 import { useT } from '@/lib/i18n';
 import { TimezoneCluster } from './TimezoneCluster';
+import { ConnectModal } from './ConnectModal';
 
 export function Header() {
   const t = useT();
   const path = usePathname();
+  // v2.20-1: The Connect button had no onClick through v2.19 — same dead
+  // CTA state the Hero had pre-v2.17. Now it surfaces a "sign-in coming
+  // soon" modal with the roadmap (SSO + wallet + HOGC oracle) + a mailto
+  // notify hook so evaluators see the intent without wondering why
+  // nothing happened.
+  const [connectOpen, setConnectOpen] = useState(false);
 
   const NAV = [
     { label: t('nav.markets'), href: '/' },
@@ -120,11 +128,17 @@ export function Header() {
             <span className="live-dot" />
             {t('nav.live')}
           </button>
-          <button className="rounded-md bg-volt px-4 py-1.5 text-sm font-semibold text-ink-900 transition hover:bg-volt-dark">
+          <button
+            type="button"
+            onClick={() => setConnectOpen(true)}
+            className="rounded-md bg-volt px-4 py-1.5 text-sm font-semibold text-ink-900 transition hover:bg-volt-dark"
+            aria-haspopup="dialog"
+          >
             {t('nav.connect')}
           </button>
         </div>
       </div>
+      <ConnectModal open={connectOpen} onClose={() => setConnectOpen(false)} />
     </header>
   );
 }
