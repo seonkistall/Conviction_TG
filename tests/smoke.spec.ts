@@ -312,3 +312,67 @@ test.describe('smoke · v2.11 desktop /feed chrome', () => {
     ).toBeGreaterThan(72);
   });
 });
+
+/*
+ * v2.16 — Live ticker actually ticks.
+ *
+ * Why this exists
+ * ---------------
+ * The v2.13 `useLivePrices` hook + v2.15 `<LiveMarketGrid>` wrapper are the
+ * "this product is alive" signal. If the tick loop silently dies — visibility
+ * gate stuck off, IntersectionObserver bug freezing the grid, provider
+ * unmounted on a route — every market price becomes static. The demo looks
+ * dead but every assertion above still passes. This test catches that by
+ * sampling the displayed price text on multiple homepage cards before and
+ * after a tick window, then asserting at least one card moved.
+ *
+ * Tolerance reasoning: TICK_MS = 4000, MAX_STEP = ±1.8pp. Across 8 cards
+ * in a 12s window (~3 ticks) the probability that NOT A SINGLE rounded ¢
+ * value changes is vanishingly small (~10^-6). If we see no movement,
+ * the ticker is broken, not unlucky.
+ */
+test.describe('smoke · v2.16 live ticker', () => {
+  test('Homepage market prices tick within 12s', async ({ page }) => {
+    await page.addInitScript(() => {
+      try {
+        window.localStorage.setItem('cv_onboarded_v1', '1');
+      } catch {
+        /* noop */
+      }
+    });
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    // Sample the price text from the first 8 visible market cards. The
+    // selector targets the font-mono price span inside MarketCard.
+    const priceLocator = page.locator(
+      'a[href^="/markets/"] span.font-mono.tabular-nums'
+    );
+    const sampleCount = Math.min(8, await priceLocator.count());
+    expect(
+      sampleCount,
+      'expected at least 4 market cards on the homepage to sample'
+    ).toBeGreaterThanOrEqual(4);
+
+    const before: string[] = [];
+    for (let i = 0; i < sampleCount; i++) {
+      before.push((await priceLocator.nth(i).textContent()) ?? '');
+    }
+
+    // Wait through ~3 tick boundaries. The provider ticks at 4000ms.
+    await page.waitForTimeout(12_000);
+
+    const after: string[] = [];
+    for (let i = 0; i < sampleCount; i++) {
+      after.push((await priceLocator.nth(i).textContent()) ?? '');
+    }
+
+    const changed = before.filter((b, i) => b !== after[i]).length;
+    expect(
+      changed,
+      `Expected at least one of ${sampleCount} cards to tick within 12s.\n` +
+        `before=${JSON.stringify(before)}\nafter=${JSON.stringify(after)}\n` +
+        `If 0 changed, useLivePrices/visibilitychange/IntersectionObserver gating is likely broken.`
+    ).toBeGreaterThan(0);
+  });
+});
