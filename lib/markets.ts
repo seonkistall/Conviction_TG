@@ -835,6 +835,306 @@ export const MARKETS: Market[] = [
     aiTrend: 'flat',
     edgePP: 7,
   },
+
+  // --------------------- v2.21 — APAC EXPANSION ----------------------
+  //
+  // Added 10 markets to tell the full "APAC-native, not K-only" story
+  // at a glance for a VC-deck demo. Coverage map:
+  //   - India    (Bollywood, IPL)
+  //   - Japan    (YOASOBI, Demon Slayer, NPB, BOJ)
+  //   - China    (JDG at Worlds)
+  //   - SEA      (MLBB M-series)
+  //   - Korea    (IVE, Upbit)
+  //
+  // Video IDs reuse known-public public YouTube MVs / trailers; posters
+  // fall back through the v2.16 chain if a specific ID has been pulled.
+  //
+  // -------------------------------- INDIA ---------------------------
+
+  {
+    id: 'mkt_pathaan_2_box_office',
+    slug: 'pathaan-2-opening-week-500cr',
+    title: "Shah Rukh Khan's Pathaan sequel crosses ₹500cr opening week?",
+    description:
+      'Resolves YES if the opening-week (7 days from theatrical release) net box office for Pathaan 2 (dir. Siddharth Anand) crosses ₹500 crore across India + overseas combined, per Box Office India + Koimoi tracking.',
+    category: 'Entertainment',
+    region: 'SEA',
+    endsAt: '2026-09-15T18:30:00Z',
+    resolvesAt: '2026-09-22T00:00:00Z',
+    volume: 612_800,
+    liquidity: 172_100,
+    traders: 2_141,
+    yesProb: 0.58,
+    kind: 'binary',
+    media: {
+      kind: 'youtube',
+      src: 'vqu4z34wENw',
+      poster: 'https://i.ytimg.com/vi/vqu4z34wENw/maxresdefault.jpg',
+    },
+    tags: ['Bollywood', 'SRK', 'India', 'Box Office'],
+    status: 'live',
+    aiConfidence: 0.66,
+    aiTrend: 'up',
+    trending: true,
+    edgePP: 8,
+    vibe: 0.71,
+  },
+  {
+    id: 'mkt_ipl_opener_beats_sb',
+    slug: 'ipl-2026-opener-beats-super-bowl',
+    title: 'IPL 2026 opener beats Super Bowl LX on same-day streaming viewers?',
+    description:
+      'Resolves YES if JioCinema + Hotstar combined live concurrent viewership for IPL 2026 opener (expected late-March) exceeds NBC + Peacock peak concurrent for Super Bowl LX (Feb 8, 2026).',
+    category: 'Sports',
+    region: 'SEA',
+    endsAt: '2026-03-28T15:00:00Z',
+    resolvesAt: '2026-04-03T00:00:00Z',
+    volume: 1_080_400,
+    liquidity: 281_200,
+    traders: 3_902,
+    yesProb: 0.71,
+    kind: 'binary',
+    media: {
+      kind: 'youtube',
+      src: 'XBPN_WdYNrY',
+      poster: 'https://i.ytimg.com/vi/XBPN_WdYNrY/maxresdefault.jpg',
+    },
+    tags: ['Cricket', 'IPL', 'India', 'Streaming'],
+    status: 'live',
+    aiConfidence: 0.79,
+    aiTrend: 'up',
+    trending: true,
+    edgePP: 8,
+  },
+
+  // -------------------------------- JAPAN ---------------------------
+
+  {
+    id: 'mkt_yoasobi_billboard',
+    slug: 'yoasobi-billboard-hot-100-top-40',
+    title: 'YOASOBI charts Billboard Hot 100 top 40 in 2026?',
+    description:
+      'Resolves YES if any YOASOBI single (new or catalog) charts in the weekly Billboard Hot 100 top 40 at any point during calendar 2026. Digital + streaming aggregate, per official Billboard chart.',
+    category: 'K-Pop',
+    region: 'JP',
+    endsAt: '2026-12-31T07:00:00Z',
+    resolvesAt: '2027-01-10T00:00:00Z',
+    volume: 524_900,
+    liquidity: 142_800,
+    traders: 1_812,
+    yesProb: 0.34,
+    kind: 'binary',
+    media: {
+      kind: 'youtube',
+      src: 'ZRtdQ81jPUQ',
+      poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/maxresdefault.jpg',
+    },
+    tags: ['J-Pop', 'YOASOBI', 'Japan', 'Billboard'],
+    status: 'live',
+    aiConfidence: 0.42,
+    aiTrend: 'up',
+    edgePP: 8,
+    vibe: 0.62,
+    trending: true,
+  },
+  {
+    id: 'mkt_demon_slayer_p3_2026',
+    slug: 'demon-slayer-infinity-castle-p3-2026',
+    title: 'Demon Slayer: Infinity Castle Part 3 releases before end of 2026?',
+    description:
+      'Resolves YES if ufotable / Aniplex announces AND theatrically releases the final Part 3 of the Infinity Castle trilogy in any market before Dec 31, 2026 11:59PM JST.',
+    category: 'Anime',
+    region: 'JP',
+    endsAt: '2026-12-31T14:59:00Z',
+    resolvesAt: '2027-01-05T00:00:00Z',
+    volume: 826_100,
+    liquidity: 218_400,
+    traders: 3_218,
+    yesProb: 0.27,
+    kind: 'binary',
+    media: {
+      kind: 'youtube',
+      src: 'a9tq0aS5Zu8',
+      poster: 'https://i.ytimg.com/vi/a9tq0aS5Zu8/maxresdefault.jpg',
+    },
+    tags: ['Anime', 'Demon Slayer', 'ufotable', 'Aniplex'],
+    status: 'live',
+    aiConfidence: 0.35,
+    aiTrend: 'flat',
+    edgePP: 8,
+    vibe: 0.68,
+  },
+  {
+    id: 'mkt_yakult_japan_series_26',
+    slug: 'yakult-swallows-japan-series-2026',
+    title: 'Yakult Swallows win the 2026 Japan Series?',
+    description:
+      'Resolves YES if the Tokyo Yakult Swallows lift the Japan Series championship trophy at the conclusion of the 2026 NPB postseason. Best of 7 format, CL champion vs PL champion.',
+    category: 'Sports',
+    region: 'JP',
+    endsAt: '2026-11-05T12:00:00Z',
+    resolvesAt: '2026-11-10T00:00:00Z',
+    volume: 372_500,
+    liquidity: 102_300,
+    traders: 1_228,
+    yesProb: 0.12,
+    kind: 'binary',
+    media: {
+      kind: 'youtube',
+      src: 'TYJNV5uAC-Q',
+      poster: 'https://i.ytimg.com/vi/TYJNV5uAC-Q/maxresdefault.jpg',
+    },
+    tags: ['NPB', 'Yakult', 'Japan', 'Baseball'],
+    status: 'live',
+    aiConfidence: 0.18,
+    aiTrend: 'flat',
+    edgePP: 6,
+  },
+  {
+    id: 'mkt_boj_rate_cut_q3',
+    slug: 'boj-first-rate-cut-by-q3-2026',
+    title: 'BOJ delivers its first rate cut (since 2016) by end of Q3 2026?',
+    description:
+      "Resolves YES if the Bank of Japan's Policy Board announces a cut to the uncollateralized overnight call rate (or equivalent policy rate) at any meeting on or before Sep 30, 2026. Hikes do not resolve the market.",
+    category: 'Finance',
+    region: 'JP',
+    endsAt: '2026-09-30T03:00:00Z',
+    resolvesAt: '2026-10-07T00:00:00Z',
+    volume: 1_312_700,
+    liquidity: 341_900,
+    traders: 4_281,
+    yesProb: 0.23,
+    kind: 'binary',
+    media: {
+      kind: 'youtube',
+      src: 'XVl8xdRDFkk',
+      poster: 'https://i.ytimg.com/vi/XVl8xdRDFkk/maxresdefault.jpg',
+    },
+    tags: ['BOJ', 'Japan', 'Macro', 'Rates'],
+    status: 'live',
+    aiConfidence: 0.17,
+    aiTrend: 'down',
+    edgePP: 6,
+  },
+
+  // -------------------------------- CHINA ---------------------------
+
+  {
+    id: 'mkt_jdg_worlds_final_2026',
+    slug: 'jdg-reaches-worlds-2026-final',
+    title: 'JDG reaches the 2026 LoL Worlds Finals?',
+    description:
+      'Resolves YES if JD Gaming advances to (wins semifinals at) the 2026 League of Legends World Championship Finals stage, regardless of final result.',
+    category: 'Esports',
+    region: 'CN',
+    endsAt: '2026-11-01T12:00:00Z',
+    resolvesAt: '2026-11-10T00:00:00Z',
+    volume: 918_400,
+    liquidity: 241_800,
+    traders: 3_841,
+    yesProb: 0.39,
+    kind: 'binary',
+    media: {
+      kind: 'youtube',
+      src: 'AOTfM6H8XOo',
+      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+      start: 15,
+    },
+    tags: ['LoL', 'LPL', 'JDG', 'Knight', 'Worlds'],
+    status: 'live',
+    aiConfidence: 0.45,
+    aiTrend: 'up',
+    trending: true,
+    edgePP: 6,
+  },
+
+  // --------------------------------- SEA ----------------------------
+
+  {
+    id: 'mkt_mlbb_m6_record',
+    slug: 'mlbb-m6-jakarta-viewer-record',
+    title: 'MLBB M6 Jakarta breaks peak concurrent viewer record?',
+    description:
+      'Resolves YES if MOONTON reports peak concurrent viewers for the M6 World Championship (hosted in Jakarta) exceeds the current MLBB World Championship record set at M5.',
+    category: 'Esports',
+    region: 'SEA',
+    endsAt: '2026-12-15T12:00:00Z',
+    resolvesAt: '2026-12-22T00:00:00Z',
+    volume: 288_100,
+    liquidity: 78_400,
+    traders: 1_041,
+    yesProb: 0.63,
+    kind: 'binary',
+    media: {
+      kind: 'youtube',
+      src: 'qIxdS0ZZ-qU',
+      poster: 'https://i.ytimg.com/vi/qIxdS0ZZ-qU/maxresdefault.jpg',
+    },
+    tags: ['MLBB', 'MOONTON', 'Indonesia', 'SEA Esports'],
+    status: 'live',
+    aiConfidence: 0.72,
+    aiTrend: 'up',
+    trending: true,
+    edgePP: 9,
+  },
+
+  // -------------------------------- KOREA ---------------------------
+
+  {
+    id: 'mkt_ive_mama_daesang_2026',
+    slug: 'ive-mama-daesang-2026',
+    title: 'IVE wins Artist of the Year (Daesang) at MAMA 2026?',
+    description:
+      "Resolves YES if IVE is announced as the Daesang winner of the 'Artist of the Year' category at the 2026 MAMA Awards ceremony. Only the top-line Daesang counts — genre Bonsang awards do not resolve YES.",
+    category: 'K-Pop',
+    region: 'KR',
+    endsAt: '2026-11-28T12:00:00Z',
+    resolvesAt: '2026-12-02T00:00:00Z',
+    volume: 491_200,
+    liquidity: 127_300,
+    traders: 2_008,
+    yesProb: 0.31,
+    kind: 'binary',
+    media: {
+      kind: 'youtube',
+      src: 'V37TaRdVUjg',
+      poster: 'https://i.ytimg.com/vi/V37TaRdVUjg/maxresdefault.jpg',
+    },
+    tags: ['K-Pop', 'IVE', 'MAMA', 'Daesang', 'Starship'],
+    status: 'live',
+    aiConfidence: 0.38,
+    aiTrend: 'up',
+    edgePP: 7,
+    vibe: 0.66,
+    trending: true,
+  },
+  {
+    id: 'mkt_upbit_vs_binance_2026',
+    slug: 'upbit-volume-share-over-20pct',
+    title: 'Upbit captures >20% of global spot crypto volume on any Q2 day?',
+    description:
+      "Resolves YES if Upbit's reported daily spot volume (CoinGecko + Kaiko blended) exceeds 20% of global spot crypto exchange volume on any trading day in Q2 2026. Kimchi-premium weeks historically spike to ~15%.",
+    category: 'Crypto',
+    region: 'KR',
+    endsAt: '2026-06-30T14:59:00Z',
+    resolvesAt: '2026-07-07T00:00:00Z',
+    volume: 742_300,
+    liquidity: 198_400,
+    traders: 2_581,
+    yesProb: 0.28,
+    kind: 'binary',
+    media: {
+      kind: 'youtube',
+      src: '2wf-lzoWPwY',
+      poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/maxresdefault.jpg',
+      start: 4,
+    },
+    tags: ['Crypto', 'Upbit', 'Korea', 'Binance'],
+    status: 'live',
+    aiConfidence: 0.34,
+    aiTrend: 'up',
+    edgePP: 6,
+  },
 ];
 
 export function getMarket(idOrSlug: string): Market | undefined {
