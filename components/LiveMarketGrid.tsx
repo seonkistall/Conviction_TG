@@ -93,27 +93,79 @@ export function LiveMarketGrid({
 
   const display = visible ? live : frozenRef.current;
 
+  // v2.16: A single grid-level live region replaces the per-card aria-live
+  // we had in v2.15 (which announced every tick on every visible card —
+  // a flood for screen reader users). We watch for any market whose
+  // displayed pct moved ≥3pp from the last *announced* value, then emit
+  // one polite message. Rate-limited to 8s so a thrashing tape doesn't
+  // overwhelm the queue. Empty string by default so SR doesn't read
+  // anything on first render.
+  const lastAnnouncedRef = useRef<Record<string, number>>(seeds);
+  const lastAnnouncedAtRef = useRef<number>(0);
+  const [announcement, setAnnouncement] = useState('');
+  useEffect(() => {
+    if (!visible) return;
+    const now = Date.now();
+    if (now - lastAnnouncedAtRef.current < 8000) return;
+    let biggest:
+      | { market: Market; from: number; to: number; delta: number }
+      | null = null;
+    for (const m of markets) {
+      const to = Math.round((display[m.id] ?? m.yesProb) * 100);
+      const from = Math.round(
+        (lastAnnouncedRef.current[m.id] ?? m.yesProb) * 100
+      );
+      const delta = Math.abs(to - from);
+      if (delta >= 3 && (!biggest || delta > biggest.delta)) {
+        biggest = { market: m, from, to, delta };
+      }
+    }
+    if (!biggest) return;
+    setAnnouncement(
+      `${biggest.market.title} moved ${biggest.from > biggest.to ? 'down' : 'up'} ${biggest.delta} cents to ${biggest.to} cents.`
+    );
+    // Update *all* baselines, not just the announced one — otherwise a
+    // single big mover keeps stealing the queue while smaller drifts
+    // accumulate silently.
+    for (const m of markets) {
+      lastAnnouncedRef.current[m.id] = display[m.id] ?? m.yesProb;
+    }
+    lastAnnouncedAtRef.current = now;
+  }, [display, visible, markets]);
+
   return (
-    <div ref={rootRef} className={clsx(className ?? DEFAULT_GRID)}>
-      {markets.map((m) => {
-        const card = (
-          <MarketCard
-            market={m}
-            size={size}
-            livePrice={display[m.id]}
-          />
-        );
-        const decorator = decorators?.[m.id];
-        if (decorator) {
-          return (
-            <div key={m.id} className="relative">
-              {decorator}
-              {card}
-            </div>
+    <>
+      <div ref={rootRef} className={clsx(className ?? DEFAULT_GRID)}>
+        {markets.map((m) => {
+          const card = (
+            <MarketCard
+              market={m}
+              size={size}
+              livePrice={display[m.id]}
+            />
           );
-        }
-        return <div key={m.id}>{card}</div>;
-      })}
-    </div>
+          const decorator = decorators?.[m.id];
+          if (decorator) {
+            return (
+              <div key={m.id} className="relative">
+                {decorator}
+                {card}
+              </div>
+            );
+          }
+          return <div key={m.id}>{card}</div>;
+        })}
+      </div>
+      {/* sr-only live region. One per grid; debounced + threshold-gated
+          (see the effect above) so screen readers get a useful summary
+          rather than a per-tick price firehose. */}
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {announcement}
+      </div>
+    </>
   );
 }

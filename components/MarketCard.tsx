@@ -107,7 +107,13 @@ export function MarketCard({ market, size = 'md', livePrice }: Props) {
                   // across a 12-card grid) and only let the digits move.
                   isLive && 'transition-opacity'
                 )}
-                aria-live={isLive ? 'polite' : undefined}
+                // v2.16: Removed aria-live. Every tick was queueing a polite
+                // announcement on every visible card — across a 12-card
+                // grid that's a flood. The price is already in the parent
+                // Link's aria-label, so SR users hear it once when they
+                // focus the card. Significant per-grid moves are surfaced
+                // in a dedicated sr-only live region inside
+                // <LiveMarketGrid> (debounced + threshold-gated).
               >
                 {pct(displayProb)}
               </span>
