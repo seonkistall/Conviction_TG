@@ -1,8 +1,73 @@
 import Link from 'next/link';
 import clsx from 'clsx';
-import { TRADERS, MARKETS } from '@/lib/markets';
+import { TRADERS, AI_TRADERS, MARKETS } from '@/lib/markets';
 import { formatUSD, pct } from '@/lib/format';
 import { LiveMarketGrid } from '@/components/LiveMarketGrid';
+
+/**
+ * v2.20-6 — Agentic / Human / All filter for the leaderboard.
+ *
+ * Pre-v2.20 the leaderboard surfaced TRADERS (humans) only. AI_TRADERS
+ * lived exclusively on /traders/[handle] detail + the AgenticTraders
+ * home-section, with no leaderboard view — so a reader evaluating
+ * "which quants should I copy?" vs "which humans are edging the AI?"
+ * had no direct comparison surface.
+ *
+ * We now merge both arrays into a normalized `LeaderRow` and filter
+ * via `?type=human|ai|all` (default all). Tabs are `<Link>`s so the
+ * page stays fully static — no client handler needed. The AI label
+ * and model surface in the table so rank #3 being an AI quant vs
+ * rank #4 being a human narrative trader is legible at a glance.
+ */
+interface LeaderRow {
+  id: string;
+  handle: string;
+  avatar: string;
+  region: 'KR' | 'JP' | 'SEA' | 'APAC' | 'GLOBAL';
+  pnl30d: number;
+  winRate: number;
+  isAi: boolean;
+  // Only one of these will be meaningful per row — the table branches
+  // off `isAi`.
+  streak?: number;
+  badge?: 'oracle' | 'culture' | 'sniper' | 'whale';
+  volume30d?: number;
+  model?: string;
+  aum?: number;
+  followers?: number;
+}
+
+type LeaderFilter = 'all' | 'human' | 'ai';
+
+function buildRows(filter: LeaderFilter): LeaderRow[] {
+  const humanRows: LeaderRow[] = TRADERS.map((t) => ({
+    id: t.id,
+    handle: t.handle,
+    avatar: t.avatar,
+    region: t.region,
+    pnl30d: t.pnl30d,
+    winRate: t.winRate,
+    isAi: false,
+    streak: t.streak,
+    badge: t.badge,
+    volume30d: t.volume30d,
+  }));
+  const aiRows: LeaderRow[] = AI_TRADERS.map((t) => ({
+    id: t.id,
+    handle: t.handle,
+    avatar: t.avatar,
+    region: t.region,
+    pnl30d: t.pnl30d,
+    winRate: t.winRate,
+    isAi: true,
+    model: t.model,
+    aum: t.aum,
+    followers: t.followers,
+  }));
+  const rows =
+    filter === 'human' ? humanRows : filter === 'ai' ? aiRows : [...humanRows, ...aiRows];
+  return rows.sort((a, b) => b.pnl30d - a.pnl30d);
+}
 
 const REGION_LABEL: Record<string, string> = {
   KR: '🇰🇷 Korea',
@@ -19,8 +84,18 @@ const BADGE_LABEL: Record<string, string> = {
   whale: '🐋 Whale',
 };
 
-export default function LeaderboardPage() {
-  const top = TRADERS;
+export default function LeaderboardPage({
+  searchParams,
+}: {
+  searchParams?: { type?: string };
+}) {
+  const filter: LeaderFilter =
+    searchParams?.type === 'human'
+      ? 'human'
+      : searchParams?.type === 'ai'
+        ? 'ai'
+        : 'all';
+  const top = buildRows(filter);
   const hotMarkets = [...MARKETS]
     .sort((a, b) => b.traders - a.traders)
     .slice(0, 6);
@@ -38,22 +113,43 @@ export default function LeaderboardPage() {
           <p className="mt-3 max-w-2xl text-bone-muted">
             Conviction's leaderboard is ranked by 30-day P&L, not just volume.
             Winning $1 on a contrarian call counts more than churning whales.
+            Human traders and agentic quants compete on the same ladder.
           </p>
         </div>
+        {/*
+         * v2.20-6 — Segmented filter: All / Humans / Agentic. Links, not
+         * buttons, so the page stays fully static-renderable. Active tab
+         * is derived from the URL search param, so bookmarks and share
+         * links preserve the view.
+         */}
         <div className="flex items-center gap-1 rounded-full border border-white/10 bg-ink-800 p-1 text-xs">
-          {['30D', '90D', 'Season', 'All-time'].map((t, i) => (
-            <button
-              key={t}
-              className={clsx(
-                'rounded-full px-3 py-1 font-semibold transition',
-                i === 0
-                  ? 'bg-white/10 text-bone'
-                  : 'text-bone-muted hover:text-bone'
-              )}
-            >
-              {t}
-            </button>
-          ))}
+          {(
+            [
+              { label: '🌏 All', value: 'all', count: TRADERS.length + AI_TRADERS.length },
+              { label: '🧑 Humans', value: 'human', count: TRADERS.length },
+              { label: '🤖 Agentic', value: 'ai', count: AI_TRADERS.length },
+            ] as const
+          ).map((t) => {
+            const active = filter === t.value;
+            return (
+              <Link
+                key={t.value}
+                href={t.value === 'all' ? '/leaderboard' : `/leaderboard?type=${t.value}`}
+                aria-current={active ? 'page' : undefined}
+                className={clsx(
+                  'flex items-center gap-1.5 rounded-full px-3 py-1 font-semibold transition',
+                  active
+                    ? 'bg-white/10 text-bone'
+                    : 'text-bone-muted hover:text-bone'
+                )}
+              >
+                <span>{t.label}</span>
+                <span className="font-mono text-[10px] tabular-nums text-bone-muted">
+                  {t.count}
+                </span>
+              </Link>
+            );
+          })}
         </div>
       </div>
 
@@ -81,18 +177,40 @@ export default function LeaderboardPage() {
                 <div className="text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
                   {REGION_LABEL[t.region]}
                 </div>
-                <h3 className="font-display text-3xl text-bone">@{t.handle}</h3>
-                {t.badge && (
+                <h3 className="font-display text-3xl text-bone">
+                  {t.isAi && (
+                    <span
+                      aria-label="Agentic trader"
+                      className="mr-1"
+                    >
+                      🤖
+                    </span>
+                  )}
+                  @{t.handle}
+                </h3>
+                {/* v2.20-6 — Badge row adapts to trader kind. Humans get
+                    their existing badge chip; AI rows get a "Model · AI
+                    agent" pill so the scan-read tells you "this is a
+                    quant" without hunting. */}
+                {t.isAi ? (
+                  <span className="mt-2 inline-block rounded-full border border-conviction/40 bg-conviction/10 px-2.5 py-1 text-[11px] text-conviction">
+                    🤖 {t.model} · AI agent
+                  </span>
+                ) : t.badge ? (
                   <span className="mt-2 inline-block rounded-full border border-white/10 bg-ink-900 px-2.5 py-1 text-[11px] text-bone">
                     {BADGE_LABEL[t.badge]}
                   </span>
-                )}
+                ) : null}
               </div>
 
               <div className="mt-6 grid grid-cols-3 gap-3">
                 <Mini k="P&L 30d" v={`+${formatUSD(t.pnl30d)}`} accent="text-volt" />
                 <Mini k="Winrate" v={pct(t.winRate)} />
-                <Mini k="Streak" v={`${t.streak}W`} />
+                {t.isAi ? (
+                  <Mini k="AUM" v={formatUSD(t.aum ?? 0)} />
+                ) : (
+                  <Mini k="Streak" v={`${t.streak ?? 0}W`} />
+                )}
               </div>
             </div>
           </div>
@@ -107,30 +225,56 @@ export default function LeaderboardPage() {
               <Th className="w-12">Rank</Th>
               <Th>Trader</Th>
               <Th>Region</Th>
-              <Th>Badge</Th>
+              <Th>Kind / badge</Th>
               <Th className="text-right">P&L 30d</Th>
               <Th className="text-right">Winrate</Th>
-              <Th className="text-right">Volume</Th>
-              <Th className="text-right">Streak</Th>
+              {/* v2.20-6: column heading adapts — when filtering to AI
+                  only, we show AUM; human only, Volume; mixed, a
+                  combined "Volume / AUM" header with per-row formatting. */}
+              <Th className="text-right">
+                {filter === 'ai' ? 'AUM' : filter === 'human' ? 'Volume' : 'Volume / AUM'}
+              </Th>
+              <Th className="text-right">
+                {filter === 'ai' ? 'Followers' : filter === 'human' ? 'Streak' : 'Streak / Fol.'}
+              </Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">
             {top.map((t, i) => (
-              <tr key={t.id} className="hover:bg-ink-700/50">
+              <tr
+                key={t.id}
+                className={clsx(
+                  'hover:bg-ink-700/50',
+                  t.isAi && 'bg-conviction/[0.04]'
+                )}
+              >
                 <td className="p-4 font-mono text-bone-muted">#{i + 1}</td>
                 <td className="p-4">
                   <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-900 text-xl">
                       {t.avatar}
                     </span>
-                    <span className="font-medium text-bone">@{t.handle}</span>
+                    {t.isAi ? (
+                      <Link
+                        href={`/traders/${t.handle}`}
+                        className="font-medium text-bone hover:text-conviction"
+                      >
+                        🤖 @{t.handle}
+                      </Link>
+                    ) : (
+                      <span className="font-medium text-bone">@{t.handle}</span>
+                    )}
                   </div>
                 </td>
                 <td className="p-4 text-bone-muted">
                   {REGION_LABEL[t.region]}
                 </td>
                 <td className="p-4">
-                  {t.badge ? (
+                  {t.isAi ? (
+                    <span className="rounded-full border border-conviction/40 bg-conviction/10 px-2 py-1 text-[11px] text-conviction">
+                      🤖 {t.model}
+                    </span>
+                  ) : t.badge ? (
                     <span className="rounded-full border border-white/10 bg-ink-900 px-2 py-1 text-[11px] text-bone">
                       {BADGE_LABEL[t.badge]}
                     </span>
@@ -145,10 +289,12 @@ export default function LeaderboardPage() {
                   {pct(t.winRate)}
                 </td>
                 <td className="p-4 text-right font-mono tabular-nums text-bone-muted">
-                  {formatUSD(t.volume30d)}
+                  {t.isAi ? formatUSD(t.aum ?? 0) : formatUSD(t.volume30d ?? 0)}
                 </td>
                 <td className="p-4 text-right font-mono tabular-nums text-bone">
-                  {t.streak}W
+                  {t.isAi
+                    ? `${(t.followers ?? 0).toLocaleString()}`
+                    : `${t.streak ?? 0}W`}
                 </td>
               </tr>
             ))}
