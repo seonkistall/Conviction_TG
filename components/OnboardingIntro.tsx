@@ -68,13 +68,19 @@ const slides: Slide[] = [
     titleKey: 'onb.3.title',
     bodyKey: 'onb.3.body',
     bg: 'from-conviction/20 via-volt/10 to-ink-900',
+    // v2.17 — Previous visual showed a static phone with right-rail icons
+    // (♥ + ↗) but never taught the primary gestures: double-tap = YES,
+    // single-tap = global mute. These are the main ways a reader
+    // interacts with the feed, and leaving them to a source-code comment
+    // was the biggest gulf-of-execution gap in the whole product. We now
+    // label the two taps explicitly with a pulsing dot + caption.
     visual: (
       <div className="relative mx-auto h-52 w-36 overflow-hidden rounded-3xl border border-white/15 bg-ink-900">
         <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-conviction/30 to-transparent" />
         <div className="absolute bottom-3 left-3 right-3 space-y-1">
           <div className="h-1 w-10 rounded-full bg-volt" />
           <div className="text-[10px] font-bold leading-tight text-bone">
-            BLACKPINK tops Spotify · Q4 2026?
+            T1 wins Worlds 2026?
           </div>
           <div className="flex gap-1 pt-1">
             <div className="flex-1 rounded bg-yes/90 py-0.5 text-center text-[9px] font-bold text-ink-900">
@@ -85,10 +91,21 @@ const slides: Slide[] = [
             </div>
           </div>
         </div>
-        <div className="absolute right-2 top-1/3 flex flex-col gap-2 text-[10px] text-bone-muted">
-          <span className="rounded-full bg-ink-800 px-1.5 py-0.5">♥</span>
-          <span className="rounded-full bg-volt/90 px-1.5 py-0.5 text-ink-900">+</span>
-          <span className="rounded-full bg-ink-800 px-1.5 py-0.5">↗</span>
+        {/* Double-tap gesture hint: pulsing ring centered on the card */}
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2"
+          aria-hidden="true"
+        >
+          <span className="absolute inline-flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full bg-volt/30" />
+          <span className="relative inline-flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-volt text-[11px] font-bold text-ink-900">
+            2×
+          </span>
+        </div>
+        <div className="absolute left-2 top-2 rounded-md bg-ink-900/85 px-1.5 py-0.5 text-[9px] font-semibold text-volt">
+          2× tap · YES
+        </div>
+        <div className="absolute right-2 top-2 rounded-md bg-ink-900/85 px-1.5 py-0.5 text-[9px] font-semibold text-bone-muted">
+          1× tap · mute
         </div>
       </div>
     ),

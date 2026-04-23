@@ -86,15 +86,15 @@ const EN: Dict = {
   'onb.skip': 'Skip',
   'onb.next': 'Next',
   'onb.start': 'Start trading',
-  'onb.1.title': 'Trade every Asia narrative',
+  'onb.1.title': 'Trade every APAC narrative',
   'onb.1.body':
-    'K-pop, K-drama, LCK, KBO, BTC, elections — every Asia thesis is a market priced in ¢.',
+    'K-pop, anime, LCK vs LPL, NPB, Bollywood, BTC at the Tokyo open — every APAC thesis priced in ¢.',
   'onb.2.title': 'AI-graded evidence',
   'onb.2.body':
-    'Qwen3 drafts, Sonnet-4.6 verifies. 23 scrapers keep every market honest — inspect the evidence bundle on any card.',
-  'onb.3.title': 'Swipe, stack, conviction',
+    'Qwen3 drafts, Sonnet-4.6 verifies. 23 scrapers keep every market honest — tap any AI dial to inspect the evidence bundle.',
+  'onb.3.title': 'Feed with feel',
   'onb.3.body':
-    'TikTok-style feed. Tap + to stack picks into a parlay, copy-trade agentic quants, ride the Hallyu wave on-chain.',
+    'TikTok-style vertical scroll. Double-tap a card for YES. Single-tap to mute. The gesture is the UI — no buttons to hunt for.',
 
   'mobnav.markets': 'Markets',
   'mobnav.feed': 'Feed',
