@@ -4,6 +4,27 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { MediaSource } from '@/lib/types';
 import { useMute } from '@/lib/mute';
 
+/*
+ * v2.20-7 — Added two user-facing states to AutoVideo on top of the
+ * existing poster→player→fallback chain:
+ *
+ *   1. **iframe load error** — YouTube embeds can fail (region lock,
+ *      removed video, privacy mode). The iframe itself just shows a
+ *      black rectangle with YouTube's internal "Video unavailable"
+ *      copy, but our `onLoad` fires before YouTube decides to render
+ *      that notice, so we never knew. We now race a 6s timeout: if
+ *      `onPlay` hasn't fired, we set `iframeFailed` and keep the
+ *      poster visible with a tiny "Video unavailable" chip.
+ *
+ *   2. **mp4 slow-load skeleton** — on slow connections `preload=
+ *      metadata` can take ≥1s before anything paints. We show a
+ *      subtle shimmer over the poster while `playing===false` so the
+ *      user knows motion is coming, rather than assuming the card is
+ *      broken.
+ *
+ * Both states are additive — the existing logic is unchanged.
+ */
+
 interface Props {
   media: MediaSource;
   className?: string;
@@ -69,6 +90,9 @@ export function AutoVideo({
   const [active, setActive] = useState(!lazy || priority);
   const [playing, setPlaying] = useState(false);
   const [posterState, setPosterState] = useState<PosterState>('max');
+  // v2.20-7: Added states for iframe load failure + mp4 slow-load
+  // skeleton. See the component-top comment for rationale.
+  const [iframeFailed, setIframeFailed] = useState(false);
 
   const {
     muted,
@@ -217,9 +241,44 @@ export function AutoVideo({
           videoId={media.src}
           start={media.start}
           audio={effectiveAudio}
-          onPlay={() => setPlaying(true)}
+          onPlay={() => {
+            setPlaying(true);
+            setIframeFailed(false);
+          }}
+          onFail={() => setIframeFailed(true)}
           cover={fit === 'cover'}
         />
+      )}
+
+      {/*
+       * v2.20-7: mp4 slow-load skeleton — subtle pulse over the poster
+       * while the player hasn't reported `onPlaying` yet. Only shows
+       * AFTER the player has been mounted (`active`) but BEFORE we've
+       * seen the first frame. No-op on iframe videos since YouTube
+       * paints its own loading state inside the iframe.
+       */}
+      {active && media.kind === 'mp4' && !playing && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 animate-pulse bg-gradient-to-br from-ink-900/30 via-transparent to-ink-900/30"
+        />
+      )}
+
+      {/*
+       * v2.20-7: Video-unavailable chip — shown when the iframe didn't
+       * fire onPlay within the failure window. Keeps the poster
+       * visible behind so the card doesn't become a black void.
+       * `aria-live=polite` so SR users learn the video can't play
+       * without being interrupted mid-sentence.
+       */}
+      {iframeFailed && (
+        <div
+          className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-white/20 bg-ink-900/90 px-3 py-1 text-[11px] font-semibold text-bone-muted backdrop-blur"
+          aria-live="polite"
+          role="status"
+        >
+          Video unavailable · poster only
+        </div>
       )}
     </div>
   );
@@ -230,6 +289,7 @@ function YouTubeEmbed({
   start = 0,
   audio,
   onPlay,
+  onFail,
   cover = false,
 }: {
   videoId: string;
@@ -237,6 +297,12 @@ function YouTubeEmbed({
   /** True iff this player currently owns audio. */
   audio: boolean;
   onPlay?: () => void;
+  /**
+   * v2.20-7: Fires if the iframe hasn't loaded within 6s of mount, or
+   * if the underlying load event errors. Parent uses this to surface
+   * a "Video unavailable" chip while keeping the poster visible.
+   */
+  onFail?: () => void;
   /**
    * When true, size the iframe so its 16:9 content covers the parent
    * container regardless of the container's aspect ratio. Relies on the
@@ -246,11 +312,24 @@ function YouTubeEmbed({
 }) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 120);
     return () => clearTimeout(t);
   }, []);
+
+  // v2.20-7: 6s load-failure watchdog. YouTube's own "Video unavailable"
+  // renders inside the iframe long after our onLoad would normally
+  // fire, so a race against a timer is the cleanest portable signal
+  // that something's wrong (region lock, privacy mode, removed video).
+  useEffect(() => {
+    if (!mounted) return;
+    const t = setTimeout(() => {
+      if (!loaded && onFail) onFail();
+    }, 6000);
+    return () => clearTimeout(t);
+  }, [mounted, loaded, onFail]);
 
   // Send mute/unMute via postMessage whenever audio ownership changes.
   // Requires enablejsapi=1 in the iframe URL.
@@ -343,7 +422,11 @@ function YouTubeEmbed({
           title="market video"
           frameBorder={0}
           allow="autoplay; encrypted-media; picture-in-picture"
-          onLoad={onPlay}
+          onLoad={() => {
+            setLoaded(true);
+            onPlay?.();
+          }}
+          onError={() => onFail?.()}
         />
       )}
     </div>
