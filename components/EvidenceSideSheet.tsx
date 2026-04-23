@@ -36,6 +36,50 @@ const PROVIDER_WHY: Record<string, string> = {
   RAG: 'Retrieval-augmented generation over our own historical market + resolution corpus.',
 };
 
+// v2.18-4 — Provider → category classification. The swarm's narrative
+// ("23-source evidence") lands flat when the side sheet shows 4-7
+// anonymous provider chips in a vertical list. Grouping them into four
+// semantic buckets makes the breadth legible at a glance: "this verdict
+// triangulated web search + community sentiment + authoritative market
+// data + our own historical RAG, not just one channel."
+type ProviderCategory = 'Web' | 'Community' | 'Market data' | 'RAG';
+const PROVIDER_CATEGORY: Record<string, ProviderCategory> = {
+  Brave: 'Web',
+  Exa: 'Web',
+  Naver: 'Web',
+  Weverse: 'Community',
+  CoinGecko: 'Market data',
+  TheSportsDB: 'Market data',
+  RAG: 'RAG',
+};
+const CATEGORY_ORDER: ProviderCategory[] = [
+  'Web',
+  'Community',
+  'Market data',
+  'RAG',
+];
+const CATEGORY_BLURB: Record<ProviderCategory, string> = {
+  Web: 'Wide-net search across public APAC publishers',
+  Community: 'Fan-community sentiment signals (K-pop, J-pop, esports)',
+  'Market data': 'Authoritative sports, crypto, financial feeds',
+  RAG: 'Historical market + resolution corpus (ChromaDB)',
+};
+
+// v2.18-3 — small human-readable "time ago" used in the summary strip.
+// Rounds to the nearest sensible unit; deliberately simple because we
+// only render one value at a time.
+function timeAgo(isoOrMs: string | number): string {
+  const t = typeof isoOrMs === 'number' ? isoOrMs : Date.parse(isoOrMs);
+  if (!Number.isFinite(t)) return '—';
+  const mins = Math.max(0, Math.round((Date.now() - t) / 60000));
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  return `${days}d ago`;
+}
+
 export function EvidenceSideSheet({ bundle, open, onClose }: Props) {
   const t = useT();
 
@@ -113,72 +157,193 @@ export function EvidenceSideSheet({ bundle, open, onClose }: Props) {
           </p>
         ) : (
           <>
-            {/* Reasoning */}
-            <section className="mt-6 rounded-2xl border border-white/10 bg-ink-800 p-5">
-              <h3 className="text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
-                {t('evidence.reasoning')}
+            {/*
+             * v2.18-5 — Reasoning is the punchline of the whole side sheet:
+             * it's the one-paragraph "WHY did the AI land on this verdict."
+             * Promoted to a bigger, higher-contrast callout so it lands
+             * before the user's eyes drift to the provider list.
+             */}
+            <section className="mt-6 rounded-2xl border border-conviction/30 bg-gradient-to-br from-conviction/10 via-ink-800 to-ink-800 p-5">
+              <h3 className="text-[11px] font-semibold uppercase tracking-widest text-conviction">
+                Why this verdict
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-bone">
+              <p className="mt-2 text-[15px] leading-relaxed text-bone">
                 {bundle.reasoning}
               </p>
             </section>
 
-            {/* Sources */}
+            {/*
+             * v2.18-3 — Source summary strip. Surfaces the three facts
+             * that anchor the "23-source evidence swarm" value prop in
+             * numbers the user can actually see:
+             *   - Total source count (for THIS bundle).
+             *   - Average per-source confidence.
+             *   - Freshness (most recently retrieved signal).
+             */}
+            <section className="mt-6">
+              {(() => {
+                const n = bundle.sources.length;
+                const avgConf = n
+                  ? Math.round(
+                      (bundle.sources.reduce(
+                        (a, s) => a + s.confidence,
+                        0
+                      ) /
+                        n) *
+                        100
+                    )
+                  : 0;
+                const latestMs = n
+                  ? bundle.sources.reduce(
+                      (acc, s) => {
+                        const t = Date.parse(s.retrievedAt);
+                        return Number.isFinite(t) && t > acc ? t : acc;
+                      },
+                      0
+                    )
+                  : 0;
+                return (
+                  <div className="grid grid-cols-3 gap-2 rounded-xl border border-white/10 bg-ink-800 p-3">
+                    <SummaryStat
+                      label="Sources"
+                      value={`${n}`}
+                      sub="active this bundle"
+                    />
+                    <SummaryStat
+                      label="Avg conf."
+                      value={`${avgConf}%`}
+                      sub="across sources"
+                      accent={
+                        avgConf >= 80
+                          ? 'text-yes'
+                          : avgConf >= 60
+                            ? 'text-volt'
+                            : 'text-bone'
+                      }
+                    />
+                    <SummaryStat
+                      label="Latest"
+                      value={latestMs ? timeAgo(latestMs) : '—'}
+                      sub="retrieved"
+                    />
+                  </div>
+                );
+              })()}
+            </section>
+
+            {/*
+             * v2.18-4 — Source list, grouped by provider category. Each
+             * category gets a 1-line blurb below the header so the user
+             * understands WHY four categories of source complement each
+             * other rather than looking like a grab-bag.
+             */}
             <section className="mt-6">
               <h3 className="mb-3 flex items-center justify-between text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
                 <span>{t('evidence.sources')}</span>
-                <span className="font-mono text-bone">{bundle.sources.length}</span>
+                <span className="font-mono text-bone">
+                  {bundle.sources.length}
+                </span>
               </h3>
-              <ul className="space-y-3">
-                {bundle.sources.map((s) => (
-                  <li
-                    key={s.id}
-                    className="rounded-xl border border-white/10 bg-ink-800 p-4"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={clsx(
-                          'rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest',
-                          PROVIDER_TINT[s.provider] ?? 'bg-white/10 text-bone'
-                        )}
-                        title={PROVIDER_WHY[s.provider] ?? s.provider}
-                      >
-                        {s.provider}
-                      </span>
-                      <div className="ml-auto flex items-center gap-2">
-                        <ConfidenceDot v={s.confidence} />
-                        <span className="font-mono text-[11px] tabular-nums text-bone">
-                          {Math.round(s.confidence * 100)}%
+
+              {CATEGORY_ORDER.map((cat) => {
+                const group = bundle.sources.filter(
+                  (s) =>
+                    (PROVIDER_CATEGORY[s.provider] ?? 'Web') === cat
+                );
+                if (group.length === 0) return null;
+                return (
+                  <div key={cat} className="mb-4">
+                    <div className="mb-2 flex items-baseline justify-between gap-2">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-bone">
+                          {cat}
+                        </span>
+                        <span className="font-mono text-[10px] tabular-nums text-bone-muted">
+                          {group.length}
                         </span>
                       </div>
-                    </div>
-                    <div className="mt-2 text-sm font-medium text-bone">
-                      {s.title}
-                    </div>
-                    <p className="mt-1 text-[13px] leading-relaxed text-bone-muted">
-                      "{s.excerpt}"
-                    </p>
-                    <div className="mt-2 flex items-center justify-between text-[11px]">
-                      <a
-                        href={s.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="truncate text-conviction hover:underline"
-                      >
-                        {s.url}
-                      </a>
-                      <span className="font-mono text-bone-muted">
-                        {t('evidence.retrieved')}{' '}
-                        {new Date(s.retrievedAt).toLocaleString()}
+                      <span className="truncate text-[10px] text-bone-muted">
+                        {CATEGORY_BLURB[cat]}
                       </span>
                     </div>
-                  </li>
-                ))}
-              </ul>
+                    <ul className="space-y-3">
+                      {group.map((s) => (
+                        <li
+                          key={s.id}
+                          className="rounded-xl border border-white/10 bg-ink-800 p-4"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={clsx(
+                                'rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest',
+                                PROVIDER_TINT[s.provider] ??
+                                  'bg-white/10 text-bone'
+                              )}
+                              title={PROVIDER_WHY[s.provider] ?? s.provider}
+                            >
+                              {s.provider}
+                            </span>
+                            <div className="ml-auto flex items-center gap-2">
+                              <ConfidenceDot v={s.confidence} />
+                              <span className="font-mono text-[11px] tabular-nums text-bone">
+                                {Math.round(s.confidence * 100)}%
+                              </span>
+                            </div>
+                          </div>
+                          <div className="mt-2 text-sm font-medium text-bone">
+                            {s.title}
+                          </div>
+                          <p className="mt-1 text-[13px] leading-relaxed text-bone-muted">
+                            "{s.excerpt}"
+                          </p>
+                          <div className="mt-2 flex items-center justify-between text-[11px]">
+                            <a
+                              href={s.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="truncate text-conviction hover:underline"
+                            >
+                              {s.url}
+                            </a>
+                            <span className="font-mono text-bone-muted">
+                              {t('evidence.retrieved')}{' '}
+                              {timeAgo(s.retrievedAt)}
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
             </section>
           </>
         )}
       </aside>
+    </div>
+  );
+}
+
+function SummaryStat({
+  label,
+  value,
+  sub,
+  accent,
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  accent?: string;
+}) {
+  return (
+    <div className="rounded-lg bg-ink-900 p-2.5">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
+        {label}
+      </div>
+      <div className={clsx('mt-0.5 font-mono text-lg font-bold tabular-nums', accent ?? 'text-bone')}>
+        {value}
+      </div>
+      <div className="text-[10px] text-bone-muted">{sub}</div>
     </div>
   );
 }
