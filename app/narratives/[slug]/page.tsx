@@ -255,6 +255,94 @@ export default function NarrativePage({
         </div>
       </section>
 
+      {/*
+       * v2.19-7 — "Why this basket" thesis callout.
+       *
+       * Landing on /narratives/[slug] the reader saw: big visual hero
+       * with the blurb in the subtitle, then jumped straight into the
+       * 30-day price chart. The thesis — WHY these particular markets
+       * travel together, what the AI sees across them — never got a
+       * dedicated surface; the blurb buried it in hero chrome.
+       *
+       * This section promotes the thesis: the blurb as a large-type
+       * callout with a conviction-tinted gradient (same visual
+       * language as the Evidence sheet's "Why this verdict" in v2.18),
+       * plus three derived signal stats that anchor it in the actual
+       * basket data — no new mock needed.
+       */}
+      {(() => {
+        const categories = Array.from(
+          new Set(legs.map((l) => l.market.category))
+        );
+        const topLeg = legs
+          .slice()
+          .sort((a, b) => b.weight - a.weight)[0];
+        const avgAiConf = legs.length
+          ? Math.round(
+              (legs.reduce((a, l) => a + l.market.aiConfidence, 0) /
+                legs.length) *
+                100
+            )
+          : 0;
+        return (
+          <section className="mx-auto max-w-[1440px] px-6 pt-12">
+            <div className="rounded-3xl border border-conviction/30 bg-gradient-to-br from-conviction/10 via-ink-800 to-ink-800 p-6 md:p-8">
+              <div className="text-[11px] font-semibold uppercase tracking-widest text-conviction">
+                Why this basket
+              </div>
+              <p className="mt-3 max-w-3xl text-base leading-relaxed text-bone md:text-lg">
+                {nx.blurb}
+              </p>
+              <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="rounded-xl border border-white/10 bg-ink-900 p-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
+                    Coverage
+                  </div>
+                  <div className="mt-1 font-mono text-lg font-bold tabular-nums text-bone">
+                    {legs.length} markets
+                  </div>
+                  <div className="text-[11px] text-bone-muted">
+                    across {categories.length}{' '}
+                    {categories.length === 1 ? 'category' : 'categories'} ·{' '}
+                    {categories.slice(0, 3).join(' · ')}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-ink-900 p-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
+                    Heaviest leg
+                  </div>
+                  <div className="mt-1 truncate font-mono text-lg font-bold tabular-nums text-bone">
+                    {Math.round((topLeg?.weight ?? 0) * 100)}%
+                  </div>
+                  <div className="truncate text-[11px] text-bone-muted">
+                    {topLeg?.market.title ?? '—'}
+                  </div>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-ink-900 p-3">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
+                    AI swarm · avg confidence
+                  </div>
+                  <div
+                    className={`mt-1 font-mono text-lg font-bold tabular-nums ${
+                      avgAiConf >= 80
+                        ? 'text-yes'
+                        : avgAiConf >= 60
+                          ? 'text-volt'
+                          : 'text-bone'
+                    }`}
+                  >
+                    {avgAiConf}%
+                  </div>
+                  <div className="text-[11px] text-bone-muted">
+                    Qwen3 → Sonnet-4.6 · across legs
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
+
       {/* ----- Basket price sparkline ----- */}
       <section className="mx-auto max-w-[1440px] px-6 pt-12">
         <div className="rounded-3xl border border-white/10 bg-ink-800 p-6">
