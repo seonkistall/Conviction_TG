@@ -119,6 +119,12 @@ export default async function Image({ params }: { params: { id: string } }) {
               gap: '14px',
             }}
           >
+            {/* v2.16: CSS-drawn triangle. The previous Unicode ▲ triggered
+                next/og's dynamic-font fetch (Status 400 for that codepoint),
+                producing a fallback glyph that varied between local and
+                Vercel runtimes — the noise we sized the OG snapshot
+                tolerance around. Borders render natively in Satori, no
+                font lookup. */}
             <div
               style={{
                 display: 'flex',
@@ -128,12 +134,17 @@ export default async function Image({ params }: { params: { id: string } }) {
                 background: '#C6FF3D',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#05060A',
-                fontSize: 22,
-                fontWeight: 800,
               }}
             >
-              ▲
+              <div
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeft: '9px solid transparent',
+                  borderRight: '9px solid transparent',
+                  borderBottom: '14px solid #05060A',
+                }}
+              />
             </div>
             <div
               style={{

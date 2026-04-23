@@ -2,7 +2,9 @@ import { test, expect } from '@playwright/test';
 
 /**
  * v2.14 — Edge OG image pixel regression.  v2.15 — baselines committed,
- * default-on.
+ * default-on.  v2.16 — coverage expanded to 8 routes, tolerance tightened
+ * to 3% after the ▲-glyph dynamic-font fix removed Vercel-vs-local font
+ * fallback jitter.
  *
  * Why this exists
  * ---------------
@@ -14,26 +16,26 @@ import { test, expect } from '@playwright/test';
  *
  * How it works
  * ------------
- * For a hand-picked set of representative routes (one market per
- * K/J/C region + two trader personas) we hit the OG endpoint directly,
- * render the returned PNG in a blank page, and diff it against a
- * checked-in baseline with a generous pixel tolerance. Fonts and emoji
- * can jitter a few pixels between runs, but a real breakage (missing
- * card, wrong tint, empty title) always blows through 5%.
+ * For a hand-picked set of representative routes (markets across K/J/C
+ * regions covering different card-layout shapes + two trader personas)
+ * we hit the OG endpoint directly, render the returned PNG in a blank
+ * page, and diff it against a checked-in baseline. Fonts can still
+ * jitter a small amount across runs (subpixel hinting, anti-aliasing
+ * differences across Chromium versions), but a real breakage — missing
+ * card, dropped Hangul, empty title — always blows through 3%.
  *
  * Tolerance note
  * --------------
- * 5% is wider than the 2% that's typical for raster diffs. It's tuned
- * for `next/og`'s dynamic-font behavior — the runtime fetches glyphs at
- * request time, and the same image rendered locally vs. on Vercel can
- * fall back to a different font if the dynamic-font fetch fails in
- * one environment but not the other. 5% absorbs the "logo glyph
- * swapped for fallback" jitter while still tripping on a fully-broken
- * card.
+ * Started at 5% in v2.15 to absorb the dynamic-font fallback jitter from
+ * the ▲ logo glyph (next/og's runtime font fetch returned 400 for that
+ * codepoint, so local and Vercel renders disagreed on the fallback). In
+ * v2.16 the logo became a CSS-drawn triangle (no font needed), so we
+ * tightened to 3% — wide enough to absorb subpixel hinting noise, tight
+ * enough to catch a layout regression on a single quadrant of the card.
  *
  * Re-baselining
  * -------------
- * If a deliberate OG layout change pushes a diff above 5%, run:
+ * If a deliberate OG layout change pushes a diff above 3%, run:
  *
  *   npx playwright test tests/og.spec.ts \
  *     --project=chromium --update-snapshots
@@ -62,6 +64,24 @@ const OG_TARGETS: { name: string; path: string }[] = [
   {
     name: 'market-hanshin-tigers',
     path: '/markets/hanshin-tigers-japan-series-2026/opengraph-image/hanshin-tigers-japan-series-2026',
+  },
+  // v2.16: Three additional layout shapes that v2.15 baselines didn't
+  // cover. NewJeans = K-pop debut card style (long Hangul-leaning title +
+  // trending chip), BYD = global EV market (large numeric AI edge), KBO =
+  // baseball player prop (player-handle category pill). Each renders a
+  // different AI edge polarity, which exercises the green/red branch in
+  // markets/[id]/opengraph-image.tsx.
+  {
+    name: 'market-newjeans-comeback',
+    path: '/markets/newjeans-comeback-q4/opengraph-image/newjeans-comeback-q4',
+  },
+  {
+    name: 'market-byd-tesla-ev',
+    path: '/markets/byd-beats-tesla-ev-2026/opengraph-image/byd-beats-tesla-ev-2026',
+  },
+  {
+    name: 'market-kiwoom-kbo',
+    path: '/markets/kiwoom-kbo-2026/opengraph-image/kiwoom-kbo-2026',
   },
   {
     name: 'trader-ai-oracle-kr',
@@ -95,11 +115,12 @@ test.describe('visual · OG images', () => {
       const img = page.locator('img').first();
       await expect(img).toBeVisible();
       await expect(img).toHaveScreenshot(`${name}.png`, {
-        // 5% tolerates next/og dynamic-font fallbacks across CI vs.
-        // Vercel runtime, plus the usual font hinting / emoji subpixel
-        // jitter. Real regressions (missing card, dropped Hangul,
-        // empty title) always exceed this by a wide margin.
-        maxDiffPixelRatio: 0.05,
+        // 3% (down from 5% in v2.15) — the ▲ logo is now CSS-drawn so
+        // the dynamic-font fallback jitter is gone. Remaining variance
+        // is subpixel hinting only. Real regressions (missing card,
+        // dropped Hangul, empty title) always exceed this by a wide
+        // margin.
+        maxDiffPixelRatio: 0.03,
       });
     });
   }

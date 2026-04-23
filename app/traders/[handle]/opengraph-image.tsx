@@ -122,6 +122,9 @@ export default async function Image({ params }: { params: { handle: string } }) 
               gap: '14px',
             }}
           >
+            {/* v2.16: CSS-drawn triangle replaces ▲ Unicode (next/og's
+                dynamic-font fetch returned 400 for that codepoint). See
+                markets/[id]/opengraph-image.tsx for the same fix. */}
             <div
               style={{
                 display: 'flex',
@@ -131,12 +134,17 @@ export default async function Image({ params }: { params: { handle: string } }) 
                 background: '#C6FF3D',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#05060A',
-                fontSize: 22,
-                fontWeight: 800,
               }}
             >
-              ▲
+              <div
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeft: '9px solid transparent',
+                  borderRight: '9px solid transparent',
+                  borderBottom: '14px solid #05060A',
+                }}
+              />
             </div>
             <div
               style={{
