@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useToast } from '@/lib/toast';
+import { PriceChart } from './PriceChart';
 
 /**
  * v2.21-7 — Market-detail hero Share button, wired.
@@ -138,17 +139,25 @@ export function PriceRangeTabs({
   );
 }
 
+/**
+ * v2.21-7.1 — PriceChart is imported inside this client component
+ * rather than passed as a prop. Next 14 rejects passing React
+ * component functions across the server→client boundary at runtime
+ * (the "Functions cannot be passed directly to Client Components"
+ * error). Since both PriceChart and this wrapper are presentational
+ * + reasonably small, co-locating the import here is cleaner than
+ * juggling a server/client split through component-factory props.
+ */
 export function PriceChartWithRange({
   seed,
-  Chart,
   heading,
 }: {
   seed: number;
-  Chart: React.ComponentType<{ seed: number; days: number; stroke?: string }>;
   /**
    * Optional headline element rendered to the left of the range tabs.
-   * Passed from the server component so `<h3>` stays part of the
-   * static SSR markup + the chart-range state stays client.
+   * Passed from the server component as a ReactNode (serializable) so
+   * `<h3>` stays part of the SSR markup + the chart-range state stays
+   * client.
    */
   heading?: React.ReactNode;
 }) {
@@ -160,7 +169,7 @@ export function PriceChartWithRange({
         <PriceRangeTabs days={days} onChange={setDays} />
       </div>
       <div className="h-64 chart-grid-bg">
-        <Chart seed={seed} days={days} />
+        <PriceChart seed={seed} days={days} />
       </div>
     </>
   );

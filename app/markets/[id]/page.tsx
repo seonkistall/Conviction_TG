@@ -234,7 +234,6 @@ export default function MarketDetailPage({
           <div className="rounded-2xl border border-white/10 bg-ink-800 p-5">
             <PriceChartWithRange
               seed={seed}
-              Chart={PriceChart}
               heading={
                 <h3 className="font-display text-2xl text-bone">
                   Price history
