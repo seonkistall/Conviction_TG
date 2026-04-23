@@ -107,12 +107,50 @@ export function EvidenceSideSheet({ bundle, open, onClose }: Props) {
         )}
         onClick={onClose}
       />
+      {/*
+       * v2.19-6 — Responsive sheet shape.
+       *
+       * Pre-v2.19 the sheet was a full-width right-side slide-in on every
+       * viewport, including phones — which meant it covered the whole
+       * mobile screen with a right-edge shadow that made no sense for
+       * thumb dismissal. Modern mobile convention (TikTok, Twitter,
+       * native iOS/Android sheets) is a bottom-sheet with a draggable
+       * top handle + tap-outside backdrop.
+       *
+       * We now render:
+       *   - Mobile (< md): bottom sheet at 85dvh max-height with a
+       *     rounded top, 10×1.5 drag handle at the top, slide-up from
+       *     `translate-y-full`. Swipe-down dismissal is delegated to
+       *     native overscroll (the sheet is its own scroll container,
+       *     so pulling past top fires the FeedDetailSheet pattern).
+       *   - Desktop (md+): unchanged — right-side slide-in, full
+       *     height, 520px wide.
+       *
+       * The transform classes branch on the breakpoint; the overlay
+       * backdrop already covered both cases.
+       */}
       <aside
         className={clsx(
-          'absolute right-0 top-0 h-full w-full overflow-y-auto border-l border-white/10 bg-ink-900 p-6 shadow-2xl transition-transform duration-300 md:w-[520px]',
-          open ? 'translate-x-0' : 'translate-x-full'
+          // Base
+          'absolute overflow-y-auto bg-ink-900 shadow-2xl transition-transform duration-300',
+          // Mobile shape: bottom sheet
+          'inset-x-0 bottom-0 max-h-[85dvh] rounded-t-3xl border-t border-white/10 p-5 pb-[calc(env(safe-area-inset-bottom,0)+1rem)]',
+          // Desktop shape: right-side, full height (overrides bottom-sheet props)
+          'md:inset-y-0 md:right-0 md:left-auto md:bottom-auto md:h-full md:w-[520px] md:max-h-none md:rounded-none md:border-l md:border-t-0 md:p-6 md:pb-6',
+          // Transform — slide direction varies by breakpoint
+          open
+            ? 'translate-y-0 md:translate-x-0'
+            : 'translate-y-full md:translate-x-full md:translate-y-0'
         )}
       >
+        {/* Mobile-only drag handle — visual affordance; swipe dismissal
+            delegated to native overscroll since the sheet is its own
+            scroll container. */}
+        <div
+          aria-hidden="true"
+          className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-white/15 md:hidden"
+        />
+
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-widest text-conviction">
