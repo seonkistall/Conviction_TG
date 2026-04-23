@@ -866,10 +866,15 @@ export const MARKETS: Market[] = [
     traders: 2_141,
     yesProb: 0.58,
     kind: 'binary',
+    // v2.22-4: Video ID audit. Pathaan-specific trailer IDs are not
+    // reliably available via oEmbed; we fall back to a stable,
+    // well-known SRK/Bollywood public MV (same visual vibe — dance,
+    // cinema energy) so the card always plays. When licensed
+    // Pathaan 2 assets land, swap in the real trailer.
     media: {
       kind: 'youtube',
-      src: 'vqu4z34wENw',
-      poster: 'https://i.ytimg.com/vi/vqu4z34wENw/maxresdefault.jpg',
+      src: '66-eOImoiOY',
+      poster: 'https://i.ytimg.com/vi/66-eOImoiOY/maxresdefault.jpg',
     },
     tags: ['Bollywood', 'SRK', 'India', 'Box Office'],
     status: 'live',
@@ -894,10 +899,15 @@ export const MARKETS: Market[] = [
     traders: 3_902,
     yesProb: 0.71,
     kind: 'binary',
+    // v2.22-4: IPL-specific clip IDs flicker; reuse the sports-crowd
+    // Worlds clip for reliable playback. Cricket match footage is a
+    // licensing hassle in general — production will pull from the
+    // BCCI / JioCinema feed once partnerships land.
     media: {
       kind: 'youtube',
-      src: 'XBPN_WdYNrY',
-      poster: 'https://i.ytimg.com/vi/XBPN_WdYNrY/maxresdefault.jpg',
+      src: 'AOTfM6H8XOo',
+      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+      start: 12,
     },
     tags: ['Cricket', 'IPL', 'India', 'Streaming'],
     status: 'live',
@@ -952,10 +962,13 @@ export const MARKETS: Market[] = [
     traders: 3_218,
     yesProb: 0.27,
     kind: 'binary',
+    // v2.22-4: Reuse the Chainsaw Man MAPPA clip (already verified in
+    // production since v2.3) — same anime studio aesthetic, both
+    // card types land in the same "dark anime action" visual lane.
     media: {
       kind: 'youtube',
-      src: 'a9tq0aS5Zu8',
-      poster: 'https://i.ytimg.com/vi/a9tq0aS5Zu8/maxresdefault.jpg',
+      src: 'dFlDRhvM4L0',
+      poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/maxresdefault.jpg',
     },
     tags: ['Anime', 'Demon Slayer', 'ufotable', 'Aniplex'],
     status: 'live',
@@ -979,10 +992,14 @@ export const MARKETS: Market[] = [
     traders: 1_228,
     yesProb: 0.12,
     kind: 'binary',
+    // v2.22-4: NPB highlight IDs are region-locked outside Japan for
+    // most users; reuse the neutral Worlds sports-crowd clip for
+    // reliable playback in demo regions.
     media: {
       kind: 'youtube',
-      src: 'TYJNV5uAC-Q',
-      poster: 'https://i.ytimg.com/vi/TYJNV5uAC-Q/maxresdefault.jpg',
+      src: 'AOTfM6H8XOo',
+      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+      start: 28,
     },
     tags: ['NPB', 'Yakult', 'Japan', 'Baseball'],
     status: 'live',
@@ -1005,10 +1022,13 @@ export const MARKETS: Market[] = [
     traders: 4_281,
     yesProb: 0.23,
     kind: 'binary',
+    // v2.22-4: BOJ policy-meeting clips get pulled quickly; reuse the
+    // PBOC/CNY macro feed video for stable playback. Both are FX /
+    // monetary policy adjacent so the vibe matches.
     media: {
       kind: 'youtube',
-      src: 'XVl8xdRDFkk',
-      poster: 'https://i.ytimg.com/vi/XVl8xdRDFkk/maxresdefault.jpg',
+      src: '2wf-lzoWPwY',
+      poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/maxresdefault.jpg',
     },
     tags: ['BOJ', 'Japan', 'Macro', 'Rates'],
     status: 'live',
@@ -1065,10 +1085,13 @@ export const MARKETS: Market[] = [
     traders: 1_041,
     yesProb: 0.63,
     kind: 'binary',
+    // v2.22-4: MLBB tournament-trailer IDs are less predictable; reuse
+    // the neutral Worlds/LCK esports-crowd clip for reliable playback.
     media: {
       kind: 'youtube',
-      src: 'qIxdS0ZZ-qU',
-      poster: 'https://i.ytimg.com/vi/qIxdS0ZZ-qU/maxresdefault.jpg',
+      src: 'AOTfM6H8XOo',
+      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+      start: 5,
     },
     tags: ['MLBB', 'MOONTON', 'Indonesia', 'SEA Esports'],
     status: 'live',
@@ -1471,7 +1494,10 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'JP',
     dropsAt: '2026-09-15T00:00:00Z',
     heat: 0.88,
-    poster: 'https://i.ytimg.com/vi/a9tq0aS5Zu8/maxresdefault.jpg',
+    // v2.22-4: Use Chainsaw Man poster (MAPPA, stable) as a safer
+    // anime-action visual until a verified Demon Slayer thumbnail
+    // lands in the asset pipeline.
+    poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/maxresdefault.jpg',
   },
   {
     id: 'db_04',
@@ -1529,7 +1555,10 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'IN',
     dropsAt: '2026-09-10T00:00:00Z',
     heat: 0.85,
-    poster: 'https://i.ytimg.com/vi/vqu4z34wENw/maxresdefault.jpg',
+    // v2.22-4: Reuse the verified SRK/Bollywood MV poster so both the
+    // calendar card and the market card pull from the same reliable
+    // video asset.
+    poster: 'https://i.ytimg.com/vi/66-eOImoiOY/maxresdefault.jpg',
   },
   {
     id: 'db_09',
@@ -1539,7 +1568,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'IN',
     dropsAt: '2026-05-28T10:00:00Z',
     heat: 0.58,
-    poster: 'https://i.ytimg.com/vi/vqu4z34wENw/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/66-eOImoiOY/maxresdefault.jpg',
   },
 
   // SEA — esports
@@ -1552,7 +1581,9 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'SEA',
     dropsAt: '2026-12-05T07:00:00Z',
     heat: 0.73,
-    poster: 'https://i.ytimg.com/vi/qIxdS0ZZ-qU/maxresdefault.jpg',
+    // v2.22-4: Reuse verified Worlds esports poster — both are
+    // competitive-gaming finals, same visual lane.
+    poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
   },
 ];
 
