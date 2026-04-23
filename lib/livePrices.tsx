@@ -85,8 +85,39 @@ export function LivePricesProvider({ children }: { children: ReactNode }) {
       });
     };
 
-    const iv = window.setInterval(tick, TICK_MS);
-    return () => window.clearInterval(iv);
+    // v2.16: Pause the ticker while the tab is hidden. setInterval keeps
+    // firing on background tabs (just throttled to ≥1Hz by Chrome's
+    // background-tab policy), wasting CPU and waking the device's
+    // efficiency cores on mobile. We tear the interval down on
+    // visibilitychange → hidden, and re-arm it (with one immediate tick
+    // to refresh the visual state) when the tab comes back.
+    let iv: number | null = null;
+    const start = () => {
+      if (iv !== null) return;
+      iv = window.setInterval(tick, TICK_MS);
+    };
+    const stop = () => {
+      if (iv === null) return;
+      window.clearInterval(iv);
+      iv = null;
+    };
+    const onVisibility = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        // Catch up on the missed interval boundary so a returning user
+        // doesn't see a stale price for up to TICK_MS.
+        tick();
+        start();
+      }
+    };
+
+    if (!document.hidden) start();
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      stop();
+    };
   }, []);
 
   return <Ctx.Provider value={{ prices }}>{children}</Ctx.Provider>;
