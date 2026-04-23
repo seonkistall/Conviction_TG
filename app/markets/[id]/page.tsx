@@ -51,11 +51,22 @@ export function generateMetadata({
 
 export default function MarketDetailPage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams?: { evidence?: string; side?: string };
 }) {
   const m = getMarket(params.id);
   if (!m) return notFound();
+
+  // v2.17 — When a user clicks the AI-confidence dial on a MarketCard
+  // elsewhere in the app, we navigate here with `?evidence=open` so the
+  // AIOracleCard boots with its side sheet already expanded. Avoids the
+  // "click the dial, get dropped on the detail page, then hunt for the
+  // Inspect button" hole we had before. `side=yes|no` is forwarded from
+  // the Hero CTAs; individual trade components can pick it up from the
+  // URL if they want to pre-select a side.
+  const autoOpenEvidence = searchParams?.evidence === 'open';
 
   const related = MARKETS.filter(
     (x) => x.id !== m.id && x.category === m.category
@@ -323,7 +334,7 @@ export default function MarketDetailPage({
                 resolved={m.status === 'resolved'}
               />
             )}
-            <AIOracleCard market={m} />
+            <AIOracleCard market={m} autoOpen={autoOpenEvidence} />
           </div>
         </div>
       </div>

@@ -13,8 +13,20 @@ import { useT } from '@/lib/i18n';
  * Qwen3-32B-AWQ → Claude Sonnet verify. The "Inspect evidence bundle" button
  * opens a full side-sheet with sources, excerpts, and per-source confidence.
  */
-export function AIOracleCard({ market }: { market: Market }) {
-  const [open, setOpen] = useState(false);
+/**
+ * v2.17 — `autoOpen` boots the evidence side sheet on mount. Used when
+ * the user arrived with `?evidence=open` in the URL (clicking the
+ * confidence dial on a MarketCard surfaces the AI rationale without
+ * scrolling the whole detail page).
+ */
+export function AIOracleCard({
+  market,
+  autoOpen = false,
+}: {
+  market: Market;
+  autoOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(autoOpen);
   const t = useT();
   const conf = Math.round(market.aiConfidence * 100);
   const diff = Math.round((market.aiConfidence - market.yesProb) * 100);

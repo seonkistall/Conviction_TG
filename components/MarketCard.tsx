@@ -7,6 +7,7 @@ import { OutcomeBar } from './OutcomeBar';
 import { ResolvedBanner } from './ResolvedBanner';
 import { SettledChip } from './SettledChip';
 import { QuickBetActions } from './QuickBetActions';
+import { EvidenceDialButton } from './EvidenceDialButton';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 
 interface Props {
@@ -128,8 +129,10 @@ export function MarketCard({ market, size = 'md', livePrice }: Props) {
             </div>
           </div>
 
-          {/* AI confidence dial */}
-          <AIConfidenceDial
+          {/* v2.17 — dial is now an interactive button that deep-links
+              into the market detail with the evidence sheet pre-opened. */}
+          <EvidenceDialButton
+            slug={market.slug}
             value={market.aiConfidence}
             trend={market.aiTrend}
           />
@@ -178,40 +181,6 @@ function Badge({
   );
 }
 
-function AIConfidenceDial({
-  value,
-  trend,
-}: {
-  value: number;
-  trend: 'up' | 'down' | 'flat';
-}) {
-  const deg = value * 360;
-  return (
-    <div
-      className="relative flex h-14 w-14 items-center justify-center rounded-full bg-ink-900/80 backdrop-blur"
-      title={`Conviction AI confidence: ${Math.round(value * 100)}%`}
-      style={{
-        background: `conic-gradient(#C6FF3D ${deg}deg, rgba(255,255,255,0.08) ${deg}deg)`,
-      }}
-    >
-      <div className="flex h-11 w-11 flex-col items-center justify-center rounded-full bg-ink-900">
-        <span className="text-[9px] font-semibold uppercase tracking-widest text-bone-muted">
-          AI
-        </span>
-        <span className="font-mono text-sm font-bold text-bone">
-          {Math.round(value * 100)}
-        </span>
-      </div>
-      <span
-        className={clsx(
-          'absolute -bottom-1 right-0 rounded-full bg-ink-900 px-1 text-[10px]',
-          trend === 'up' && 'text-yes',
-          trend === 'down' && 'text-no',
-          trend === 'flat' && 'text-bone-muted'
-        )}
-      >
-        {trend === 'up' ? '▲' : trend === 'down' ? '▼' : '–'}
-      </span>
-    </div>
-  );
-}
+// v2.17 — `AIConfidenceDial` removed. The same visual now lives in
+// <EvidenceDialButton> (client component) with click-to-open-evidence.
+// See components/EvidenceDialButton.tsx.
