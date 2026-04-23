@@ -111,6 +111,73 @@ policy still requires videos to start muted; after the first user tap the
 provider walks the DOM and unmutes everything at once. State persists to
 sessionStorage under `cv_mute`.
 
+## v2.13 — Live ticker + ⌘K palette
+
+### Real-time price tick simulation (`lib/livePrices.tsx`)
+A single React Context owns a tick loop and exposes `useLivePrices(ids, seeds)`
+that returns a `Record<id, number>` of current marks. The provider emits a
+small Brownian step every ~1.4s for any subscribed market, scoped by an
+`ids` array so off-screen markets don't waste CPU. Seeds keep the first paint
+deterministic — the ticker hasn't fired yet on hydrate.
+
+### ⌘K command palette (`CommandPalette.tsx`)
+Global keyboard-first navigator. `⌘K` (or `Ctrl+K`, or `/` outside text
+fields) opens a dialog with a fuzzy-scored search across markets, narratives,
+and traders. The match scorer NFC-normalizes the query so a Hangul needle
+like `중국` hits Hangul titles cleanly — guarded by a Playwright smoke test.
+
+## v2.14 — CI + OG pixel regression
+
+### Playwright in CI
+GitHub Actions workflow at `.github/workflows/ci.yml` (currently held back
+by a PAT scope upgrade — see commit log) runs the full chromium smoke suite
+on every PR + push to `main`. Caches `~/.cache/ms-playwright` keyed on the
+`@playwright/test` lockfile entry so cold installs only happen on version
+bumps.
+
+### OG image pixel regression (`tests/og.spec.ts`)
+The Satori renderer behind `next/og` silently drops elements when it hits
+unsupported flex rules or a missing font glyph — the image keeps shipping,
+just blank where the broken piece was. We hit a representative set of OG
+endpoints (one market per K/J/C region + two trader personas), render the
+PNG into a centered `<img>` element, and diff against a checked-in baseline
+in `tests/og.spec.ts-snapshots/`. Tolerance is `maxDiffPixelRatio: 0.05` —
+wider than the 2% typical for raster diffs because `next/og` fetches glyphs
+at request time and a fallback font swap can swing pixels a few percent.
+Real breakages (missing card, dropped Hangul, empty title) always exceed 5%.
+
+Re-baseline on a deliberate layout change with:
+
+```bash
+npx playwright test tests/og.spec.ts --project=chromium --update-snapshots
+```
+
+The suite is default-on. Set `OG_SNAPSHOTS=0` to opt out in environments
+where outbound font fetches are blocked entirely.
+
+## v2.15 — Batched live ticker for every grid
+
+### `LiveMarketGrid` wrapper
+The v2.13 `useLivePrices` ticker shipped on portfolio Hot Positions only.
+v2.15 routes every market grid in the app — `CategoryTabs`, `/leaderboard`,
+`/markets/[id]` related, `/narratives/[slug]`, `/worlds-2026` — through a
+single `<LiveMarketGrid markets={...}>` wrapper that opens **one**
+`useLivePrices(ids, seeds)` subscription per visible grid and feeds each
+card its current mark via the new `MarketCard` `livePrice` prop.
+
+Why a wrapper instead of making `MarketCard` a client component:
+
+- `MarketCard` renders from server pages (leaderboard, worlds-2026, market
+  detail). Promoting it to `"use client"` would force a giant client tree,
+  hurting LCP and bundle size.
+- One subscription per visible grid scales better than one per card if a
+  future page renders 100+ markets.
+
+For pages that need a per-card overlay (e.g. the `% leg` chip on
+`/narratives/[slug]`), pass a `decorators?: Record<id, ReactNode>` prop —
+plain ReactNodes serialize across the server-to-client boundary, so server
+pages can hand them in without a `"use client"` directive.
+
 ## File layout (the interesting parts)
 
 ```
@@ -140,11 +207,13 @@ conviction-fe/
 │  ├─ FeedCard.tsx
 │  ├─ Footer.tsx
 │  ├─ GlobalMuteFAB.tsx
+│  ├─ CommandPalette.tsx     # v2.13 ⌘K global search
 │  ├─ Header.tsx
 │  ├─ Hero.tsx
 │  ├─ HowItWorks.tsx
 │  ├─ LangToggle.tsx
-│  ├─ MarketCard.tsx         # Now EdgeBadge + multi-aware
+│  ├─ LiveMarketGrid.tsx     # v2.15 batched useLivePrices wrapper
+│  ├─ MarketCard.tsx         # EdgeBadge + multi-aware + livePrice prop
 │  ├─ NarrativeIndices.tsx   # Moat
 │  ├─ OrderBook.tsx
 │  ├─ OutcomeBar.tsx
@@ -155,10 +224,14 @@ conviction-fe/
 ├─ lib/
 │  ├─ format.ts
 │  ├─ i18n.tsx               # Provider + EN/KO dicts
+│  ├─ livePrices.tsx         # v2.13 tick loop + useLivePrices hook
 │  ├─ markets.ts             # All mock data + Moat datasets
 │  ├─ mute.tsx               # Provider
 │  ├─ parlay.tsx             # Provider + reducer + math
 │  └─ types.ts
+├─ tests/
+│  ├─ smoke.spec.ts          # Route-level smoke + ⌘K Hangul match
+│  └─ og.spec.ts             # v2.14 next/og pixel regression (5% tol)
 └─ README.md
 ```
 

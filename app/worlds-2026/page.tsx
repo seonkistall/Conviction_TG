@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { AutoVideo } from '@/components/AutoVideo';
-import { MarketCard } from '@/components/MarketCard';
+import { LiveMarketGrid } from '@/components/LiveMarketGrid';
 import { MARKETS, getMarket } from '@/lib/markets';
 import { formatUSD, pct } from '@/lib/format';
 
@@ -233,20 +233,21 @@ export default function Worlds2026Page() {
           Graded by a 23-source evidence swarm — official Riot draft logs,
           Leaguepedia KDA, patch-meta priors.
         </p>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <MarketCard market={fakerMVP} size="wide" />
-          <MarketCard market={knightKDA} size="wide" />
-        </div>
+        <LiveMarketGrid
+          markets={[fakerMVP, knightKDA]}
+          size="wide"
+          className="mt-4 grid gap-4 md:grid-cols-2"
+        />
       </section>
 
       {/* Featured championship markets */}
       <section className="mt-10">
         <h2 className="font-display text-3xl">Championship markets</h2>
-        <div className="mt-4 grid gap-4 md:grid-cols-3">
-          <MarketCard market={worldsWinner} size="wide" />
-          <MarketCard market={t1Binary} size="wide" />
-          <MarketCard market={lckSpring} size="wide" />
-        </div>
+        <LiveMarketGrid
+          markets={[worldsWinner, t1Binary, lckSpring]}
+          size="wide"
+          className="mt-4 grid gap-4 md:grid-cols-3"
+        />
       </section>
 
       {/* Narrative index callout */}

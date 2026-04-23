@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { AutoVideo } from '@/components/AutoVideo';
-import { MarketCard } from '@/components/MarketCard';
+import { LiveMarketGrid } from '@/components/LiveMarketGrid';
 import { JsonLd } from '@/components/JsonLd';
 import { PriceChart } from '@/components/PriceChart';
 import {
@@ -302,16 +302,22 @@ export default function NarrativePage({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {legs.map(({ market, weight }) => (
-            <div key={market.id} className="relative">
-              <div className="absolute -top-3 left-3 z-10 rounded-full border border-volt/40 bg-ink-900/95 px-2 py-0.5 font-mono text-[11px] tabular-nums text-volt">
-                {Math.round(weight * 100)}% leg
-              </div>
-              <MarketCard market={market} size="md" />
-            </div>
-          ))}
-        </div>
+        <LiveMarketGrid
+          markets={legs.map((l) => l.market)}
+          size="md"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          decorators={Object.fromEntries(
+            legs.map((l) => [
+              l.market.id,
+              <div
+                key={l.market.id}
+                className="absolute -top-3 left-3 z-10 rounded-full border border-volt/40 bg-ink-900/95 px-2 py-0.5 font-mono text-[11px] tabular-nums text-volt"
+              >
+                {Math.round(l.weight * 100)}% leg
+              </div>,
+            ])
+          )}
+        />
       </section>
 
       {/* ----- Related traders ----- */}

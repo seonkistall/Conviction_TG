@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import { CATEGORIES } from '@/lib/markets';
-import { MarketCard } from './MarketCard';
+import { LiveMarketGrid } from './LiveMarketGrid';
 import type { Market } from '@/lib/types';
 import { useT } from '@/lib/i18n';
 
@@ -209,11 +209,10 @@ export function CategoryTabs({ markets }: { markets: Market[] }) {
         )}
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {filtered.map((m) => (
-          <MarketCard key={m.id} market={m} />
-        ))}
-      </div>
+      <LiveMarketGrid
+        markets={filtered}
+        className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      />
 
       {filtered.length === 0 && (
         <div className="mt-12 flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-white/10 px-6 py-10 text-center">

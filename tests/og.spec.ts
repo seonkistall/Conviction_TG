@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * v2.14 — Edge OG image pixel regression.
+ * v2.14 — Edge OG image pixel regression.  v2.15 — baselines committed,
+ * default-on.
  *
  * Why this exists
  * ---------------
@@ -18,22 +19,32 @@ import { test, expect } from '@playwright/test';
  * render the returned PNG in a blank page, and diff it against a
  * checked-in baseline with a generous pixel tolerance. Fonts and emoji
  * can jitter a few pixels between runs, but a real breakage (missing
- * card, wrong tint, empty title) always blows through 2%.
+ * card, wrong tint, empty title) always blows through 5%.
  *
- * Bootstrap
- * ---------
- * Baselines aren't committed yet. On a fresh checkout the suite is a
- * no-op — set `OG_SNAPSHOTS=1` to activate. To capture the first
- * baseline, run:
+ * Tolerance note
+ * --------------
+ * 5% is wider than the 2% that's typical for raster diffs. It's tuned
+ * for `next/og`'s dynamic-font behavior — the runtime fetches glyphs at
+ * request time, and the same image rendered locally vs. on Vercel can
+ * fall back to a different font if the dynamic-font fetch fails in
+ * one environment but not the other. 5% absorbs the "logo glyph
+ * swapped for fallback" jitter while still tripping on a fully-broken
+ * card.
  *
- *   OG_SNAPSHOTS=1 npx playwright test tests/og.spec.ts \
+ * Re-baselining
+ * -------------
+ * If a deliberate OG layout change pushes a diff above 5%, run:
+ *
+ *   npx playwright test tests/og.spec.ts \
  *     --project=chromium --update-snapshots
  *
- * Commit the generated `tests/og.spec.ts-snapshots/` folder and this
- * guard flag can become the default in a later patch.
+ * and commit the regenerated `tests/og.spec.ts-snapshots/`.
+ *
+ * The test honors `OG_SNAPSHOTS=0` as an explicit opt-out for
+ * environments where outbound font fetches are blocked entirely.
  */
 
-const ENABLED = process.env.OG_SNAPSHOTS === '1';
+const ENABLED = process.env.OG_SNAPSHOTS !== '0';
 
 // Representative OG endpoints. The `id` segment mirrors what Next's
 // metadata pipeline emits (id === the slug/handle from
@@ -84,10 +95,11 @@ test.describe('visual · OG images', () => {
       const img = page.locator('img').first();
       await expect(img).toBeVisible();
       await expect(img).toHaveScreenshot(`${name}.png`, {
-        // 2% tolerates font hinting + emoji subpixel differences across
-        // runner OSes. Real regressions (missing card, dropped Hangul)
-        // always exceed this by a wide margin.
-        maxDiffPixelRatio: 0.02,
+        // 5% tolerates next/og dynamic-font fallbacks across CI vs.
+        // Vercel runtime, plus the usual font hinting / emoji subpixel
+        // jitter. Real regressions (missing card, dropped Hangul,
+        // empty title) always exceed this by a wide margin.
+        maxDiffPixelRatio: 0.05,
       });
     });
   }

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { TRADERS, MARKETS } from '@/lib/markets';
 import { formatUSD, pct } from '@/lib/format';
-import { MarketCard } from '@/components/MarketCard';
+import { LiveMarketGrid } from '@/components/LiveMarketGrid';
 
 const REGION_LABEL: Record<string, string> = {
   KR: '🇰🇷 Korea',
@@ -164,11 +164,10 @@ export default function LeaderboardPage() {
             See all →
           </Link>
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {hotMarkets.map((m) => (
-            <MarketCard key={m.id} market={m} />
-          ))}
-        </div>
+        <LiveMarketGrid
+          markets={hotMarkets}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
+        />
       </section>
 
       {/* Rising predictors */}

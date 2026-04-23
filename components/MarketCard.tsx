@@ -12,9 +12,17 @@ import { formatUSD, pct, timeUntil } from '@/lib/format';
 interface Props {
   market: Market;
   size?: 'sm' | 'md' | 'lg' | 'wide';
+  /**
+   * v2.15 — Optional live price override fed by `<LiveMarketGrid>`.
+   * When omitted, falls back to `market.yesProb` so MarketCard stays
+   * a pure presentational component renderable from server pages.
+   */
+  livePrice?: number;
 }
 
-export function MarketCard({ market, size = 'md' }: Props) {
+export function MarketCard({ market, size = 'md', livePrice }: Props) {
+  const displayProb = livePrice ?? market.yesProb;
+  const isLive = typeof livePrice === 'number' && market.status !== 'resolved';
   const aspect =
     size === 'wide'
       ? 'aspect-[16/9]'
@@ -39,7 +47,7 @@ export function MarketCard({ market, size = 'md' }: Props) {
       aria-label={
         isResolved
           ? `${market.title} — resolved`
-          : `${market.title} — ${pct(market.yesProb)} ${topLabel}`
+          : `${market.title} — ${pct(displayProb)} ${topLabel}`
       }
     >
       <AutoVideo
@@ -90,8 +98,18 @@ export function MarketCard({ market, size = 'md' }: Props) {
         <div className="mt-3 flex items-end justify-between gap-3">
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="font-mono text-3xl font-bold tabular-nums text-bone">
-                {pct(market.yesProb)}
+              <span
+                className={clsx(
+                  'font-mono text-3xl font-bold tabular-nums text-bone',
+                  // v2.15 — when fed by `<LiveMarketGrid>`, the number itself
+                  // changes every tick, which is the dominant signal. We
+                  // keep the color stable (loud volt was visually noisy
+                  // across a 12-card grid) and only let the digits move.
+                  isLive && 'transition-opacity'
+                )}
+                aria-live={isLive ? 'polite' : undefined}
+              >
+                {pct(displayProb)}
               </span>
               <span className="text-[11px] font-medium uppercase tracking-wider text-bone-muted line-clamp-1">
                 {topLabel}
@@ -123,7 +141,7 @@ export function MarketCard({ market, size = 'md' }: Props) {
              * Parlay Slip without navigating to market detail. Mobile-first
              * 10–20s judgment loop.
              */
-            <QuickBetActions marketId={market.id} yesProb={market.yesProb} />
+            <QuickBetActions marketId={market.id} yesProb={displayProb} />
           )}
         </div>
       </div>

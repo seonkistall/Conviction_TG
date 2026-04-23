@@ -9,7 +9,7 @@ import { OutcomeBar } from '@/components/OutcomeBar';
 import { EdgeBadge } from '@/components/EdgeBadge';
 import { PriceChart } from '@/components/PriceChart';
 import { AIOracleCard } from '@/components/AIOracleCard';
-import { MarketCard } from '@/components/MarketCard';
+import { LiveMarketGrid } from '@/components/LiveMarketGrid';
 import { JsonLd } from '@/components/JsonLd';
 import { ResolvedBanner } from '@/components/ResolvedBanner';
 
@@ -333,11 +333,10 @@ export default function MarketDetailPage({
         <h3 className="mb-4 font-display text-3xl text-bone">
           More {m.category}
         </h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {related.map((r) => (
-            <MarketCard key={r.id} market={r} />
-          ))}
-        </div>
+        <LiveMarketGrid
+          markets={related}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        />
       </section>
     </div>
   );

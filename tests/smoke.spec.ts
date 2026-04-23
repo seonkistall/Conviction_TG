@@ -180,7 +180,10 @@ test.describe('smoke · v2.13 ⌘K palette', () => {
     await page.keyboard.press('Control+K');
     const dialog = page.getByRole('dialog', { name: /Command palette/i });
     await expect(dialog).toBeVisible();
-    await page.getByRole('searchbox', { name: /Search/i }).fill('중국');
+    // Scope the searchbox to the dialog. v2.15 added a second searchbox on
+    // the homepage (CategoryTabs "Search markets" discovery input), so a
+    // page-level getByRole('searchbox', ...) now hits strict-mode violation.
+    await dialog.getByRole('searchbox').fill('중국');
     // At least one listbox option should render for the Hangul needle.
     await expect(
       dialog.locator('[role="option"]').first()
