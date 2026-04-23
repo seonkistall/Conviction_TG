@@ -331,6 +331,7 @@ export default function MarketDetailPage({
                 yesProb={m.yesProb}
                 marketId={m.id}
                 marketTitle={m.title}
+                marketSlug={m.slug}
                 resolved={m.status === 'resolved'}
               />
             )}
