@@ -88,6 +88,20 @@ const KIND_STYLES: Record<Scraper['kind'], { tint: string; label: string }> = {
   },
 };
 
+// v2.20-2: Matches the category blurbs from the EvidenceSideSheet
+// (v2.18-4) so the /methodology page and the evidence bundle tell the
+// same story with the same language. The scraper inventory below is now
+// rendered as 4 labeled sub-sections instead of a flat grid, so a
+// reader can quickly see "oh, they triangulate four *different kinds*
+// of signal" rather than counting 23 identical chips.
+const KIND_ORDER: Scraper['kind'][] = ['search', 'social', 'domain', 'structured'];
+const KIND_BLURB: Record<Scraper['kind'], string> = {
+  search: 'Wide-net web indexing across APAC publishers — fast velocity, filter-bubble-free.',
+  social: 'Fan-community heat (K-pop, J-fan, C-weibo) + global social graph signals.',
+  domain: 'Authoritative sports, esports, anime, streaming, and crypto feeds.',
+  structured: 'Equity/forex/policy-rate tickers + Conviction-curated historical corpus.',
+};
+
 // --- Pipeline steps ---------------------------------------------------
 
 const PIPELINE = [
@@ -280,6 +294,49 @@ export default function MethodologyPage() {
         </div>
       </section>
 
+      {/*
+       * v2.20-2 — "Why this pipeline" thesis callout.
+       *
+       * Lands between the hero stats and the pipeline step-by-step so a
+       * reader who only scans the top of the page still gets the
+       * one-paragraph answer to "why did Conviction build this and not
+       * just ping GPT-4?" Shares the conviction-gradient visual language
+       * with the Evidence sheet's "Why this verdict" (v2.18-5) and the
+       * Narrative "Why this basket" (v2.19-7) so the 3 trust surfaces
+       * read as one family.
+       */}
+      <section className="mx-auto w-full max-w-[1200px] px-6 pt-4">
+        <div className="rounded-3xl border border-conviction/30 bg-gradient-to-br from-conviction/10 via-ink-800 to-ink-800 p-6 md:p-8">
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-conviction">
+            Why this pipeline
+          </div>
+          <p className="mt-3 max-w-3xl text-base leading-relaxed text-bone md:text-lg">
+            A single LLM asked "will BLACKPINK comeback?" hallucinates
+            confidently. APAC prediction markets need verifiable,
+            region-native evidence — Naver before Google, Weverse before
+            Twitter, LCK-patch feeds before pundits. Conviction's swarm
+            is six deterministic steps: parse → route → scrape 23 sources
+            → Qwen3 drafts → Sonnet-4.6 verifies → publish with a signed
+            audit trail. Every price on the site traces back to this
+            bundle, and every bundle is what the Evidence side sheet
+            shows you when you tap the AI dial on a market.
+          </p>
+          <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            <MiniStat label="Stages" value="6" sub="parse → publish" />
+            <MiniStat
+              label="Sources per question"
+              value="8–14"
+              sub="routed from pool of 23"
+            />
+            <MiniStat
+              label="Auto-resolve threshold"
+              value="≥ 0.80"
+              sub="else human oracle review"
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Pipeline */}
       <section className="mx-auto w-full max-w-[1200px] px-6 pt-16">
         <SectionHeading
@@ -318,32 +375,59 @@ export default function MethodologyPage() {
           body="Routing is per-question. A K-Pop comeback question typically pulls Weverse + Naver News + YouTube Data + Instiz + KOSPI HYBE ticker. A LoL Worlds question pulls the Riot LoL Esports API + Weibo + theqoo. The scraper mix is what makes the oracle APAC-native."
         />
 
-        <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {SCRAPERS.map((s) => {
-            const k = KIND_STYLES[s.kind];
-            return (
-              <li
-                key={s.name}
-                className="flex flex-col gap-2 rounded-xl border border-white/10 bg-ink-800 p-4"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold text-bone">
-                    {s.name}
-                  </span>
+        {/*
+         * v2.20-2 — Grouped into the 4 kinds (search / social /
+         * domain / structured). Through v2.19 the list was a flat
+         * 3-col grid of 23 chips; colored tag was the only thing
+         * communicating the kind. Now each kind gets its own labeled
+         * section + blurb, matching the category grouping in the
+         * Evidence sheet's source list. The 4-section scan ("they
+         * triangulate 4 different channels, not 23 copies of the
+         * same channel") is the real trust story — a flat grid made
+         * that invisible.
+         */}
+        {KIND_ORDER.map((kind) => {
+          const group = SCRAPERS.filter((s) => s.kind === kind);
+          if (group.length === 0) return null;
+          const k = KIND_STYLES[kind];
+          return (
+            <div key={kind} className="mt-8">
+              <div className="mb-3 flex items-baseline justify-between gap-4">
+                <div className="flex items-baseline gap-2">
                   <span
                     className={clsx(
-                      'rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest',
+                      'rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest',
                       k.tint
                     )}
                   >
                     {k.label}
                   </span>
+                  <span className="font-mono text-[11px] tabular-nums text-bone">
+                    {group.length}
+                  </span>
                 </div>
-                <p className="text-[11px] text-bone-muted">{s.note}</p>
-              </li>
-            );
-          })}
-        </ul>
+                <span className="truncate text-right text-[11px] text-bone-muted">
+                  {KIND_BLURB[kind]}
+                </span>
+              </div>
+              <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {group.map((s) => (
+                  <li
+                    key={s.name}
+                    className="flex flex-col gap-2 rounded-xl border border-white/10 bg-ink-800 p-4"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-semibold text-bone">
+                        {s.name}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-bone-muted">{s.note}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })}
 
         <p className="mt-6 text-xs text-bone-muted">
           Source list is versioned — retiring a source or adding one is a signed
