@@ -94,9 +94,10 @@ function HeroCard({
           </h1>
 
           <p className="mt-6 max-w-xl text-base leading-relaxed text-bone-muted sm:text-lg">
-            K-pop comebacks. T1 at Worlds. Son scoring a brace. The next Oscar.
-            Every narrative that matters to 4 billion Asians — priced, tradable, and
-            graded by a 23-source AI evidence swarm.
+            K-pop comebacks. LCK vs LPL at Worlds. NPB pennant races. Bollywood
+            openings. Anime debuts. BTC at the Tokyo open. Every APAC narrative
+            that moves 4 billion people — priced, tradable, and graded by a
+            23-source AI evidence swarm.
           </p>
 
           {/*
@@ -221,13 +222,34 @@ function HeroCard({
                 </div>
               </div>
 
+              {/*
+               * v2.17 — Wire the Hero CTAs. Through v2.16 these were
+               * decorative <button>s with no onClick — clicking them did
+               * literally nothing, which is the worst possible state for
+               * the most prominent CTA on the landing fold. They now
+               * navigate to the market detail with a `?side=yes|no`
+               * intent hint that the detail page can use to pre-select
+               * the trade form. We use Link (not button + router.push) so
+               * Cmd-click / middle-click open the market in a new tab,
+               * which is what evaluators on the live deck demo always do.
+               */}
               <div className="mt-4 grid grid-cols-2 gap-2">
-                <button className="rounded-lg border border-yes/30 bg-yes-soft py-2.5 text-sm font-semibold text-yes transition hover:bg-yes/20">
+                <Link
+                  href={`/markets/${m.slug}?side=yes`}
+                  prefetch
+                  className="rounded-lg border border-yes/30 bg-yes-soft py-2.5 text-center text-sm font-semibold text-yes transition hover:bg-yes/20"
+                  aria-label={`Open ${m.title} market — Buy YES at ¢${(liveYes * 100).toFixed(0)}`}
+                >
                   Buy YES · ¢{(liveYes * 100).toFixed(0)}
-                </button>
-                <button className="rounded-lg border border-no/30 bg-no-soft py-2.5 text-sm font-semibold text-no transition hover:bg-no/20">
+                </Link>
+                <Link
+                  href={`/markets/${m.slug}?side=no`}
+                  prefetch
+                  className="rounded-lg border border-no/30 bg-no-soft py-2.5 text-center text-sm font-semibold text-no transition hover:bg-no/20"
+                  aria-label={`Open ${m.title} market — Buy NO at ¢${((1 - liveYes) * 100).toFixed(0)}`}
+                >
                   Buy NO · ¢{((1 - liveYes) * 100).toFixed(0)}
-                </button>
+                </Link>
               </div>
             </div>
           </div>
