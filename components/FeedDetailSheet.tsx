@@ -5,7 +5,7 @@ import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
 import type { Market } from '@/lib/types';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
-import { useParlay } from '@/lib/parlay';
+import { usePositions } from '@/lib/positions';
 import { useToast } from '@/lib/toast';
 
 /**
@@ -41,7 +41,7 @@ interface Props {
 }
 
 export function FeedDetailSheet({ market, open, onClose }: Props) {
-  const parlay = useParlay();
+  const positions = usePositions();
   const toast = useToast();
   // "Share" button state. We flash a "Copied!" label after a clipboard-path
   // share so the user has a visible acknowledgement even when no native
@@ -98,8 +98,19 @@ export function FeedDetailSheet({ market, open, onClose }: Props) {
 
   if (!open) return null;
 
+  // v2.22-1: direct $10 position in place of parlay.add.
   const pickAndClose = (pick: 'YES' | 'NO', price: number) => {
-    parlay.add({ marketId: market.id, pick, price });
+    if (price > 0 && price < 1) {
+      const shares = Math.max(1, Math.round(10 / price));
+      positions.buy({ marketId: market.id, side: pick, shares, price });
+      toast.push({
+        kind: 'trade',
+        title: `${pick} · ${shares} shares placed`,
+        body: market.title,
+        amount: `-$${(shares * price).toFixed(2)}`,
+        cta: { href: '/portfolio', label: 'View' },
+      });
+    }
     onClose();
   };
 

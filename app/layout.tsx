@@ -14,12 +14,10 @@ import './globals.css';
 import { ChromeShell } from '@/components/ChromeShell';
 import { I18nProvider } from '@/lib/i18n';
 import { MuteProvider } from '@/lib/mute';
-import { ParlayProvider } from '@/lib/parlay';
 import { PositionsProvider } from '@/lib/positions';
 import { ToastProvider } from '@/lib/toast';
 import { LivePricesProvider } from '@/lib/livePrices';
 import { Toaster } from '@/components/Toaster';
-import { ParlaySlip } from '@/components/ParlaySlip';
 import { GlobalMuteFAB } from '@/components/GlobalMuteFAB';
 import { OnboardingIntro } from '@/components/OnboardingIntro';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -202,38 +200,39 @@ export default function RootLayout({
           <MuteProvider>
             <ToastProvider>
               <PositionsProvider>
-                <ParlayProvider>
+                {/*
+                 * v2.22-1 — ParlayProvider + <ParlaySlip/> removed.
+                 *
+                 * Parlay was confusing users in discovery ("what is this?
+                 * why do I need to stack?") and diluting the product's
+                 * Polymarket-style direct-trade positioning. The whole
+                 * surface is gone: provider, store, FAB drawer, portfolio
+                 * tickets section, /parlays/[id] receipt page, feed
+                 * swipe-right and double-tap-adds-leg gestures. Direct
+                 * trade (OrderBook on market detail + QuickBet on cards)
+                 * is now the only path to a position.
+                 *
+                 * LivePricesProvider ticks market prices client-side so
+                 * the UI feels alive. Inside PositionsProvider (so a
+                 * settled fill stays visible while the ticker keeps
+                 * moving) and outside ChromeShell (so every page
+                 * inherits the same live map).
+                 */}
+                <LivePricesProvider>
                   {/*
-                   * LivePricesProvider ticks market prices client-side so
-                   * the UI feels alive. It's intentionally INSIDE the
-                   * Parlay/Positions providers (so a parlay leg price
-                   * stays frozen at add-time while the global store
-                   * keeps ticking) and OUTSIDE ChromeShell (so every
-                   * page inherits the same live map).
+                   * ChromeShell renders Header/Footer/MobileNav + the <main>
+                   * padding — but skips all of it on /feed so that the
+                   * TikTok-style immersive feed gets a true 100dvh canvas.
+                   * See components/ChromeShell.tsx for rationale.
                    */}
-                  <LivePricesProvider>
-                    {/*
-                     * ChromeShell renders Header/Footer/MobileNav + the <main>
-                     * padding — but skips all of it on /feed so that the
-                     * TikTok-style immersive feed gets a true 100dvh canvas.
-                     * See components/ChromeShell.tsx for rationale.
-                     */}
-                    <ChromeShell>{children}</ChromeShell>
-                  {/*
-                   * The floating overlays below sit outside the chrome shell
-                   * because they're controlled by global state (parlay store,
-                   * mute context, toast queue) and need to remain mounted
-                   * even on immersive routes so that feed gestures
-                   * (e.g. swipe-right → open parlay) still work. Each
-                   * overlay owns its own pathname-aware visibility check.
-                   */}
-                    <ParlaySlip />
-                    <GlobalMuteFAB />
-                    <OnboardingIntro />
-                    <CommandPalette />
-                    <Toaster />
-                  </LivePricesProvider>
-                </ParlayProvider>
+                  <ChromeShell>{children}</ChromeShell>
+                  {/* Floating overlays kept mounted across routes so
+                      they still work on the immersive /feed shell. */}
+                  <GlobalMuteFAB />
+                  <OnboardingIntro />
+                  <CommandPalette />
+                  <Toaster />
+                </LivePricesProvider>
               </PositionsProvider>
             </ToastProvider>
           </MuteProvider>

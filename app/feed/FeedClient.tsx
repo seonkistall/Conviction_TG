@@ -7,7 +7,7 @@ import type { Market } from '@/lib/types';
 import { FeedCard } from '@/components/FeedCard';
 import { ProposeInterstitial } from '@/components/ProposeInterstitial';
 import { useT } from '@/lib/i18n';
-import { useParlay } from '@/lib/parlay';
+import { usePositions } from '@/lib/positions';
 import { useToast } from '@/lib/toast';
 
 /**
@@ -48,7 +48,7 @@ export function FeedClient({ markets }: Props) {
   const [showHelp, setShowHelp] = useState(false);
   const t = useT();
   const router = useRouter();
-  const parlay = useParlay();
+  const positions = usePositions();
   const toast = useToast();
 
   // v2.21-2: items interleaves FeedCard + ProposeInterstitial.
@@ -122,36 +122,50 @@ export function FeedClient({ markets }: Props) {
           break;
         case 'y':
         case 'Y':
+          // v2.22-1: Y/N now place a direct $10 position via
+          // PositionsProvider, matching the QuickBetActions refactor.
           if (current && current.kind === 'binary' && current.status !== 'resolved') {
             e.preventDefault();
-            parlay.add({
-              marketId: current.id,
-              pick: 'YES',
-              price: current.yesProb,
-            });
-            toast.push({
-              kind: 'parlay',
-              title: `Added YES leg`,
-              body: current.title,
-              amount: `¢${Math.round(current.yesProb * 100)}`,
-            });
+            const price = current.yesProb;
+            if (price > 0 && price < 1) {
+              const shares = Math.max(1, Math.round(10 / price));
+              positions.buy({
+                marketId: current.id,
+                side: 'YES',
+                shares,
+                price,
+              });
+              toast.push({
+                kind: 'trade',
+                title: `YES · ${shares} shares placed`,
+                body: current.title,
+                amount: `-$${(shares * price).toFixed(2)}`,
+                cta: { href: '/portfolio', label: 'View' },
+              });
+            }
           }
           break;
         case 'n':
         case 'N':
           if (current && current.kind === 'binary' && current.status !== 'resolved') {
             e.preventDefault();
-            parlay.add({
-              marketId: current.id,
-              pick: 'NO',
-              price: 1 - current.yesProb,
-            });
-            toast.push({
-              kind: 'parlay',
-              title: `Added NO leg`,
-              body: current.title,
-              amount: `¢${Math.round((1 - current.yesProb) * 100)}`,
-            });
+            const price = 1 - current.yesProb;
+            if (price > 0 && price < 1) {
+              const shares = Math.max(1, Math.round(10 / price));
+              positions.buy({
+                marketId: current.id,
+                side: 'NO',
+                shares,
+                price,
+              });
+              toast.push({
+                kind: 'trade',
+                title: `NO · ${shares} shares placed`,
+                body: current.title,
+                amount: `-$${(shares * price).toFixed(2)}`,
+                cta: { href: '/portfolio', label: 'View' },
+              });
+            }
           }
           break;
         case '?':
@@ -171,7 +185,7 @@ export function FeedClient({ markets }: Props) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [idx, items, markets, parlay, router, scrollTo, showHelp, toast]);
+  }, [idx, items, markets, positions, router, scrollTo, showHelp, toast]);
 
   const progressPct = items.length > 1
     ? ((idx + 1) / items.length) * 100
@@ -297,8 +311,8 @@ export function FeedClient({ markets }: Props) {
             <ul className="space-y-2 text-bone-muted">
               <ShortRow keys={['↑', 'k']} label="Previous market" />
               <ShortRow keys={['↓', 'j']} label="Next market" />
-              <ShortRow keys={['Y']} label="Add YES to parlay" />
-              <ShortRow keys={['N']} label="Add NO to parlay" />
+              <ShortRow keys={['Y']} label="Place $10 YES position" />
+              <ShortRow keys={['N']} label="Place $10 NO position" />
               <ShortRow keys={['⌘', 'K']} label="Open search" />
               <ShortRow keys={['Esc']} label="Back to grid" />
             </ul>

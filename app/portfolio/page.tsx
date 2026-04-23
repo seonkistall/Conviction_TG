@@ -11,7 +11,6 @@ import {
 } from '@/lib/markets';
 import { formatUSD } from '@/lib/format';
 import { PriceChart } from '@/components/PriceChart';
-import { ParlayTickets } from '@/components/ParlayTickets';
 import { Sparkline } from '@/components/Sparkline';
 import { HotPositions } from '@/components/HotPositions';
 import { usePositions } from '@/lib/positions';
@@ -121,7 +120,9 @@ export default function PortfolioPage() {
       </div>
 
       {/* Parlay tickets ledger */}
-      <ParlayTickets />
+      {/* v2.22-1: ParlayTickets ledger removed along with the rest of
+          parlay. Direct positions live in the Open positions table
+          below; closed fills already land in the Realized P&L stat. */}
 
       <div className="mt-8 grid gap-8 md:grid-cols-12">
         {/* Positions */}

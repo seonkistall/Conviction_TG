@@ -118,20 +118,10 @@ export interface ActivityEvent {
   amount?: number;
 }
 
-// ---------- Parlay ----------
-
-export interface ParlayLeg {
-  marketId: string;
-  /** For binary: YES/NO. For multi: outcome id */
-  pick: string;
-  /** Implied price 0..1 at time added */
-  price: number;
-}
-
-export interface ParlaySlip {
-  legs: ParlayLeg[];
-  stake: number; // USD
-}
+// v2.22-1: Parlay types removed. Parlay was dropped from the product
+// (users found the "stack theses into one ticket" mechanic confusing
+// and it diluted the direct-trade positioning). Positions + OrderBook
+// are now the only trade path.
 
 // ---------- Narrative Index / Culture moats ----------
 

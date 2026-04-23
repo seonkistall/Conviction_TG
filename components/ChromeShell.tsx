@@ -27,10 +27,7 @@ import { SideRail } from './SideRail';
  *   - Offset `<main>` by 72px on the left on desktop immersive routes so
  *     feed cards don't render under the rail.
  *
- * The ParlaySlip drawer itself is NOT rendered here — it stays mounted at
- * the layout level so feed-card gestures (swipe-right) can still open it
- * programmatically. Only its floating trigger FAB is pathname-gated inside
- * ParlaySlip.tsx.
+ * v2.22-1: ParlaySlip reference removed along with the rest of parlay.
  *
  * Detail pages like `/feed/market-slug` don't exist yet, but if they do
  * later we match on `/feed` exactly + prefix to stay forward-compatible.

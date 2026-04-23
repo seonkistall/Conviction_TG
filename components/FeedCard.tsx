@@ -12,7 +12,8 @@ import { FeedDetailSheet } from './FeedDetailSheet';
 import { LivePrice } from './LivePrice';
 import { useLivePrice } from '@/lib/livePrices';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
-import { useParlay } from '@/lib/parlay';
+import { usePositions } from '@/lib/positions';
+import { useToast } from '@/lib/toast';
 import { useMute } from '@/lib/mute';
 import { useT } from '@/lib/i18n';
 
@@ -54,10 +55,14 @@ const HEART_ANIM_MS = 900;        // lifespan of the heart pop overlay
  *     fights the vertical snap-feed scroll.
  */
 export function FeedCard({ market }: Props) {
-  const parlay = useParlay();
+  const positions = usePositions();
+  const toast = useToast();
   const mute = useMute();
   const t = useT();
-  const inParlay = parlay.hasLeg(market.id);
+  // v2.22-1: Parlay store removed. `hasPosition` replaces the old
+  // `inParlay` ring on YES/NO quick-bets so the card still hints
+  // "you already hold this side".
+  const hasPosition = positions.hasPosition(market.id);
   const isResolved = market.status === 'resolved';
   const isBinary = market.kind === 'binary';
   // Resolved markets keep their settlement price frozen. Everyone else
@@ -107,17 +112,9 @@ export function FeedCard({ market }: Props) {
       const dy = t1.clientY - start.y;
       const dt = Date.now() - start.t;
 
-      // --- Swipe-right → open parlay slip ---
-      // Must be mostly-horizontal, rightward, fast, and of meaningful magnitude.
-      if (
-        dx > SWIPE_MIN_DX &&
-        Math.abs(dy) < SWIPE_MAX_DY &&
-        Math.abs(dx) > Math.abs(dy) * 1.5 &&
-        dt < SWIPE_MAX_MS
-      ) {
-        parlay.toggle(true);
-        return;
-      }
+      // v2.22-1: Swipe-right → open-parlay gesture removed along
+      // with the rest of parlay. Horizontal swipes are now ignored
+      // by the feed (vertical scroll is still native).
 
       // --- Tap detection ---
       // If the finger barely moved and the press was short, treat as tap.
@@ -132,13 +129,27 @@ export function FeedCard({ market }: Props) {
         // Reset so a third tap doesn't chain-fire as another double.
         lastTapAt.current = 0;
         if (!isResolved && isBinary) {
-          parlay.add({
-            marketId: market.id,
-            pick: 'YES',
-            price: market.yesProb,
-          });
-          // Coordinate in element-local space so the heart animates at the
-          // finger position, not the viewport origin.
+          // v2.22-1: Double-tap now places a direct $10 YES position
+          // instead of adding a parlay leg. The heart-burst still
+          // fires so the gesture feels identical to pre-v2.22 —
+          // only the backing action changed (parlay.add → positions.buy).
+          const price = market.yesProb;
+          if (price > 0 && price < 1) {
+            const shares = Math.max(1, Math.round(10 / price));
+            positions.buy({
+              marketId: market.id,
+              side: 'YES',
+              shares,
+              price,
+            });
+            toast.push({
+              kind: 'trade',
+              title: `YES · ${shares} shares placed`,
+              body: market.title,
+              amount: `-$${(shares * price).toFixed(2)}`,
+              cta: { href: '/portfolio', label: 'View' },
+            });
+          }
           const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
           popHeart(t1.clientX - rect.left, t1.clientY - rect.top);
         }
@@ -156,7 +167,17 @@ export function FeedCard({ market }: Props) {
         }
       }, DOUBLE_TAP_MS + 10);
     },
-    [isBinary, isResolved, market.id, market.yesProb, mute, parlay, popHeart]
+    [
+      isBinary,
+      isResolved,
+      market.id,
+      market.title,
+      market.yesProb,
+      mute,
+      popHeart,
+      positions,
+      toast,
+    ]
   );
 
   return (
@@ -260,30 +281,11 @@ export function FeedCard({ market }: Props) {
         <span className="-mt-3 text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
           Info
         </span>
-        {!isResolved && (
-          <>
-            <button
-              type="button"
-              onClick={() =>
-                parlay.add({ marketId: market.id, pick: 'YES', price: market.yesProb })
-              }
-              className={clsx(
-                'flex h-12 w-12 flex-col items-center justify-center rounded-full font-bold transition',
-                inParlay
-                  ? 'bg-volt text-ink-900 scale-105'
-                  : 'bg-ink-900/70 text-volt hover:bg-ink-900 backdrop-blur'
-              )}
-              aria-label={t('feed.add_parlay')}
-            >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z" />
-              </svg>
-            </button>
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
-              {t('feed.add_parlay_short')}
-            </span>
-          </>
-        )}
+        {/* v2.22-1: Parlay "+" button removed from the rail along with
+            the rest of parlay. Direct trade happens via QuickBet
+            (card bottom) or detail-page OrderBook. Share rail button
+            is wired in v2.22-2 — for now it still renders as a
+            non-functional RailButton, same as Heart and Comment. */}
         <RailButton icon="↗" label="Share" />
       </div>
 
@@ -365,11 +367,13 @@ export function FeedCard({ market }: Props) {
               side="YES"
               price={displayYes}
               marketId={market.id}
+              marketTitle={market.title}
             />
             <QuickBet
               side="NO"
               price={1 - displayYes}
               marketId={market.id}
+              marketTitle={market.title}
             />
           </div>
         ) : (
@@ -450,34 +454,37 @@ function QuickBet({
   side,
   price,
   marketId,
+  marketTitle,
 }: {
   side: 'YES' | 'NO';
   price: number;
   marketId: string;
+  marketTitle: string;
 }) {
-  const parlay = useParlay();
-  // v2.12 — micro-interaction. A 380ms `bet-pulse` keyframe on click gives
-  // the user a crisp "registered" cue that pairs with the success haptic
-  // in parlay.add. We toggle a ref-backed token and apply a remount-free
-  // replay trick: setting animation: none → forcing reflow → restoring it
-  // would be cleaner, but the className flip below is simpler and good
-  // enough for a 380ms flash. The timer clears the class so a re-render
-  // from unrelated state doesn't keep the glow on.
+  const positions = usePositions();
+  const toast = useToast();
   const [pulsing, setPulsing] = useState(false);
   return (
     <button
       type="button"
       onClick={(e) => {
         e.preventDefault();
-        // Reset-then-set so the keyframe re-plays on rapid repeat taps.
         setPulsing(false);
-        // Double rAF so the browser commits the class removal before we
-        // add it back — otherwise React batches and nothing retriggers.
         requestAnimationFrame(() =>
           requestAnimationFrame(() => setPulsing(true))
         );
         window.setTimeout(() => setPulsing(false), 420);
-        parlay.add({ marketId, pick: side, price });
+        // v2.22-1: direct-buy $10 stake instead of parlay.add.
+        if (price <= 0 || price >= 1) return;
+        const shares = Math.max(1, Math.round(10 / price));
+        positions.buy({ marketId, side, shares, price });
+        toast.push({
+          kind: 'trade',
+          title: `${side} · ${shares} shares placed`,
+          body: marketTitle,
+          amount: `-$${(shares * price).toFixed(2)}`,
+          cta: { href: '/portfolio', label: 'View' },
+        });
       }}
       className={clsx(
         'flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-bold uppercase tracking-widest backdrop-blur transition hover:scale-[1.02]',
