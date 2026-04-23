@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import clsx from 'clsx';
-import { notFound } from 'next/navigation';
 import { getMarket } from '@/lib/markets';
 import { decodeSharedParlay, computePayout } from '@/lib/parlayShare';
 import { formatUSD } from '@/lib/format';
@@ -79,7 +78,79 @@ export function generateMetadata({
 
 export default function ParlayReceiptPage({ params, searchParams }: PageProps) {
   const p = shared(searchParams);
-  if (!p) return notFound();
+
+  /*
+   * v2.19-5 — Empty / malformed fallback.
+   *
+   * Ticket data travels inside the URL `?d=<base64url>`. A link with a
+   * missing or corrupt payload used to hit `notFound()` → generic 404.
+   * That made sense for a legacy DB lookup but reads weirdly here:
+   * the ticket isn't "not found", the link is just broken, and the
+   * reader is probably a person the sharer sent the URL to. Render a
+   * friendly empty state with a back-to-markets path and a direct
+   * link to their own portfolio (in case they mis-copied their own
+   * receipt URL).
+   */
+  if (!p) {
+    return (
+      <main className="min-h-dvh bg-ink-900 pb-16">
+        <div className="border-b border-white/5 bg-ink-900/80 backdrop-blur">
+          <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-4 md:px-6">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.25em] text-volt"
+            >
+              <span className="inline-block h-2 w-2 rounded-full bg-volt" />
+              Conviction
+            </Link>
+            <Link
+              href="/portfolio"
+              className="text-xs font-semibold text-bone-muted hover:text-bone"
+            >
+              My tickets →
+            </Link>
+          </div>
+        </div>
+
+        <div className="mx-auto flex w-full max-w-xl flex-col items-center gap-4 px-4 pt-24 text-center md:pt-32">
+          <div className="text-5xl">🎟️</div>
+          <h1 className="font-display text-3xl text-bone md:text-4xl">
+            This parlay link looks empty
+          </h1>
+          <p className="max-w-md text-sm leading-relaxed text-bone-muted">
+            Conviction parlay receipts encode the full ticket in the URL, so a
+            copy-paste truncation or a legacy link without the{' '}
+            <code className="rounded bg-ink-800 px-1 font-mono text-bone">
+              ?d=…
+            </code>{' '}
+            payload shows up blank.
+          </p>
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+            <Link
+              href="/"
+              className="rounded-full bg-volt px-5 py-2.5 text-sm font-semibold text-ink-900 hover:bg-volt-dark"
+            >
+              Browse markets →
+            </Link>
+            <Link
+              href="/portfolio"
+              className="rounded-full border border-white/10 bg-ink-800 px-5 py-2.5 text-sm font-semibold text-bone hover:bg-ink-700"
+            >
+              My portfolio
+            </Link>
+          </div>
+          {/* ID is often all the sharer remembers — surface it so they can
+              ask the original sharer for the full link. */}
+          <div className="mt-6 text-[11px] text-bone-muted">
+            Ticket id{' '}
+            <code className="rounded bg-ink-800 px-1 font-mono text-bone">
+              {params.id}
+            </code>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   const { multiplier, impliedProb, maxPayout } = computePayout(p);
   const placed = new Date(p.placedAt);
