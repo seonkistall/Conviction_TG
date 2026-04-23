@@ -197,14 +197,17 @@ export function OrderBook({
     if (onBuy) onBuy(side, shares, price);
     if (marketId) {
       positions.buy({ marketId, side, shares, price });
+      // v2.19-1: Trimmed. The PostTradeCard that renders in place right
+      // after this dispatch already owns "View position" / "Share" /
+      // "Find similar" CTAs — having the same CTA on a 2.8s-flash toast
+      // duplicated the nudge and made the confirmation card feel
+      // redundant. Toast is now a compact "Placed" ack; the card does
+      // the actual next-step work.
       push({
         kind: 'trade',
-        title: `Bought ${side} · ${shares.toLocaleString()} shares${
-          marketTitle ? ` · ${marketTitle}` : ''
-        }`,
-        body: `Filled @ ¢${Math.round(price * 100)} · Max return $${maxReturn.toFixed(2)}`,
+        title: `${side} · ${shares.toLocaleString()} placed`,
+        body: `Filled @ ¢${Math.round(price * 100)}`,
         amount: `-$${cost.toFixed(2)}`,
-        cta: { href: '/portfolio', label: 'View position' },
       });
       setPulse(true);
       window.setTimeout(() => setPulse(false), 400);
