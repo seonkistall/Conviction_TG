@@ -27,7 +27,7 @@ export const MARKETS: Market[] = [
     title: 'BLACKPINK releases full group album in 2026?',
     description:
       'Resolves YES if BLACKPINK releases a full group (4-member) studio album or mini-album before Dec 31, 2026 11:59PM KST. Sub-unit or solo work does not count.',
-    category: 'K-Pop',
+    category: 'Music',
     region: 'KR',
     endsAt: '2026-12-31T14:59:00Z',
     resolvesAt: '2027-01-07T00:00:00Z',
@@ -154,7 +154,7 @@ export const MARKETS: Market[] = [
     title: 'Squid Game S3 hits 100M Netflix views in week 1?',
     description:
       'Resolves YES if Squid Game Season 3 reaches 100 million official Netflix views within the first 7 days after global premiere.',
-    category: 'K-Drama',
+    category: 'Film & TV',
     region: 'KR',
     endsAt: '2026-09-15T04:00:00Z',
     resolvesAt: '2026-09-22T04:00:00Z',
@@ -183,7 +183,7 @@ export const MARKETS: Market[] = [
     title: 'NewJeans full-group comeback before Q4 2026 ends?',
     description:
       'Resolves YES if all 5 members of NewJeans appear together on an officially-released song by Dec 31, 2026.',
-    category: 'K-Pop',
+    category: 'Music',
     region: 'KR',
     endsAt: '2026-12-31T14:59:00Z',
     resolvesAt: '2027-01-07T00:00:00Z',
@@ -212,7 +212,7 @@ export const MARKETS: Market[] = [
     title: 'Who wins MAMA Daesang (Artist of the Year) 2026?',
     description:
       'Multi-outcome market on the Artist of the Year Grand Prize at the 2026 MAMA Awards.',
-    category: 'K-Pop',
+    category: 'Music',
     region: 'KR',
     endsAt: '2026-12-10T11:00:00Z',
     resolvesAt: '2026-12-12T00:00:00Z',
@@ -308,7 +308,7 @@ export const MARKETS: Market[] = [
     title: 'One Piece manga concludes before end of 2027?',
     description:
       'Resolves YES if Eiichiro Oda publishes the final chapter of One Piece in Weekly Shonen Jump by Dec 31, 2027.',
-    category: 'Anime',
+    category: 'Film & TV',
     region: 'JP',
     endsAt: '2027-12-31T14:59:00Z',
     resolvesAt: '2028-01-14T00:00:00Z',
@@ -335,7 +335,7 @@ export const MARKETS: Market[] = [
     title: "Bong Joon-ho's next film wins Best Picture at the 2027 Oscars?",
     description:
       'Resolves YES if the next feature film directed by Bong Joon-ho (released before Oct 15, 2026) wins Best Picture at the 99th Academy Awards.',
-    category: 'Entertainment',
+    category: 'Film & TV',
     region: 'KR',
     endsAt: '2027-03-05T00:00:00Z',
     resolvesAt: '2027-03-10T00:00:00Z',
@@ -367,7 +367,7 @@ export const MARKETS: Market[] = [
     title: 'Nikkei 225 closes above 50,000 in 2026?',
     description:
       'Resolves YES if the Nikkei 225 has at least one daily closing print ≥ 50,000 between Jan 1, 2026 and Dec 31, 2026.',
-    category: 'Finance',
+    category: 'Markets',
     region: 'JP',
     endsAt: '2026-12-31T06:00:00Z',
     resolvesAt: '2027-01-05T00:00:00Z',
@@ -394,7 +394,7 @@ export const MARKETS: Market[] = [
     title: 'BTS announces full 7-member world tour in 2026?',
     description:
       'Resolves YES if BIGHIT MUSIC officially announces a world tour featuring all 7 members of BTS before Dec 31, 2026.',
-    category: 'K-Pop',
+    category: 'Music',
     region: 'KR',
     endsAt: '2026-12-31T14:59:00Z',
     resolvesAt: '2027-01-10T00:00:00Z',
@@ -424,7 +424,7 @@ export const MARKETS: Market[] = [
     title: 'Jay Chou (周杰倫) releases a full studio album in 2026?',
     description:
       'Resolves YES if Jay Chou officially releases a new full-length studio album (≥ 8 tracks) via JVR Music before Dec 31, 2026 23:59 CST. Single tracks, re-masters, and live albums do not count.',
-    category: 'K-Pop',
+    category: 'Music',
     region: 'CN',
     endsAt: '2026-12-31T15:59:00Z',
     resolvesAt: '2027-01-10T00:00:00Z',
@@ -453,7 +453,7 @@ export const MARKETS: Market[] = [
     title: 'Joy of Life S3 (慶餘年) averages ≥ 8.5 on Douban?',
     description:
       'Resolves YES if the Douban audience score for Joy of Life Season 3 is ≥ 8.5 at the end of its full broadcast run on Tencent Video / WeTV.',
-    category: 'K-Drama',
+    category: 'Film & TV',
     region: 'CN',
     endsAt: '2026-11-30T16:00:00Z',
     resolvesAt: '2026-12-15T00:00:00Z',
@@ -544,7 +544,7 @@ export const MARKETS: Market[] = [
     title: 'BYD outsells Tesla in global BEV deliveries in FY26?',
     description:
       'Resolves YES if BYD\'s reported full-year 2026 global battery-electric-vehicle (BEV) deliveries exceed Tesla\'s global BEV deliveries, per each company\'s Q4 shareholder letter.',
-    category: 'Finance',
+    category: 'Markets',
     region: 'CN',
     endsAt: '2027-01-31T00:00:00Z',
     resolvesAt: '2027-02-07T00:00:00Z',
@@ -572,7 +572,7 @@ export const MARKETS: Market[] = [
     title: 'USD/CNY prints above 7.50 at any point in 2026?',
     description:
       'Resolves YES if the CFETS onshore USD/CNY reference rate or spot prints ≥ 7.50 on any trading day in 2026.',
-    category: 'Finance',
+    category: 'Markets',
     region: 'CN',
     endsAt: '2026-12-31T08:00:00Z',
     resolvesAt: '2027-01-05T00:00:00Z',
@@ -601,7 +601,7 @@ export const MARKETS: Market[] = [
     title: 'Chainsaw Man S2 holds MAL score ≥ 8.5 at season end?',
     description:
       'Resolves YES if the MyAnimeList weighted score for Chainsaw Man Season 2 is ≥ 8.5 at the end of its broadcast run.',
-    category: 'Anime',
+    category: 'Film & TV',
     region: 'JP',
     endsAt: '2026-09-28T15:00:00Z',
     resolvesAt: '2026-10-05T00:00:00Z',
@@ -629,7 +629,7 @@ export const MARKETS: Market[] = [
     title: 'YOASOBI claims a weekly #1 on the Oricon Singles Chart in 2026?',
     description:
       'Resolves YES if any YOASOBI song ranks #1 on the weekly Oricon Singles Chart at least once during the 2026 calendar year.',
-    category: 'K-Pop',
+    category: 'Music',
     region: 'JP',
     endsAt: '2026-12-31T15:00:00Z',
     resolvesAt: '2027-01-10T00:00:00Z',
@@ -684,7 +684,7 @@ export const MARKETS: Market[] = [
     title: 'USD/JPY closes above 160 on any day in 2026?',
     description:
       'Resolves YES if the Tokyo fix or NY close USD/JPY spot prints ≥ 160.00 on any business day during 2026.',
-    category: 'Finance',
+    category: 'Markets',
     region: 'JP',
     endsAt: '2026-12-31T21:00:00Z',
     resolvesAt: '2027-01-05T00:00:00Z',
@@ -857,7 +857,7 @@ export const MARKETS: Market[] = [
     title: "Shah Rukh Khan's Pathaan sequel crosses ₹500cr opening week?",
     description:
       'Resolves YES if the opening-week (7 days from theatrical release) net box office for Pathaan 2 (dir. Siddharth Anand) crosses ₹500 crore across India + overseas combined, per Box Office India + Koimoi tracking.',
-    category: 'Entertainment',
+    category: 'Film & TV',
     region: 'SEA',
     endsAt: '2026-09-15T18:30:00Z',
     resolvesAt: '2026-09-22T00:00:00Z',
@@ -925,7 +925,7 @@ export const MARKETS: Market[] = [
     title: 'YOASOBI charts Billboard Hot 100 top 40 in 2026?',
     description:
       'Resolves YES if any YOASOBI single (new or catalog) charts in the weekly Billboard Hot 100 top 40 at any point during calendar 2026. Digital + streaming aggregate, per official Billboard chart.',
-    category: 'K-Pop',
+    category: 'Music',
     region: 'JP',
     endsAt: '2026-12-31T07:00:00Z',
     resolvesAt: '2027-01-10T00:00:00Z',
@@ -953,7 +953,7 @@ export const MARKETS: Market[] = [
     title: 'Demon Slayer: Infinity Castle Part 3 releases before end of 2026?',
     description:
       'Resolves YES if ufotable / Aniplex announces AND theatrically releases the final Part 3 of the Infinity Castle trilogy in any market before Dec 31, 2026 11:59PM JST.',
-    category: 'Anime',
+    category: 'Film & TV',
     region: 'JP',
     endsAt: '2026-12-31T14:59:00Z',
     resolvesAt: '2027-01-05T00:00:00Z',
@@ -1013,7 +1013,7 @@ export const MARKETS: Market[] = [
     title: 'BOJ delivers its first rate cut (since 2016) by end of Q3 2026?',
     description:
       "Resolves YES if the Bank of Japan's Policy Board announces a cut to the uncollateralized overnight call rate (or equivalent policy rate) at any meeting on or before Sep 30, 2026. Hikes do not resolve the market.",
-    category: 'Finance',
+    category: 'Markets',
     region: 'JP',
     endsAt: '2026-09-30T03:00:00Z',
     resolvesAt: '2026-10-07T00:00:00Z',
@@ -1109,7 +1109,7 @@ export const MARKETS: Market[] = [
     title: 'IVE wins Artist of the Year (Daesang) at MAMA 2026?',
     description:
       "Resolves YES if IVE is announced as the Daesang winner of the 'Artist of the Year' category at the 2026 MAMA Awards ceremony. Only the top-line Daesang counts — genre Bonsang awards do not resolve YES.",
-    category: 'K-Pop',
+    category: 'Music',
     region: 'KR',
     endsAt: '2026-11-28T12:00:00Z',
     resolvesAt: '2026-12-02T00:00:00Z',
@@ -1178,16 +1178,21 @@ export const LIVE_MARKETS: Market[] = MARKETS.filter((m) => m.status !== 'resolv
 /** Markets that have already settled. */
 export const RESOLVED_MARKETS: Market[] = MARKETS.filter((m) => m.status === 'resolved');
 
+/*
+ * v2.23-4 — MECE label set. See the comment on `MarketCategory` in
+ * lib/types.ts for the rationale. Order here drives the chip row on
+ * the landing page, chosen by live-catalog volume: Esports (8) and
+ * Music (8) lead, then Sports (6), Film & TV (7), Markets (5),
+ * Crypto (2), Politics (1) trail.
+ */
 export const CATEGORIES: { label: string; value: string }[] = [
   { label: 'All', value: 'all' },
-  { label: 'K-Pop', value: 'K-Pop' },
-  { label: 'K-Drama', value: 'K-Drama' },
+  { label: 'Music', value: 'Music' },
+  { label: 'Film & TV', value: 'Film & TV' },
   { label: 'Esports', value: 'Esports' },
   { label: 'Sports', value: 'Sports' },
-  { label: 'Anime', value: 'Anime' },
   { label: 'Crypto', value: 'Crypto' },
-  { label: 'Finance', value: 'Finance' },
-  { label: 'Entertainment', value: 'Entertainment' },
+  { label: 'Markets', value: 'Markets' },
   { label: 'Politics', value: 'Politics' },
 ];
 
@@ -1364,7 +1369,11 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
   {
     id: 'nx_lpl_rising',
     slug: 'lpl-rising-2026',
-    title: 'LPL Rising · 중국 리그 제국',
+    // v2.23-2: Dropped the Korean tail `· 중국 리그 제국` — everywhere
+    // else in the landing reads English-only, and the mixed-script chip
+    // in NarrativeIndices was the only Korean leaking through. Title is
+    // now parallel with the other four narratives.
+    title: 'LPL Rising',
     blurb: 'JDG · BLG · Knight — can the LPL reclaim Worlds and dominate patch 2026?',
     emoji: '🐉',
     legs: [
@@ -1459,8 +1468,29 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
  * drops. Kept the heat + poster + (optional) linked market shape
  * identical so the UI stays drop-in compatible.
  */
+/*
+ * v2.23-3 — Interleaved Spawn-vs-linked order.
+ *
+ * Through v2.22-3 the calendar strip was ordered by region block
+ * (Korea → Japan → China → India → SEA). The two "Spawn market"
+ * CTAs (events without a `marketId`, iQiyi + Dharma) ended up buried
+ * in positions 7 and 9. Users skimming the first three cards never
+ * saw the permissionless-creation story.
+ *
+ * New order: every third card is a Spawn CTA (2:1 linked-to-spawn
+ * ratio). That pulls the "you can propose the next market yourself"
+ * message into the reader's first scroll-horizontal and reinforces
+ * Conviction's core differentiator. Four Spawn cards now (two were
+ * already here; added Squid Game S3 and SMTown Live concert so the
+ * 2:1 rhythm holds across all 12 cards instead of running out of
+ * spawn slots mid-strip).
+ *
+ * Chronological order inside each run is preserved loosely — we
+ * still lead with the highest-heat near-term events (BLACKPINK,
+ * Demon Slayer) so the strip reads hot → cool horizontally.
+ */
 export const DEBUT_EVENTS: DebutEvent[] = [
-  // Korea — music
+  // Pair 1 → Spawn
   {
     id: 'db_01',
     artist: 'BLACKPINK',
@@ -1474,19 +1504,6 @@ export const DEBUT_EVENTS: DebutEvent[] = [
   },
   {
     id: 'db_02',
-    artist: 'IVE',
-    title: 'IVE · MAMA Daesang campaign',
-    marketId: 'mkt_ive_mama_daesang_2026',
-    company: 'HYBE',
-    region: 'KR',
-    dropsAt: '2026-11-28T12:00:00Z',
-    heat: 0.78,
-    poster: 'https://i.ytimg.com/vi/V37TaRdVUjg/maxresdefault.jpg',
-  },
-
-  // Japan — anime / J-pop
-  {
-    id: 'db_03',
     artist: 'ufotable',
     title: 'Demon Slayer: Infinity Castle · Part 3 premiere',
     marketId: 'mkt_demon_slayer_p3_2026',
@@ -1500,31 +1517,33 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/maxresdefault.jpg',
   },
   {
+    // v2.23-3 — First Spawn slot (new). Netflix hasn't confirmed a
+    // Squid Game S3 premiere window yet, so no linked market exists —
+    // perfect fit for the AI wizard CTA ("spawn this market in 45s").
+    id: 'db_03',
+    artist: 'Netflix',
+    title: 'Squid Game · S3 global premiere',
+    company: 'Other',
+    region: 'KR',
+    dropsAt: '2026-10-12T00:00:00Z',
+    heat: 0.87,
+    poster: 'https://i.ytimg.com/vi/oqxAJKy0ii4/maxresdefault.jpg',
+  },
+
+  // Pair 2 → Spawn
+  {
     id: 'db_04',
-    artist: 'YOASOBI',
-    title: 'YOASOBI · first global arena tour',
-    marketId: 'mkt_yoasobi_billboard',
-    company: 'Sony Music JP',
-    region: 'JP',
-    dropsAt: '2026-07-18T10:00:00Z',
-    heat: 0.72,
-    poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/maxresdefault.jpg',
+    artist: 'IVE',
+    title: 'IVE · MAMA Daesang campaign',
+    marketId: 'mkt_ive_mama_daesang_2026',
+    company: 'HYBE',
+    region: 'KR',
+    dropsAt: '2026-11-28T12:00:00Z',
+    heat: 0.78,
+    poster: 'https://i.ytimg.com/vi/V37TaRdVUjg/maxresdefault.jpg',
   },
   {
     id: 'db_05',
-    artist: 'MAPPA',
-    title: 'Chainsaw Man S2 · final arc key art',
-    marketId: 'mkt_chainsawman_s2',
-    company: 'MAPPA',
-    region: 'JP',
-    dropsAt: '2026-06-01T00:00:00Z',
-    heat: 0.69,
-    poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/maxresdefault.jpg',
-  },
-
-  // China — drama + esports
-  {
-    id: 'db_06',
     artist: 'JDG',
     title: 'JDG · 2026 Worlds roster announcement',
     marketId: 'mkt_jdg_worlds_final_2026',
@@ -1535,17 +1554,28 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
   },
   {
-    id: 'db_07',
-    artist: 'iQiyi',
-    title: 'Joy of Reign · Season 2 launch',
-    company: 'iQiyi',
-    region: 'CN',
-    dropsAt: '2026-08-22T12:00:00Z',
-    heat: 0.62,
-    poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/maxresdefault.jpg',
+    id: 'db_06',
+    artist: 'Dharma Productions',
+    title: 'Dharma · FY26 slate reveal',
+    company: 'Dharma',
+    region: 'IN',
+    dropsAt: '2026-05-28T10:00:00Z',
+    heat: 0.58,
+    poster: 'https://i.ytimg.com/vi/66-eOImoiOY/maxresdefault.jpg',
   },
 
-  // India — Bollywood
+  // Pair 3 → Spawn
+  {
+    id: 'db_07',
+    artist: 'YOASOBI',
+    title: 'YOASOBI · first global arena tour',
+    marketId: 'mkt_yoasobi_billboard',
+    company: 'Sony Music JP',
+    region: 'JP',
+    dropsAt: '2026-07-18T10:00:00Z',
+    heat: 0.72,
+    poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/maxresdefault.jpg',
+  },
   {
     id: 'db_08',
     artist: 'YRF · SRK',
@@ -1562,18 +1592,29 @@ export const DEBUT_EVENTS: DebutEvent[] = [
   },
   {
     id: 'db_09',
-    artist: 'Dharma Productions',
-    title: 'Dharma · FY26 slate reveal',
-    company: 'Dharma',
-    region: 'IN',
-    dropsAt: '2026-05-28T10:00:00Z',
-    heat: 0.58,
-    poster: 'https://i.ytimg.com/vi/66-eOImoiOY/maxresdefault.jpg',
+    artist: 'iQiyi',
+    title: 'Joy of Reign · Season 2 launch',
+    company: 'iQiyi',
+    region: 'CN',
+    dropsAt: '2026-08-22T12:00:00Z',
+    heat: 0.62,
+    poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/maxresdefault.jpg',
   },
 
-  // SEA — esports
+  // Pair 4 → Spawn
   {
     id: 'db_10',
+    artist: 'MAPPA',
+    title: 'Chainsaw Man S2 · final arc key art',
+    marketId: 'mkt_chainsawman_s2',
+    company: 'MAPPA',
+    region: 'JP',
+    dropsAt: '2026-06-01T00:00:00Z',
+    heat: 0.69,
+    poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/maxresdefault.jpg',
+  },
+  {
+    id: 'db_11',
     artist: 'MOONTON · MLBB M6',
     title: 'MLBB M6 World Championship · Jakarta',
     marketId: 'mkt_mlbb_m6_record',
@@ -1584,6 +1625,20 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     // v2.22-4: Reuse verified Worlds esports poster — both are
     // competitive-gaming finals, same visual lane.
     poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+  },
+  {
+    // v2.23-3 — Last Spawn slot (new). SM Town Live Tokyo Dome is
+    // the biggest JP-side K-pop concert of the year but no
+    // "will they sell out all 4 nights?" market exists yet — prime
+    // Spawn example for the strip's trailing position.
+    id: 'db_12',
+    artist: 'SM Town',
+    title: 'SMTown Live · Tokyo Dome · 4-night sellout',
+    company: 'SM',
+    region: 'JP',
+    dropsAt: '2026-08-02T10:00:00Z',
+    heat: 0.64,
+    poster: 'https://i.ytimg.com/vi/V37TaRdVUjg/maxresdefault.jpg',
   },
 ];
 

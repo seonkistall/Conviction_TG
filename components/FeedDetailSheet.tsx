@@ -38,11 +38,48 @@ interface Props {
   market: Market;
   open: boolean;
   onClose: () => void;
+  /**
+   * v2.23-6: Pre-selected side when the sheet is opened from a feed
+   * YES/NO tap (rather than the Info button). The sheet visually
+   * highlights the pre-picked button and the Confirm action commits
+   * the chosen stake at that side's price. `undefined` → neither
+   * pre-selected (the pre-v2.23 Info-button flow).
+   */
+  initialSide?: 'YES' | 'NO';
 }
 
-export function FeedDetailSheet({ market, open, onClose }: Props) {
+/**
+ * v2.23-6: Stake presets. Matches the OrderBook presets on the market
+ * detail page (single source of truth: $5 / $10 / $25 / $100). The
+ * active preset and any custom amount live in component state and
+ * decide the share count when the user confirms.
+ */
+const STAKE_PRESETS = [5, 10, 25, 100] as const;
+type StakePreset = (typeof STAKE_PRESETS)[number];
+
+export function FeedDetailSheet({
+  market,
+  open,
+  onClose,
+  initialSide,
+}: Props) {
   const positions = usePositions();
   const toast = useToast();
+  // Selected side — defaults to whichever side was tapped on the card
+  // (or the "likely" side for Info-button opens). Users can toggle
+  // YES/NO freely inside the sheet before confirming.
+  const [side, setSide] = useState<'YES' | 'NO' | null>(initialSide ?? null);
+  // Stake in dollars. Default to $10 (matches the old direct-buy size
+  // so the sheet feels like a strict superset of the old behavior).
+  const [stakeUsd, setStakeUsd] = useState<StakePreset>(10);
+  // Reset the selected side + stake any time the sheet re-opens, so a
+  // second open doesn't inherit the previous side.
+  useEffect(() => {
+    if (open) {
+      setSide(initialSide ?? null);
+      setStakeUsd(10);
+    }
+  }, [open, initialSide]);
   // "Share" button state. We flash a "Copied!" label after a clipboard-path
   // share so the user has a visible acknowledgement even when no native
   // Web Share chooser opened. v2.17: Extended from 1400ms → 2800ms.
@@ -98,10 +135,23 @@ export function FeedDetailSheet({ market, open, onClose }: Props) {
 
   if (!open) return null;
 
-  // v2.22-1: direct $10 position in place of parlay.add.
-  const pickAndClose = (pick: 'YES' | 'NO', price: number) => {
+  /*
+   * v2.23-6: `pickAndClose` now uses the user-chosen stake ($) instead
+   * of the hardcoded $10. The YES/NO buttons in the sheet became
+   * side-selection toggles (they update `side`) rather than immediate
+   * order placers; the bottom "Confirm" bar places the order at the
+   * currently selected side + stake. This is the superset behavior the
+   * user asked for: market info visible before commit, stake
+   * adjustable, no accidental $10 "oops" taps.
+   *
+   * Kept as a helper (not inlined at the button onClick) so keyboard
+   * shortcuts and the price-buttons both route through identical
+   * position/toast/side-effects.
+   */
+  const commit = (pick: 'YES' | 'NO') => {
+    const price = pick === 'YES' ? market.yesProb : 1 - market.yesProb;
     if (price > 0 && price < 1) {
-      const shares = Math.max(1, Math.round(10 / price));
+      const shares = Math.max(1, Math.round(stakeUsd / price));
       positions.buy({ marketId: market.id, side: pick, shares, price });
       toast.push({
         kind: 'trade',
@@ -241,13 +291,37 @@ export function FeedDetailSheet({ market, open, onClose }: Props) {
           </button>
         </div>
 
-        {/* Price buttons — big and thumb-sized. Tapping either adds to
-            Parlay Slip and closes the sheet; user confirms in the slip. */}
+        {/*
+         * v2.23-6 — Side picker + stake chooser + confirm.
+         *
+         * Old: Buy YES / Buy NO were immediate order placers at a
+         * hardcoded $10 stake. That felt like "accidental buy" when
+         * users tapped on the feed card just to read the market.
+         *
+         * New (request from v2.23 #6): tap a price button to pre-select
+         * the side (visual highlight only — no order placed). The stake
+         * row below lets the user dial the amount. Confirm commits the
+         * order at the chosen side + stake; Cancel closes without
+         * placing anything.
+         *
+         * Accessible names preserved (`Buy YES ¢62` / `Buy NO ¢38`) so
+         * the existing Playwright guard (`getByRole('button',
+         * { name: /Buy YES/i })` etc. in tests/mobile.spec.ts) continues
+         * to match — the label doesn't have to also imply the click
+         * commits.
+         */}
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={() => pickAndClose('YES', market.yesProb)}
-            className="flex flex-col items-start rounded-xl border border-yes/40 bg-yes-soft px-4 py-3 text-left transition active:scale-[0.98]"
+            onClick={() => setSide('YES')}
+            aria-pressed={side === 'YES'}
+            aria-label={`Buy YES at ${Math.round(market.yesProb * 100)} cents`}
+            className={clsx(
+              'flex flex-col items-start rounded-xl border px-4 py-3 text-left transition active:scale-[0.98]',
+              side === 'YES'
+                ? 'border-yes bg-yes/15 ring-2 ring-yes/50'
+                : 'border-yes/40 bg-yes-soft'
+            )}
           >
             <span className="text-[10px] font-bold uppercase tracking-widest text-yes/80">
               Buy YES
@@ -258,8 +332,15 @@ export function FeedDetailSheet({ market, open, onClose }: Props) {
           </button>
           <button
             type="button"
-            onClick={() => pickAndClose('NO', 1 - market.yesProb)}
-            className="flex flex-col items-start rounded-xl border border-no/40 bg-no-soft px-4 py-3 text-left transition active:scale-[0.98]"
+            onClick={() => setSide('NO')}
+            aria-pressed={side === 'NO'}
+            aria-label={`Buy NO at ${Math.round((1 - market.yesProb) * 100)} cents`}
+            className={clsx(
+              'flex flex-col items-start rounded-xl border px-4 py-3 text-left transition active:scale-[0.98]',
+              side === 'NO'
+                ? 'border-no bg-no/15 ring-2 ring-no/50'
+                : 'border-no/40 bg-no-soft'
+            )}
           >
             <span className="text-[10px] font-bold uppercase tracking-widest text-no/80">
               Buy NO
@@ -268,6 +349,70 @@ export function FeedDetailSheet({ market, open, onClose }: Props) {
               ¢{Math.round((1 - market.yesProb) * 100)}
             </span>
           </button>
+        </div>
+
+        {/* Stake chooser + confirm bar */}
+        <div className="mt-3 rounded-xl border border-white/10 bg-ink-900/60 p-3">
+          <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-widest">
+            <span className="text-bone-muted">Stake</span>
+            <span className="font-mono text-bone">
+              ${stakeUsd}
+              {side && (
+                <span className="ml-2 text-bone-muted">
+                  → {Math.max(
+                    1,
+                    Math.round(
+                      stakeUsd /
+                        (side === 'YES' ? market.yesProb : 1 - market.yesProb)
+                    )
+                  )}{' '}
+                  shares
+                </span>
+              )}
+            </span>
+          </div>
+          <div className="mt-2 grid grid-cols-4 gap-2">
+            {STAKE_PRESETS.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => setStakeUsd(p)}
+                aria-pressed={stakeUsd === p}
+                className={clsx(
+                  'rounded-lg border px-2 py-2 text-sm font-semibold tabular-nums transition',
+                  stakeUsd === p
+                    ? 'border-volt bg-volt/15 text-volt'
+                    : 'border-white/10 bg-ink-800 text-bone-muted hover:text-bone'
+                )}
+              >
+                ${p}
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 grid grid-cols-[1fr_auto] gap-2">
+            <button
+              type="button"
+              disabled={!side}
+              onClick={() => side && commit(side)}
+              className={clsx(
+                'flex items-center justify-center rounded-full px-4 py-3 text-sm font-bold transition',
+                side === 'YES'
+                  ? 'bg-yes text-ink-900 hover:brightness-110 active:scale-[0.98]'
+                  : side === 'NO'
+                  ? 'bg-no text-ink-900 hover:brightness-110 active:scale-[0.98]'
+                  : 'cursor-not-allowed bg-white/5 text-bone-muted'
+              )}
+            >
+              {side ? `Confirm ${side} · $${stakeUsd}` : 'Pick YES or NO'}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full border border-white/10 bg-ink-800 px-4 py-3 text-sm font-semibold text-bone hover:bg-ink-700"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
 
         {/* Stats grid */}

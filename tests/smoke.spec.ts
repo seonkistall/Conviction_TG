@@ -173,6 +173,22 @@ test.describe('smoke · v2.13 ⌘K palette', () => {
   });
 
   test('Ctrl+K opens palette and matches Korean query', async ({ page }) => {
+    /*
+     * v2.23-8: Pre-dismiss the onboarding overlay before goto. The
+     * OnboardingIntro sits at z-80 fixed-inset-0 and captures keyboard
+     * events on first visit (via its `<div onKeyDown>` close-handler),
+     * so a fresh Control+K was being swallowed by the modal's focus
+     * trap before the global CommandPalette listener saw it. Seeding
+     * `cv_onboarded_v1=1` skips the overlay entirely and restores the
+     * direct "Ctrl+K → palette" behavior the rest of the app assumes.
+     */
+    await page.addInitScript(() => {
+      try {
+        window.localStorage.setItem('cv_onboarded_v1', '1');
+      } catch {
+        /* noop */
+      }
+    });
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     // The `/` shortcut is blocked when focus is in a text field, so we use
@@ -180,12 +196,16 @@ test.describe('smoke · v2.13 ⌘K palette', () => {
     await page.keyboard.press('Control+K');
     const dialog = page.getByRole('dialog', { name: /Command palette/i });
     await expect(dialog).toBeVisible();
-    // Scope the searchbox to the dialog. The CategoryTabs discovery input
-    // ("Search markets") and the palette input ("Command palette search",
-    // renamed in v2.16) now have distinct accessible names, but scoping
-    // to the dialog locator stays strictly better — it's what a real user
-    // sees once the palette is open.
-    await dialog.getByRole('searchbox').fill('중국');
+    /*
+     * v2.23-2: Needle changed 중국 → 민주. The prior query matched the
+     * Korean tail of "LPL Rising · 중국 리그 제국" (a narrative-index
+     * title). v2.23-2 dropped that tail to parallelize the English
+     * narrative list, and 중국 is no longer present in any market or
+     * narrative title. 민주 still appears in the Korean presidential
+     * election market's outcome labels ("Democratic Party (민주)"),
+     * so it's still a valid live-Hangul-in-search smoke.
+     */
+    await dialog.getByRole('searchbox').fill('민주');
     // At least one listbox option should render for the Hangul needle.
     await expect(
       dialog.locator('[role="option"]').first()
@@ -333,6 +353,23 @@ test.describe('smoke · v2.11 desktop /feed chrome', () => {
  */
 test.describe('smoke · v2.16 live ticker', () => {
   test('Homepage market prices tick within 12s', async ({ page }) => {
+    /*
+     * v2.23-8: Explicit 45s test budget.
+     *
+     * The assertion loop polls up to 18s for any sampled card to tick,
+     * but the full test flow (page.goto → networkidle → scroll → first
+     * textContent reads → 18s wait) consistently runs ~22-28s on a
+     * loaded CI worker. Playwright's default 30s test timeout left
+     * almost no safety margin, and the `npm run build` artifact cache
+     * priming on the first test of a cold run regularly nudged us
+     * past 30s → spurious "Test timeout exceeded" failures even when
+     * the ticker was working (the assertion itself never fired).
+     *
+     * 45s is still short enough that a truly broken ticker fails
+     * promptly, but gives the networkidle + hydration pipeline the
+     * headroom it needs on a busy runner.
+     */
+    test.setTimeout(45_000);
     await page.addInitScript(() => {
       try {
         window.localStorage.setItem('cv_onboarded_v1', '1');

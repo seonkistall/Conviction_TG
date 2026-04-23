@@ -1,13 +1,38 @@
+/**
+ * v2.23-4 — MECE taxonomy.
+ *
+ * Pre-v2.23 the category set was {K-Pop, K-Drama, Anime, Esports,
+ * Sports, Crypto, Finance, Entertainment, Politics} — nine labels
+ * where two (K-Pop, K-Drama) carried a region tag in the TYPE itself,
+ * pulling every landing-page filter chip toward Korea. That hurt
+ * perceived coverage for APAC markets outside Korea (Bollywood had
+ * to sit under "Entertainment", Joy of Reign under "Entertainment",
+ * NPB under "Sports" — all losing brand lift).
+ *
+ * The new axis is CONTENT TYPE, region-neutral:
+ *   Music        — any album/concert/chart market (K-pop, J-pop, C-pop)
+ *   Film & TV    — dramas, films, anime, reality (ex-K-Drama + Anime + Ent.)
+ *   Sports       — athletics (baseball, cricket, F1, etc.)
+ *   Esports      — competitive gaming (LCK/LPL/MPL/MLBB/etc.)
+ *   Crypto       — tokens, protocols, prices
+ *   Markets      — macro / FX / equities / rates (was "Finance")
+ *   Politics     — elections, policy
+ *
+ * 7 buckets, each mutually exclusive and collectively exhaustive for
+ * the live catalog. Regional flavor stays visible via the `region`
+ * field + the per-market tag chips (`kpop`, `kdrama`, `anime`,
+ * `bollywood`, `npb`, etc.) — so you can still filter "K-Pop alone"
+ * via the tag chip, but the PRIMARY filter bar no longer hard-codes
+ * a Korea bias.
+ */
 export type MarketCategory =
-  | 'K-Pop'
-  | 'K-Drama'
+  | 'Music'
+  | 'Film & TV'
   | 'Esports'
   | 'Sports'
   | 'Crypto'
-  | 'Anime'
-  | 'Politics'
-  | 'Entertainment'
-  | 'Finance';
+  | 'Markets'
+  | 'Politics';
 
 export type MediaKind = 'mp4' | 'youtube';
 

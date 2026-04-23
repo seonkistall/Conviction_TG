@@ -93,7 +93,27 @@ function matchMarket(m: Market, q: string): number {
     },
     -1 as number
   );
-  const best = [title, cat, tags].filter((x) => x >= 0);
+  /*
+   * v2.23-8: Also search multi-outcome labels. Through v2.23 the only
+   * live Hangul in the user-facing catalog sits in outcome labels
+   * ("Democratic Party (민주)", "People Power (국민의힘)", "Rebuild
+   * Korea (조국혁신)") because the v2.23-2 rewrite dropped the
+   * Korean-tail from LPL Rising. Without this extension, typing "민주"
+   * into ⌘K returns zero matches even though there's a perfectly
+   * relevant market — and the smoke guard relied on exactly that.
+   * Tag-penalty (slight score bump) keeps title matches ranked above
+   * outcome-label matches.
+   */
+  const outcomes = m.outcomes
+    ? m.outcomes.reduce(
+        (best, o) => {
+          const s = scoreMatch(o.label, q);
+          return s >= 0 && (best < 0 || s < best) ? s : best;
+        },
+        -1 as number
+      )
+    : -1;
+  const best = [title, cat, tags, outcomes].filter((x) => x >= 0);
   if (best.length === 0) return -1;
   const min = Math.min(...best);
   // Trending markets get a small bump (subtract 0.1 so a trending

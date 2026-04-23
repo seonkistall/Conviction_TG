@@ -79,6 +79,18 @@ export function FeedCard({ market }: Props) {
   // v2.11 — detail sheet open state. Controlled here (not in FeedClient)
   // because opening/closing is per-card and shouldn't bubble up.
   const [infoOpen, setInfoOpen] = useState(false);
+  /*
+   * v2.23-6: Pre-selected side when the sheet is opened from a YES/NO
+   * quick-bet tap (rather than the Info rail button). `null` means the
+   * sheet was opened in pure read mode; YES/NO means the user already
+   * expressed an intent and the sheet should highlight that side +
+   * enable the Confirm button immediately.
+   */
+  const [pendingSide, setPendingSide] = useState<'YES' | 'NO' | null>(null);
+  const openSheet = useCallback((withSide: 'YES' | 'NO' | null) => {
+    setPendingSide(withSide);
+    setInfoOpen(true);
+  }, []);
 
   const popHeart = useCallback((x: number, y: number) => {
     const id = Date.now() + Math.random();
@@ -129,29 +141,19 @@ export function FeedCard({ market }: Props) {
         // Reset so a third tap doesn't chain-fire as another double.
         lastTapAt.current = 0;
         if (!isResolved && isBinary) {
-          // v2.22-1: Double-tap now places a direct $10 YES position
-          // instead of adding a parlay leg. The heart-burst still
-          // fires so the gesture feels identical to pre-v2.22 —
-          // only the backing action changed (parlay.add → positions.buy).
-          const price = market.yesProb;
-          if (price > 0 && price < 1) {
-            const shares = Math.max(1, Math.round(10 / price));
-            positions.buy({
-              marketId: market.id,
-              side: 'YES',
-              shares,
-              price,
-            });
-            toast.push({
-              kind: 'trade',
-              title: `YES · ${shares} shares placed`,
-              body: market.title,
-              amount: `-$${(shares * price).toFixed(2)}`,
-              cta: { href: '/portfolio', label: 'View' },
-            });
-          }
+          /*
+           * v2.23-6: Double-tap used to place a $10 YES position
+           * directly. Per the v2.23 #6 feedback, that was too
+           * committal for a gesture that people also use to "like"
+           * content elsewhere — and a user who's just excited about
+           * a market deserves to see the stake dial before the
+           * money moves. Now: heart-burst still fires (the fun
+           * part), and the detail sheet opens pre-picked to YES so
+           * the user can confirm at their chosen stake.
+           */
           const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
           popHeart(t1.clientX - rect.left, t1.clientY - rect.top);
+          openSheet('YES');
         }
         return;
       }
@@ -271,8 +273,8 @@ export function FeedCard({ market }: Props) {
       <div className="absolute right-3 bottom-[22dvh] z-20 flex flex-col items-center gap-4 md:right-6 md:bottom-[18dvh]">
         <FeedLikeButton marketId={market.id} baseCount={market.traders} />
         <FeedCommentButton
-          marketSlug={market.slug}
           baseCount={Math.round(market.traders / 7)}
+          onOpen={() => openSheet(null)}
         />
         {/*
          * v2.11 — Info button. Dev feedback #2: a single button that opens
@@ -381,14 +383,12 @@ export function FeedCard({ market }: Props) {
             <QuickBet
               side="YES"
               price={displayYes}
-              marketId={market.id}
-              marketTitle={market.title}
+              onOpen={() => openSheet('YES')}
             />
             <QuickBet
               side="NO"
               price={1 - displayYes}
-              marketId={market.id}
-              marketTitle={market.title}
+              onOpen={() => openSheet('NO')}
             />
           </div>
         ) : (
@@ -446,6 +446,7 @@ export function FeedCard({ market }: Props) {
         market={market}
         open={infoOpen}
         onClose={() => setInfoOpen(false)}
+        initialSide={pendingSide ?? undefined}
       />
     </article>
   );
@@ -496,19 +497,26 @@ function RailButton({
   );
 }
 
+/*
+ * v2.23-6 — QuickBet on the feed card is now a side-pre-select button
+ * that opens the market detail sheet. It does NOT place an order
+ * inline; the sheet's Confirm button commits at the user's chosen
+ * stake. This prevents the "accidental $10" pattern that testers
+ * reported.
+ *
+ * Shape of the button is unchanged (YES/NO + price cents) so the
+ * visual rhythm of the feed card stays identical. Only the onClick
+ * semantics moved.
+ */
 function QuickBet({
   side,
   price,
-  marketId,
-  marketTitle,
+  onOpen,
 }: {
   side: 'YES' | 'NO';
   price: number;
-  marketId: string;
-  marketTitle: string;
+  onOpen: () => void;
 }) {
-  const positions = usePositions();
-  const toast = useToast();
   const [pulsing, setPulsing] = useState(false);
   return (
     <button
@@ -520,18 +528,9 @@ function QuickBet({
           requestAnimationFrame(() => setPulsing(true))
         );
         window.setTimeout(() => setPulsing(false), 420);
-        // v2.22-1: direct-buy $10 stake instead of parlay.add.
-        if (price <= 0 || price >= 1) return;
-        const shares = Math.max(1, Math.round(10 / price));
-        positions.buy({ marketId, side, shares, price });
-        toast.push({
-          kind: 'trade',
-          title: `${side} · ${shares} shares placed`,
-          body: marketTitle,
-          amount: `-$${(shares * price).toFixed(2)}`,
-          cta: { href: '/portfolio', label: 'View' },
-        });
+        onOpen();
       }}
+      aria-label={`Open order sheet · ${side} at ${Math.round(price * 100)} cents`}
       className={clsx(
         'flex items-center justify-between rounded-xl border px-4 py-3 text-sm font-bold uppercase tracking-widest backdrop-blur transition hover:scale-[1.02]',
         side === 'YES'
@@ -606,46 +605,54 @@ function FeedLikeButton({
 }
 
 /*
- * v2.22-2 — Comment button. Comments backend isn't built yet, so this
- * opens a toast telling the user their interest is registered ("be
- * first, comments ship next cut"). Cheap retention loop + honest
- * expectation. Count uses baseCount — no +1 bump since we don't
- * actually persist a comment.
+ * v2.23-5 — Comment button.
+ *
+ * Through v2.22-2 this popped a "Comments · coming soon" toast and
+ * routed to the market detail page. That was technically honest
+ * but functionally dead — a big heart between Like and Info with
+ * no payoff. Per v2.23 #5 feedback, Comment now shares the same
+ * bottom-sheet surface as the Info button: opens FeedDetailSheet
+ * in read mode (no pre-picked side), where the reader can see
+ * structured market facts + the discussion area (ships in a follow-
+ * up cut next to the share/stake row in the sheet). `onOpen` is
+ * piped from FeedCard's `openSheet(null)` helper.
  */
 function FeedCommentButton({
-  marketSlug,
   baseCount,
+  onOpen,
 }: {
-  marketSlug: string;
   baseCount: number;
+  onOpen: () => void;
 }) {
-  const toast = useToast();
   return (
     <RailButton
       icon="💬"
       label={baseCount.toLocaleString()}
-      aria-label="Comment"
-      onClick={() => {
-        toast.push({
-          kind: 'trade',
-          title: 'Comments · coming soon',
-          body: 'We noted your interest in this thread.',
-          cta: { href: `/markets/${marketSlug}`, label: 'Open' },
-        });
-      }}
+      aria-label="View market · Comments"
+      onClick={onOpen}
     />
   );
 }
 
 /*
- * v2.22-2 — Share button. Three-tier fallback:
- *   1. navigator.share (Web Share API) — native iOS / Android sheet.
- *   2. navigator.clipboard.writeText — copy the shareable URL and
- *      toast confirm. Works on every modern desktop browser.
- *   3. X.com intent — last-ditch new-tab open with prefilled text.
+ * v2.23-5 — Share button. X-direct.
  *
- * Same three-tier pattern FeedDetailSheet + MarketHeroShare already
- * use, so every share surface behaves identically.
+ * Through v2.22-2 this was a three-tier chain (Web Share API →
+ * clipboard → X.com intent), designed for mobile natives to pick
+ * their preferred channel. In practice testers reported that the
+ * Web Share API on desktop silently fell through to clipboard,
+ * which felt like "nothing happened" — and mobile users were also
+ * asking for X specifically because that's where the APAC crowd
+ * they want to share with actually lives.
+ *
+ * New behavior: tap Share → open `x.com/intent/tweet` in a new
+ * tab/window with the market title + URL pre-filled, every time.
+ * On mobile, iOS/Android will auto-redirect the intent URL into
+ * the installed X app via deep-link if present.
+ *
+ * The toast still fires so the user gets visible feedback that the
+ * tap registered (popup blockers sometimes eat the window.open
+ * silently on desktop).
  */
 function FeedShareButton({
   title,
@@ -655,49 +662,29 @@ function FeedShareButton({
   slug: string;
 }) {
   const toast = useToast();
-  const onShare = async () => {
-    const url =
-      typeof window !== 'undefined'
-        ? `${window.location.origin}/markets/${slug}`
-        : `/markets/${slug}`;
-    const payload = { title, text: title, url };
-    try {
-      if (
-        typeof navigator !== 'undefined' &&
-        typeof navigator.share === 'function' &&
-        (!navigator.canShare || navigator.canShare(payload))
-      ) {
-        await navigator.share(payload);
-        toast.push({ kind: 'trade', title: 'Shared', body: url });
-        return;
-      }
-    } catch {
-      /* user dismissed — fall through */
-    }
-    try {
-      if (
-        typeof navigator !== 'undefined' &&
-        navigator.clipboard?.writeText
-      ) {
-        await navigator.clipboard.writeText(url);
-        toast.push({ kind: 'trade', title: 'Link copied', body: url });
-        return;
-      }
-    } catch {
-      /* clipboard unavailable */
-    }
-    if (typeof window !== 'undefined') {
-      const xHref = `https://x.com/intent/tweet?text=${encodeURIComponent(
-        title
-      )}&url=${encodeURIComponent(url)}`;
-      window.open(xHref, '_blank', 'noopener,noreferrer');
-    }
+  const onShare = () => {
+    if (typeof window === 'undefined') return;
+    const url = `${window.location.origin}/markets/${slug}`;
+    // Includes the canonical @conviction_apac handle so any reshare
+    // on X threads back to the brand without us having to pay to
+    // acquire the namespace ourselves.
+    const text = `${title} — live on @conviction_apac`;
+    const xHref = `https://x.com/intent/tweet?text=${encodeURIComponent(
+      text
+    )}&url=${encodeURIComponent(url)}`;
+    window.open(xHref, '_blank', 'noopener,noreferrer');
+    toast.push({
+      kind: 'trade',
+      title: 'Opening X',
+      body: 'Compose tweet with market link',
+      cta: { href: url, label: 'Copy link' },
+    });
   };
   return (
     <RailButton
-      icon="↗"
+      icon="𝕏"
       label="Share"
-      aria-label="Share market — native share · clipboard · X fallback"
+      aria-label="Share on X"
       onClick={onShare}
     />
   );

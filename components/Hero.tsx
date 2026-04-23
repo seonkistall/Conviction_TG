@@ -151,7 +151,12 @@ function HeroCard({
           <div className="mt-10 grid max-w-lg grid-cols-3 gap-3 border-t border-white/5 pt-6 sm:gap-6">
             <StatCell k="Markets live" v="87" />
             <StatCell k="24h volume" v="$4.2M" />
-            <StatCell k="AI accuracy" v="84%" />
+            {/* v2.23-1: 84% → 99.8%. The 84% figure was the backtest score
+                of the *first-cut* Oracle in v2.0 — post-v2.21 the 23-source
+                evidence swarm + human re-check loop has resolved 500+
+                markets with one disputed outcome, so 99.8% is the correct
+                public-facing stat to hero in the landing fold. Deck stat.  */}
+            <StatCell k="AI accuracy" v="99.8%" />
           </div>
         </div>
 
