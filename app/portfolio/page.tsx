@@ -410,6 +410,11 @@ function Th({
 }
 
 function EmptyState() {
+  // v2.17 — Tightened the copy (dropped the parlay-flow hint — we're
+  // deferring parlay polish this cycle) and added a secondary CTA so
+  // browse-happy users who don't want the TikTok-style feed have a
+  // grid-first path. Positions persist in localStorage so returning
+  // users skip this state entirely once they've touched a market.
   return (
     <div className="flex flex-col items-center gap-3 p-10 text-center">
       <div className="text-3xl">🗂️</div>
@@ -417,16 +422,24 @@ function EmptyState() {
         No positions yet
       </div>
       <p className="max-w-sm text-sm text-bone-muted">
-        Tap YES or NO on any market to add it to a parlay, or open a market
-        and place a direct trade. Your positions will appear here and
-        persist in this browser.
+        Open any APAC market — K-pop comeback, LCK final, NPB pennant — and
+        tap YES or NO to take a side. Your positions persist in this
+        browser and show up here.
       </p>
-      <Link
-        href="/feed"
-        className="mt-1 rounded-full bg-volt px-5 py-2 text-sm font-semibold text-ink-900 hover:bg-volt-dark"
-      >
-        Browse the feed →
-      </Link>
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+        <Link
+          href="/feed"
+          className="rounded-full bg-volt px-5 py-2 text-sm font-semibold text-ink-900 hover:bg-volt-dark"
+        >
+          Browse the feed →
+        </Link>
+        <Link
+          href="/"
+          className="rounded-full border border-white/10 bg-ink-800 px-5 py-2 text-sm font-semibold text-bone hover:bg-ink-700"
+        >
+          Markets grid
+        </Link>
+      </div>
     </div>
   );
 }
