@@ -1,9 +1,10 @@
 # Conviction — Frontend (v2)
 
-The first **Asia-native, AI-powered prediction market**. Every market is
+The first **APAC-native, AI-powered prediction market**. Every market is
 a "living card": immersive video of the actual narrative auto-plays in-line
-(K-pop MV, LCK highlight, KBO swing, crypto B-roll), and Conviction layers
-on the things a prediction market for Asia actually needs:
+(K-pop MV, LCK · LPL highlight, NPB swing, anime trailer, Bollywood teaser,
+crypto B-roll), and Conviction layers on the things a prediction market
+for APAC actually needs:
 
 - a **TikTok-style vertical feed** tuned for mobile-first APAC traffic,
 - **multi-outcome markets + parlays** so you can stack cultural theses,

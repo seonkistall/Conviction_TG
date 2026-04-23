@@ -124,11 +124,15 @@ const SITE_URL = 'https://conviction-fe.vercel.app';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: 'Conviction — Asia Native Prediction Markets',
+  title: 'Conviction — APAC Prediction Markets',
+  // v2.17 — metadata description was K-heavy ("culture, sports, K-pop,
+  // esports"). Rewrote to name the full APAC surface explicitly so
+  // search snippets and LinkedIn previews read as region-wide, not a
+  // Korea-only product.
   description:
-    'The first Asia-native, AI-powered prediction market. Bet on culture, sports, K-pop, esports, and every APAC narrative before it trends. Vertical-first feed, agentic traders, evidence-graded oracle.',
+    'The first APAC-native, AI-powered prediction market. Trade every Asian narrative — K-pop, anime, LCK · LPL, NPB, Bollywood, BTC at the Tokyo open — priced in ¢ and graded by a 23-source evidence swarm.',
   openGraph: {
-    title: 'Conviction — Asia Native Prediction Markets',
+    title: 'Conviction — APAC Prediction Markets',
     description:
       'Trade conviction on the moments that move APAC. Priced by AI, graded by a 23-source evidence swarm.',
     url: SITE_URL,
@@ -140,13 +144,13 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Conviction — Asia-native prediction markets, priced by AI',
+        alt: 'Conviction — APAC-native prediction markets, priced by AI',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Conviction — Asia Native Prediction Markets',
+    title: 'Conviction — APAC Prediction Markets',
     description:
       'Trade conviction on the moments that move APAC. Priced by AI, graded by a 23-source evidence swarm.',
     images: ['/og-image.png'],
