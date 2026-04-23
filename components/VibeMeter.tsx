@@ -11,6 +11,17 @@ const SOURCE_TINT: Record<string, string> = {
   instiz: 'bg-conviction/20 text-conviction',
 };
 
+// v2.20-4 — Hover tooltip per source chip. Aligns with the "explain the
+// swarm" work we did in the Evidence sheet (v2.17-8) and the
+// /methodology page (v2.20-2) — same providers, same one-line story.
+const SOURCE_WHY: Record<string, string> = {
+  weverse: 'K-pop + J-pop artist-owned community. Comeback anticipation spikes live here 2–3 days before press.',
+  x: 'Global real-time graph. Ticker velocity + quote-graph stance signals.',
+  reddit: 'Subreddit-level heat — fandom concentration + comment ranking.',
+  youtube: 'YouTube Data v3 — MV velocity, live-viewer rank, comment sentiment.',
+  instiz: 'Korean netizen aggregation site (Instiz / theqoo) — early K-consensus pulse.',
+};
+
 export function VibeMeter() {
   const t = useT();
   return (
@@ -29,12 +40,42 @@ export function VibeMeter() {
         {VIBE_SIGNALS.map((v) => {
           const pct = Math.round((v.score * 0.5 + 0.5) * 100); // -1..1 → 0..100
           return (
-            <div
+            /*
+             * v2.20-4 — Whole card is now a <button> that opens the
+             * command palette pre-seeded with this topic. Pre-v2.20
+             * the VibeMeter was purely decorative: evaluators saw
+             * "BLACKPINK reunion · score 82" and had no action to
+             * take. Now a tap hands the topic straight to ⌘K so the
+             * next step is obvious (find markets that trade this
+             * narrative). The synthetic Ctrl+K keydown is the same
+             * dispatch pattern Header's search button uses, and the
+             * pre-seed via window event means CommandPalette doesn't
+             * need to know about VibeMeter specifically — it just
+             * consumes a plain custom event.
+             */
+            <button
+              type="button"
               key={v.topic}
-              className="rounded-2xl border border-white/10 bg-ink-800 p-5"
+              onClick={() => {
+                if (typeof window === 'undefined') return;
+                window.dispatchEvent(
+                  new CustomEvent('cv:palette:seed', { detail: v.topic })
+                );
+                window.dispatchEvent(
+                  new KeyboardEvent('keydown', {
+                    key: 'k',
+                    metaKey: true,
+                    bubbles: true,
+                  })
+                );
+              }}
+              aria-label={`Search markets related to ${v.topic}`}
+              className="group rounded-2xl border border-white/10 bg-ink-800 p-5 text-left transition hover:border-conviction/40 hover:bg-ink-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-conviction"
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-display text-xl text-bone">{v.topic}</h3>
+                <h3 className="font-display text-xl text-bone transition group-hover:text-conviction">
+                  {v.topic}
+                </h3>
                 <span className="font-mono text-2xl font-bold tabular-nums text-bone">
                   {pct}
                 </span>
@@ -81,6 +122,7 @@ export function VibeMeter() {
                   {v.sources.map((s) => (
                     <span
                       key={s}
+                      title={SOURCE_WHY[s] ?? s}
                       className={`rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase ${SOURCE_TINT[s]}`}
                     >
                       {s}
@@ -88,7 +130,14 @@ export function VibeMeter() {
                   ))}
                 </div>
               </div>
-            </div>
+              {/* "Open in search" affordance — matches the chip pattern
+                  used elsewhere (Leaderboard, trader profiles). Invisible
+                  until hover so the card itself stays the primary scan. */}
+              <div className="mt-3 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-bone-muted opacity-0 transition group-hover:opacity-100">
+                <span>Find markets</span>
+                <span aria-hidden="true">→</span>
+              </div>
+            </button>
           );
         })}
       </div>

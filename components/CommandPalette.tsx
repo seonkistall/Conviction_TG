@@ -135,10 +135,41 @@ export function CommandPalette() {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
-  // Focus the input + reset query whenever we open.
+  /*
+   * v2.20-4: Pre-seed the palette query from external callers.
+   *
+   * Other components (VibeMeter cards for now, could be more later)
+   * hand the user into search by dispatching a `cv:palette:seed`
+   * custom event with the intended query, then firing the synthetic
+   * ⌘K keydown. We latch the seed here and apply it on the next
+   * open — if the event arrives BEFORE the keydown, the seed waits;
+   * if it arrives during an already-open palette, we apply right
+   * away.
+   *
+   * Using a custom event (not a shared context) keeps the palette
+   * agnostic about what "other components" exist — any client
+   * surface can seed the palette without importing a hook.
+   */
+  const seedRef = useRef<string>('');
+  useEffect(() => {
+    const onSeed = (e: Event) => {
+      const ce = e as CustomEvent<string>;
+      if (typeof ce.detail !== 'string') return;
+      if (open) {
+        setQuery(ce.detail);
+      } else {
+        seedRef.current = ce.detail;
+      }
+    };
+    window.addEventListener('cv:palette:seed', onSeed);
+    return () => window.removeEventListener('cv:palette:seed', onSeed);
+  }, [open]);
+
+  // Focus the input + apply any pending seed whenever we open.
   useEffect(() => {
     if (!open) return;
-    setQuery('');
+    setQuery(seedRef.current);
+    seedRef.current = '';
     setSel(0);
     const id = window.setTimeout(() => inputRef.current?.focus(), 20);
     return () => window.clearTimeout(id);
