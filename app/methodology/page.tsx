@@ -322,15 +322,15 @@ export default function MethodologyPage() {
             shows you when you tap the AI dial on a market.
           </p>
           <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <MiniStat label="Stages" value="6" sub="parse → publish" />
-            <MiniStat
-              label="Sources per question"
-              value="8–14"
+            <WhyStat k="Stages" v="6" sub="parse → publish" />
+            <WhyStat
+              k="Sources per question"
+              v="8–14"
               sub="routed from pool of 23"
             />
-            <MiniStat
-              label="Auto-resolve threshold"
-              value="≥ 0.80"
+            <WhyStat
+              k="Auto-resolve threshold"
+              v="≥ 0.80"
               sub="else human oracle review"
             />
           </div>
@@ -719,6 +719,26 @@ function MiniStat({
       >
         {v}
       </div>
+    </div>
+  );
+}
+
+/**
+ * v2.20-2 — Local "Why this pipeline" stat row component. Boxier than
+ * <MiniStat> (has a container + sub line) to match the Evidence sheet's
+ * summary-strip feel. Kept separate from the existing MiniStat so we
+ * don't regress any of its 20+ existing call sites on this page.
+ */
+function WhyStat({ k, v, sub }: { k: string; v: string; sub: string }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-ink-900 p-3">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
+        {k}
+      </div>
+      <div className="mt-1 font-mono text-lg font-bold tabular-nums text-bone">
+        {v}
+      </div>
+      <div className="text-[11px] text-bone-muted">{sub}</div>
     </div>
   );
 }
