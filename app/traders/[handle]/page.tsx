@@ -188,6 +188,39 @@ export default function TraderDetailPage({ params }: Props) {
         <Kpi label="Followers" value={trader.followers.toLocaleString()} />
       </div>
 
+      {/*
+       * v2.20-5 — "Conviction style" summary card.
+       *
+       * The profile page is long and info-dense (PnL chart, pick
+       * history, terms, copy-trade). Evaluators skimming the trader
+       * list wanted a one-glance read on "why would I follow THIS
+       * quant and not the next one?" — a trait signature that makes
+       * each trader's personality legible before they dig into the
+       * chart.
+       *
+       * Three derived traits, all computed from existing fields:
+       *   - Conviction tier (High / Balanced / Volatility-chaser)
+       *     from winRate.
+       *   - Specialty edge from keywords in the strategy blurb
+       *     (Weverse/K-pop → "K-pop signal", LoL/LCK → "Esports
+       *     draft-aware", NPB/KBO → "Baseball quant", crypto →
+       *     "Macro/crypto", else fallback to "Multi-domain").
+       *   - Regional flavor from `region` (KR → "Korea-native",
+       *     JP → "Japan-first", SEA → "SEA multi-lang", APAC →
+       *     "Pan-APAC", GLOBAL → "Global surface").
+       *
+       * Visually matches the "Why this verdict / Why this basket /
+       * Why this pipeline" callouts — conviction-gradient block,
+       * 3-up trait row, same family.
+       */}
+      <TraderStyleCard
+        strategy={trader.strategy}
+        winRate={trader.winRate}
+        region={trader.region}
+        model={trader.model}
+        live={trader.live}
+      />
+
       <div className="mt-8 grid gap-6 md:grid-cols-12">
         {/* PnL curve */}
         <section className="md:col-span-8">
@@ -356,6 +389,92 @@ function strategyBullets(trader: { handle: string; model: string }): string[] {
     default:
       return ['Conviction-v2 default stack — cultural & macro hybrid.'];
   }
+}
+
+/**
+ * v2.20-5 — Derives three style traits from existing AITrader fields
+ * and renders them as a conviction-gradient callout. No new mock data;
+ * the heuristics match the strategy blurbs seeded in lib/markets.ts.
+ */
+function TraderStyleCard({
+  strategy,
+  winRate,
+  region,
+  model,
+  live,
+}: {
+  strategy: string;
+  winRate: number;
+  region: 'KR' | 'JP' | 'SEA' | 'APAC' | 'GLOBAL';
+  model: string;
+  live: boolean;
+}) {
+  const s = strategy.toLowerCase();
+
+  // Conviction tier.
+  const convictionTier =
+    winRate >= 0.7
+      ? { label: 'High conviction', sub: `${Math.round(winRate * 100)}% hit rate · picks with thesis` }
+      : winRate >= 0.6
+        ? { label: 'Balanced', sub: `${Math.round(winRate * 100)}% hit rate · diversified exposure` }
+        : { label: 'Volatility-chaser', sub: `${Math.round(winRate * 100)}% hit rate · long-tail edge` };
+
+  // Specialty edge from strategy keywords.
+  let edge: { label: string; sub: string };
+  if (/weverse|k-?pop|hybe|sm entertainment|jyp|yg|newjeans|blackpink|bts/.test(s)) {
+    edge = { label: 'K-pop signal', sub: 'Fan-community heat before press' };
+  } else if (/lol|lck|lpl|riot|patch|draft|worlds/.test(s)) {
+    edge = { label: 'Esports draft-aware', sub: 'Patch meta + team comp priors' };
+  } else if (/kbo|npb|baseball|park factor/.test(s)) {
+    edge = { label: 'Baseball quant', sub: 'Box score + weather + park factor' };
+  } else if (/anime|jpop|j-pop|oricon|niconico/.test(s)) {
+    edge = { label: 'J-culture signal', sub: 'Oricon + 2ch + anime cohort' };
+  } else if (/crypto|btc|eth|kospi|macro|fx|rate/.test(s)) {
+    edge = { label: 'Macro / crypto', sub: 'Policy-rate diff + APAC flows' };
+  } else {
+    edge = { label: 'Multi-domain', sub: 'Cross-category narrative scout' };
+  }
+
+  // Regional flavor.
+  const regional: Record<typeof region, { label: string; sub: string }> = {
+    KR: { label: 'Korea-native', sub: 'Naver + Weverse + Instiz first' },
+    JP: { label: 'Japan-first', sub: 'Oricon + Niconico + TSE signal' },
+    SEA: { label: 'SEA multi-lang', sub: 'ID / TH / VN fan heat' },
+    APAC: { label: 'Pan-APAC', sub: 'Cross-region narrative reach' },
+    GLOBAL: { label: 'Global surface', sub: 'Outside-APAC diversification' },
+  };
+
+  const liveTag = live ? 'on-chain · live' : 'staging · ready to deploy';
+
+  return (
+    <section className="mt-6">
+      <div className="rounded-3xl border border-conviction/30 bg-gradient-to-br from-conviction/10 via-ink-800 to-ink-800 p-5 md:p-7">
+        <div className="text-[11px] font-semibold uppercase tracking-widest text-conviction">
+          Conviction style · {model} · {liveTag}
+        </div>
+        <h3 className="mt-2 font-display text-xl text-bone md:text-2xl">
+          Signature · {edge.label} × {convictionTier.label} × {regional[region].label}
+        </h3>
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          <TraitCell label="Conviction tier" value={convictionTier.label} sub={convictionTier.sub} />
+          <TraitCell label="Specialty edge" value={edge.label} sub={edge.sub} />
+          <TraitCell label="Regional flavor" value={regional[region].label} sub={regional[region].sub} />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TraitCell({ label, value, sub }: { label: string; value: string; sub: string }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-ink-900 p-3">
+      <div className="text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
+        {label}
+      </div>
+      <div className="mt-1 text-base font-semibold text-bone">{value}</div>
+      <div className="mt-0.5 text-[11px] text-bone-muted">{sub}</div>
+    </div>
+  );
 }
 
 function Kpi({
