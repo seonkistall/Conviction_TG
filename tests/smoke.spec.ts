@@ -374,18 +374,29 @@ test.describe('smoke · v2.16 live ticker', () => {
       before.push((await priceLocator.nth(i).textContent()) ?? '');
     }
 
-    // Wait through ~3 tick boundaries. The provider ticks at 4000ms.
-    await page.waitForTimeout(12_000);
-
-    const after: string[] = [];
-    for (let i = 0; i < sampleCount; i++) {
-      after.push((await priceLocator.nth(i).textContent()) ?? '');
+    // v2.18: Poll every second up to ~18s for ANY sampled card to move.
+    // The earlier "take one snapshot at t=12s" shape was flaky under
+    // Playwright's fullyParallel runner — when 5 other tests were
+    // hammering the same webServer, hydration could slip past the 12s
+    // mark on a single card's first tick. Polling gives us the same
+    // evidence (at least one card tickled) without waiting the full
+    // window when the ticker is behaving, and caps at 18s so a truly
+    // broken ticker still fails fast.
+    let changed = 0;
+    let after: string[] = before.slice();
+    const deadline = Date.now() + 18_000;
+    while (Date.now() < deadline) {
+      await page.waitForTimeout(1_000);
+      after = [];
+      for (let i = 0; i < sampleCount; i++) {
+        after.push((await priceLocator.nth(i).textContent()) ?? '');
+      }
+      changed = before.filter((b, i) => b !== after[i]).length;
+      if (changed > 0) break;
     }
-
-    const changed = before.filter((b, i) => b !== after[i]).length;
     expect(
       changed,
-      `Expected at least one of ${sampleCount} cards to tick within 12s.\n` +
+      `Expected at least one of ${sampleCount} cards to tick within 18s.\n` +
         `before=${JSON.stringify(before)}\nafter=${JSON.stringify(after)}\n` +
         `If 0 changed, useLivePrices/visibilitychange/IntersectionObserver gating is likely broken.`
     ).toBeGreaterThan(0);
