@@ -255,8 +255,20 @@ export function FeedCard({ market }: Props) {
         </button>
       </div>
 
-      {/* Right rail actions */}
-      <div className="absolute right-3 bottom-[22dvh] z-10 flex flex-col items-center gap-4 md:right-6 md:bottom-[18dvh]">
+      {/*
+       * Right rail actions.
+       *
+       * v2.22-6: Bumped to `z-20` (up from `z-10`). The "Bottom content"
+       * block below also sits at `z-10` and spans `inset-x-0` (even
+       * though its *content* has `pr-20` right-padding to clear the
+       * rail visually, the DIV itself still takes the full width and
+       * intercepts pointer events). On small viewports (iPhone SE 375px,
+       * Galaxy S9+ 320px) the rail's vertical midpoint lands inside
+       * the bottom-content box, so clicks on the Info button got eaten
+       * by the caption layer. Raising the rail's stack puts real
+       * buttons above the decorative caption without changing layout.
+       */}
+      <div className="absolute right-3 bottom-[22dvh] z-20 flex flex-col items-center gap-4 md:right-6 md:bottom-[18dvh]">
         <FeedLikeButton marketId={market.id} baseCount={market.traders} />
         <FeedCommentButton
           marketSlug={market.slug}

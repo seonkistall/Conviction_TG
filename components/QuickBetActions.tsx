@@ -74,7 +74,8 @@ export function QuickBetActions({ marketId, yesProb, marketTitle }: Props) {
           hasPosition && 'ring-1 ring-yes/60',
           pulse === 'YES' && 'animate-bet-pulse'
         )}
-        aria-label={`Buy ${QUICK_STAKE_USD} dollars of YES at ${Math.round(yesProb * 100)} cents`}
+        aria-label={`Buy YES at ${Math.round(yesProb * 100)} cents`}
+        title={`$${QUICK_STAKE_USD} stake → ${Math.max(1, Math.round(QUICK_STAKE_USD / yesProb))} YES shares`}
       >
         <span>YES</span>
         <span className="font-mono tabular-nums">¢{Math.round(yesProb * 100)}</span>
@@ -87,7 +88,8 @@ export function QuickBetActions({ marketId, yesProb, marketTitle }: Props) {
           'border-no/40 bg-no-soft text-no hover:bg-no/20',
           pulse === 'NO' && 'animate-bet-pulse'
         )}
-        aria-label={`Buy ${QUICK_STAKE_USD} dollars of NO at ${Math.round((1 - yesProb) * 100)} cents`}
+        aria-label={`Buy NO at ${Math.round((1 - yesProb) * 100)} cents`}
+        title={`$${QUICK_STAKE_USD} stake → ${Math.max(1, Math.round(QUICK_STAKE_USD / (1 - yesProb)))} NO shares`}
       >
         <span>NO</span>
         <span className="font-mono tabular-nums">¢{Math.round((1 - yesProb) * 100)}</span>

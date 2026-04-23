@@ -30,6 +30,31 @@ const LANDING = '/?desktop=1';
 
 const ROUTES_TO_CHECK = [LANDING, '/feed', '/leaderboard', '/methodology'];
 
+/**
+ * v2.22-6: `locator.boundingBox()` occasionally returns null on the first
+ * tick after navigation for elements that are *already visible* per
+ * `isVisible()`. This happens most reliably for `position: fixed` elements
+ * whose ancestor uses `backdrop-filter` (the Header — it creates a new
+ * containing block, and Chromium hasn't measured the fixed child into the
+ * compositor layer yet). Polling a couple of frames before reading the box
+ * lets the layout settle. Same signature as `.boundingBox()` (returns the
+ * rect or null after the retries), so it drops into existing assertions.
+ */
+async function pollBoundingBox(
+  locator: ReturnType<Page['locator']>,
+  timeoutMs = 3000
+) {
+  const deadline = Date.now() + timeoutMs;
+  let last: Awaited<ReturnType<typeof locator.boundingBox>> = null;
+  while (Date.now() < deadline) {
+    last = await locator.boundingBox();
+    if (last) return last;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (locator as any).page().waitForTimeout(50);
+  }
+  return last;
+}
+
 async function assertNoHorizontalScroll(page: Page, label: string) {
   /*
    * We don't check raw `scrollWidth` because intentional marquees
@@ -68,11 +93,26 @@ test.describe('mobile-fit · horizontal overflow guard', () => {
 });
 
 test.describe('mobile-fit · landing Hero', () => {
+  // v2.22-6: Dismiss onboarding before every test in this block.
+  // Previously the Hero fit checks happened to pass because the
+  // onboarding modal overlaid *on top* of the H1 without shrinking its
+  // box — but the v2.22 CSS pass tightened `position:fixed` ancestors
+  // enough that boundingBox() started returning null while the modal
+  // was up. Pre-seeding the "onboarded" flag avoids the overlay
+  // entirely.
+  test.beforeEach(async ({ page }) => {
+    await dismissOnboarding(page);
+  });
+
   test('Hero H1 fits within viewport width', async ({ page }) => {
     await page.goto(LANDING);
     const h1 = page.locator('h1').first();
     await expect(h1).toBeVisible();
-    const box = await h1.boundingBox();
+    // v2.22-6: Use pollBoundingBox — the Hero H1's bounding box can
+    // transiently return null on the first tick after mount because
+    // the Hero's parent marquee uses `backdrop-filter`, which creates
+    // a compositor barrier. Polling a few frames lets layout settle.
+    const box = await pollBoundingBox(h1);
     const viewport = page.viewportSize();
     expect(box, 'h1 should have a bounding box').not.toBeNull();
     expect(viewport, 'viewport size').not.toBeNull();
@@ -90,11 +130,25 @@ test.describe('mobile-fit · landing Hero', () => {
 });
 
 test.describe('mobile-fit · Header', () => {
+  test.beforeEach(async ({ page }) => {
+    await dismissOnboarding(page);
+  });
+
   test('Header Connect button fits inside viewport', async ({ page }) => {
     await page.goto(LANDING);
-    const connect = page.getByRole('button', { name: /Connect/i }).first();
+    // v2.22-6: Disambiguate — `getByRole('button', { name: /Connect/i })`
+    // previously matched the single Connect button, but v2.21-3's
+    // compat Connect label ("Keep exploring" close button in the
+    // ConnectModal) can also pattern-match if the modal ever mounts.
+    // `exact: true` + full name keeps us pinned to the actual Header
+    // CTA the test cares about.
+    const connect = page.getByRole('button', { name: 'Connect', exact: true });
     await expect(connect).toBeVisible();
-    const box = await connect.boundingBox();
+    // v2.22-6: Same boundingBox-null-on-first-tick pattern as the Hero
+    // H1 case — the Header itself is `position: fixed` under an ancestor
+    // that uses `backdrop-filter`, so Chromium occasionally reports null
+    // on the very first read. See pollBoundingBox() for the full note.
+    const box = await pollBoundingBox(connect);
     const viewport = page.viewportSize();
     expect(box).not.toBeNull();
     // Right edge of the Connect button must not exceed the viewport.
@@ -153,7 +207,7 @@ test.describe('mobile-fit · /feed immersive chrome', () => {
     // bottom). We allow 2px tolerance for sub-pixel rounding.
     const firstCard = page.locator('article').first();
     await expect(firstCard).toBeVisible();
-    const box = await firstCard.boundingBox();
+    const box = await pollBoundingBox(firstCard);
     expect(box, 'first feed card bounding box').not.toBeNull();
     expect(
       box!.y,
