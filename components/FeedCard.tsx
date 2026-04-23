@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import clsx from 'clsx';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Market } from '@/lib/types';
 import { AutoVideo } from './AutoVideo';
 import { EdgeBadge } from './EdgeBadge';
