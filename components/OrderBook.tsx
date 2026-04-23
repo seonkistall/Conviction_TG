@@ -46,6 +46,23 @@ interface LastTrade {
   at: number;
 }
 
+// v2.19-2 — Stake-first input.
+//
+// Through v2.18 the primary input was `Shares` with a ± stepper and 5
+// raw quantity presets (10 / 50 / 100 / 500 / 1000). Evaluators
+// walking through the demo defaulted to 100 shares and ignored the
+// field — because mental arithmetic on a prediction market is
+// inherently stake-based ("how much am I risking?") not share-based
+// ("how many claims am I buying?"). Polymarket / Kalshi default to
+// the stake input for the same reason.
+//
+// We now lead with a $-preset pill row ($10, $25, $100, $500) that's
+// a single tap. Share count + max return are *derived* and shown in
+// the cost breakdown. Power users who really want to enter a share
+// count open an "Advanced" drawer.
+const STAKE_PRESETS = [10, 25, 100, 500];
+const DEFAULT_STAKE = 25; // matches $25 preset and Polymarket default
+
 export function OrderBook({
   yesProb,
   marketId,
@@ -55,7 +72,13 @@ export function OrderBook({
   onBuy,
 }: Props) {
   const [side, setSide] = useState<'YES' | 'NO'>('YES');
-  const [shares, setShares] = useState(100);
+  // v2.19-2 — Stake ($) is the primary input; shares derive from
+  // `stake / price`. Keep `customShares` as an escape hatch for the
+  // Advanced drawer so power users who want round share counts
+  // (e.g. "exactly 100 shares") still have a path.
+  const [stake, setStake] = useState<number>(DEFAULT_STAKE);
+  const [advanced, setAdvanced] = useState(false);
+  const [customShares, setCustomShares] = useState<number | null>(null);
   const [pulse, setPulse] = useState(false);
   const [justBought, setJustBought] = useState<LastTrade | null>(null);
 
@@ -63,6 +86,13 @@ export function OrderBook({
   const { push } = useToast();
 
   const price = side === 'YES' ? yesProb : 1 - yesProb;
+  // When the user is in Advanced mode and has typed a share count,
+  // honor that; otherwise derive shares from stake/price. Math.max(1)
+  // guards the buy validator (positions.buy rejects shares<=0).
+  const shares =
+    advanced && customShares !== null
+      ? Math.max(1, customShares)
+      : Math.max(1, Math.round(stake / price));
   const cost = shares * price;
   const maxReturn = shares; // 1:1 payout on resolve
 
@@ -303,44 +333,97 @@ export function OrderBook({
         </button>
       </div>
 
+      {/* v2.19-2 — Stake-first primary input. */}
       <div className="mt-5">
-        <label className="text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
-          Shares
-        </label>
-        <div className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-ink-900 px-3">
+        <div className="flex items-baseline justify-between">
+          <label className="text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
+            Stake
+          </label>
           <button
-            onClick={() => setShares((x) => Math.max(1, x - 10))}
-            className="text-xl text-bone-muted hover:text-bone"
-            aria-label="Decrease shares by 10"
+            type="button"
+            onClick={() => {
+              setAdvanced((v) => {
+                if (!v && customShares === null) setCustomShares(shares);
+                return !v;
+              });
+            }}
+            className="text-[10px] font-semibold uppercase tracking-widest text-bone-muted hover:text-bone"
           >
-            −
-          </button>
-          <input
-            type="number"
-            value={shares}
-            onChange={(e) => setShares(Math.max(1, +e.target.value || 1))}
-            className="flex-1 bg-transparent py-3 text-center font-mono text-xl tabular-nums text-bone focus:outline-none"
-            aria-label="Number of shares"
-          />
-          <button
-            onClick={() => setShares((x) => x + 10)}
-            className="text-xl text-bone-muted hover:text-bone"
-            aria-label="Increase shares by 10"
-          >
-            +
+            {advanced ? '← Use $ preset' : 'Custom shares →'}
           </button>
         </div>
-        <div className="mt-2 flex gap-1">
-          {[10, 50, 100, 500, 1000].map((q) => (
-            <button
-              key={q}
-              onClick={() => setShares(q)}
-              className="flex-1 rounded-md border border-white/10 bg-ink-900 py-1 text-[11px] text-bone-muted hover:border-white/20 hover:text-bone"
-            >
-              {q}
-            </button>
-          ))}
-        </div>
+
+        {!advanced ? (
+          <>
+            {/* Primary: 4-pill stake preset row. */}
+            <div className="mt-2 grid grid-cols-4 gap-2">
+              {STAKE_PRESETS.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStake(s)}
+                  className={clsx(
+                    'rounded-lg border py-3 font-mono text-base font-bold tabular-nums transition',
+                    stake === s
+                      ? 'border-volt bg-volt/10 text-volt'
+                      : 'border-white/10 bg-ink-900 text-bone hover:border-white/20'
+                  )}
+                >
+                  ${s}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] text-bone-muted">
+              Buying{' '}
+              <span className="font-mono text-bone">
+                {shares.toLocaleString()}
+              </span>{' '}
+              {side} shares @ ¢{Math.round(price * 100)}
+            </p>
+          </>
+        ) : (
+          /* Advanced: exact share count, same stepper as pre-v2.19. */
+          <>
+            <div className="mt-1 flex items-center gap-2 rounded-lg border border-white/10 bg-ink-900 px-3">
+              <button
+                onClick={() =>
+                  setCustomShares((x) => Math.max(1, (x ?? shares) - 10))
+                }
+                className="text-xl text-bone-muted hover:text-bone"
+                aria-label="Decrease shares by 10"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                value={customShares ?? shares}
+                onChange={(e) =>
+                  setCustomShares(Math.max(1, +e.target.value || 1))
+                }
+                className="flex-1 bg-transparent py-3 text-center font-mono text-xl tabular-nums text-bone focus:outline-none"
+                aria-label="Number of shares"
+              />
+              <button
+                onClick={() => setCustomShares((x) => (x ?? shares) + 10)}
+                className="text-xl text-bone-muted hover:text-bone"
+                aria-label="Increase shares by 10"
+              >
+                +
+              </button>
+            </div>
+            <div className="mt-2 flex gap-1">
+              {[10, 50, 100, 500, 1000].map((q) => (
+                <button
+                  key={q}
+                  onClick={() => setCustomShares(q)}
+                  className="flex-1 rounded-md border border-white/10 bg-ink-900 py-1 text-[11px] text-bone-muted hover:border-white/20 hover:text-bone"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <div className="mt-5 space-y-2 rounded-lg border border-white/10 bg-ink-900 p-3 font-mono text-[13px] tabular-nums">
