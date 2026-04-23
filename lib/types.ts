@@ -139,12 +139,44 @@ export interface NarrativeIndex {
   media?: MediaSource;
 }
 
-/** A scheduled K-Culture comeback/debut event that auto-spawns a market. */
+/**
+ * A scheduled APAC cultural drop that auto-spawns a market.
+ *
+ * v2.22-3: Expanded from K-only studios to full APAC coverage — K-pop
+ * labels still there, plus JP anime/film houses, C-drama platforms,
+ * Bollywood studios, SEA esports orgs. `region` disambiguates events
+ * from studios that publish multi-territory (e.g. Netflix).
+ */
 export interface DebutEvent {
   id: string;
   artist: string;
   title: string; // "NewJeans FY26 comeback"
-  company: 'HYBE' | 'SM' | 'YG' | 'JYP' | 'ADOR' | 'Other';
+  company:
+    // Korea — music
+    | 'HYBE'
+    | 'SM'
+    | 'YG'
+    | 'JYP'
+    | 'ADOR'
+    // Japan — anime / music / film
+    | 'MAPPA'
+    | 'ufotable'
+    | 'Aniplex'
+    | 'Toho'
+    | 'Sony Music JP'
+    // China — drama / esports
+    | 'Tencent'
+    | 'iQiyi'
+    | 'JDG'
+    // India — film
+    | 'YRF'
+    | 'Dharma'
+    // SEA — esports / streaming
+    | 'MOONTON'
+    | 'GMA'
+    // Catch-all
+    | 'Other';
+  region: 'KR' | 'JP' | 'CN' | 'IN' | 'SEA' | 'APAC';
   dropsAt: string; // ISO
   heat: number; // 0..1 anticipation
   marketId?: string; // auto-spawned market

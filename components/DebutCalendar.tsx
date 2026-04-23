@@ -5,13 +5,46 @@ import clsx from 'clsx';
 import { DEBUT_EVENTS, getMarket } from '@/lib/markets';
 import { useT } from '@/lib/i18n';
 
+/**
+ * v2.22-3 — Color system expanded from K-pop labels (HYBE/SM/YG/JYP/
+ * ADOR) to the full APAC studio roster. Each region gets a signature
+ * hue inherited from its country's cultural palette (volt for Korea,
+ * sakura pink for Japan, red for China, saffron for India, emerald
+ * for SEA).
+ */
 const COMPANY_TINT: Record<string, string> = {
+  // Korea
   HYBE: 'bg-[#7C5CFF]/15 text-conviction border-conviction/30',
   SM: 'bg-[#FF8AB4]/15 text-[#FF8AB4] border-[#FF8AB4]/30',
   YG: 'bg-[#000]/60 text-bone border-white/20',
   JYP: 'bg-[#C6FF3D]/15 text-volt border-volt/30',
   ADOR: 'bg-[#AFE1E8]/15 text-[#AFE1E8] border-[#AFE1E8]/30',
+  // Japan — anime studios + music
+  MAPPA: 'bg-[#E91E63]/15 text-[#FF6B9D] border-[#FF6B9D]/30',
+  ufotable: 'bg-[#E91E63]/15 text-[#FF6B9D] border-[#FF6B9D]/30',
+  Aniplex: 'bg-[#E91E63]/15 text-[#FF6B9D] border-[#FF6B9D]/30',
+  Toho: 'bg-[#E91E63]/15 text-[#FF6B9D] border-[#FF6B9D]/30',
+  'Sony Music JP': 'bg-[#E91E63]/15 text-[#FF6B9D] border-[#FF6B9D]/30',
+  // China
+  Tencent: 'bg-[#E60012]/15 text-[#FF6B6B] border-[#FF6B6B]/30',
+  iQiyi: 'bg-[#E60012]/15 text-[#FF6B6B] border-[#FF6B6B]/30',
+  JDG: 'bg-[#E60012]/15 text-[#FF6B6B] border-[#FF6B6B]/30',
+  // India
+  YRF: 'bg-[#FF6A13]/15 text-[#FFA94D] border-[#FFA94D]/30',
+  Dharma: 'bg-[#FF6A13]/15 text-[#FFA94D] border-[#FFA94D]/30',
+  // SEA
+  MOONTON: 'bg-[#10B981]/15 text-[#34D399] border-[#34D399]/30',
+  GMA: 'bg-[#10B981]/15 text-[#34D399] border-[#34D399]/30',
   Other: 'bg-white/5 text-bone-muted border-white/10',
+};
+
+const REGION_FLAG: Record<string, string> = {
+  KR: '🇰🇷',
+  JP: '🇯🇵',
+  CN: '🇨🇳',
+  IN: '🇮🇳',
+  SEA: '🌏',
+  APAC: '🌐',
 };
 
 function fmtDate(iso: string) {
@@ -33,14 +66,25 @@ export function DebutCalendar() {
   const t = useT();
   return (
     <section className="mx-auto max-w-[1440px] px-6 pt-12 sm:pt-16">
+      {/*
+       * v2.22-3 — Eyebrow + title rebranded from "K-Culture Debut Radar"
+       * to "APAC Debut Radar" to match the expanded event catalog
+       * (K-pop + JP anime + CN drama + IN Bollywood + SEA esports).
+       * The `debut.title` / `debut.sub` i18n strings are overridden
+       * inline here so a future translator sees the APAC wording in
+       * context and doesn't have to hunt through the i18n dict.
+       */}
       <div className="mb-5">
-        <div className="inline-flex items-center gap-2 rounded-full border border-[#FF8AB4]/30 bg-[#FF8AB4]/10 px-3 py-1 text-[11px] font-medium uppercase tracking-widest text-[#FF8AB4]">
-          K-Culture · Debut Radar
+        <div className="inline-flex items-center gap-2 rounded-full border border-conviction/30 bg-conviction/10 px-3 py-1 text-[11px] font-medium uppercase tracking-widest text-conviction">
+          🌏 APAC · Debut Radar
         </div>
         <h2 className="mt-3 font-display text-3xl text-bone sm:text-4xl md:text-5xl">
-          {t('debut.title')}
+          APAC Drop Calendar
         </h2>
-        <p className="mt-1 max-w-2xl text-sm text-bone-muted">{t('debut.sub')}</p>
+        <p className="mt-1 max-w-2xl text-sm text-bone-muted">
+          K-pop comebacks · JP anime releases · C-drama launches · Bollywood
+          openings · SEA esports finals. Every drop spawns a live market.
+        </p>
       </div>
 
       {/*
@@ -86,13 +130,16 @@ export function DebutCalendar() {
                     </span>
                   </div>
 
-                  {/* Company chip */}
+                  {/* v2.22-3: Company chip gains a region flag prefix
+                      so a reader skimming the strip can instantly tell
+                      which country the drop is from (not just studio). */}
                   <span
                     className={clsx(
-                      'absolute right-3 top-3 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest backdrop-blur',
+                      'absolute right-3 top-3 flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest backdrop-blur',
                       COMPANY_TINT[d.company] ?? COMPANY_TINT.Other
                     )}
                   >
+                    <span aria-hidden="true">{REGION_FLAG[d.region]}</span>
                     {d.company}
                   </span>
 

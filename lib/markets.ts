@@ -1426,62 +1426,133 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
 
 // --------- K-Culture Debut Calendar ----------
 
+/**
+ * v2.22-3 — APAC-wide debut radar.
+ *
+ * Through v2.21 this list was K-pop only (HYBE / SM / YG / JYP / ADOR)
+ * and the component was branded "K-Culture Debut Calendar". For a
+ * Tier-1 VC demo that leaned too K-centric; we now cover the full
+ * APAC surface with a mix of music, anime, drama, film, and esports
+ * drops. Kept the heat + poster + (optional) linked market shape
+ * identical so the UI stays drop-in compatible.
+ */
 export const DEBUT_EVENTS: DebutEvent[] = [
+  // Korea — music
   {
     id: 'db_01',
-    artist: 'HYBE New Boy Group (TBA)',
-    title: 'HYBE next boy-group debut',
-    company: 'HYBE',
-    dropsAt: '2026-05-15T09:00:00Z',
-    heat: 0.82,
-    poster: 'https://i.ytimg.com/vi/gdZLi9oWNZg/maxresdefault.jpg',
-  },
-  {
-    id: 'db_02',
-    artist: 'aespa',
-    title: 'aespa · Armageddon World Tour announcement',
-    company: 'SM',
-    dropsAt: '2026-05-01T10:00:00Z',
-    heat: 0.71,
-    poster: 'https://i.ytimg.com/vi/ioNng23DkIM/maxresdefault.jpg',
-  },
-  {
-    id: 'db_03',
     artist: 'BLACKPINK',
-    title: 'BLACKPINK full-group comeback (YG)',
+    title: 'BLACKPINK full-group comeback',
     marketId: 'mkt_blackpink_2026',
     company: 'YG',
+    region: 'KR',
     dropsAt: '2026-06-21T00:00:00Z',
     heat: 0.91,
     poster: 'https://i.ytimg.com/vi/ioNng23DkIM/maxresdefault.jpg',
   },
   {
-    id: 'db_04',
-    artist: 'ADOR',
-    title: 'NewJeans 5-member reunion (post-ADOR ruling)',
-    marketId: 'mkt_newjeans_q4',
-    company: 'ADOR',
-    dropsAt: '2026-09-01T00:00:00Z',
+    id: 'db_02',
+    artist: 'IVE',
+    title: 'IVE · MAMA Daesang campaign',
+    marketId: 'mkt_ive_mama_daesang_2026',
+    company: 'HYBE',
+    region: 'KR',
+    dropsAt: '2026-11-28T12:00:00Z',
+    heat: 0.78,
+    poster: 'https://i.ytimg.com/vi/V37TaRdVUjg/maxresdefault.jpg',
+  },
+
+  // Japan — anime / J-pop
+  {
+    id: 'db_03',
+    artist: 'ufotable',
+    title: 'Demon Slayer: Infinity Castle · Part 3 premiere',
+    marketId: 'mkt_demon_slayer_p3_2026',
+    company: 'ufotable',
+    region: 'JP',
+    dropsAt: '2026-09-15T00:00:00Z',
     heat: 0.88,
-    poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/a9tq0aS5Zu8/maxresdefault.jpg',
+  },
+  {
+    id: 'db_04',
+    artist: 'YOASOBI',
+    title: 'YOASOBI · first global arena tour',
+    marketId: 'mkt_yoasobi_billboard',
+    company: 'Sony Music JP',
+    region: 'JP',
+    dropsAt: '2026-07-18T10:00:00Z',
+    heat: 0.72,
+    poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/maxresdefault.jpg',
   },
   {
     id: 'db_05',
-    artist: 'JYP · Next Gen',
-    title: 'JYP new global girl-group debut',
-    company: 'JYP',
-    dropsAt: '2026-07-11T09:00:00Z',
-    heat: 0.64,
-    poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/maxresdefault.jpg',
+    artist: 'MAPPA',
+    title: 'Chainsaw Man S2 · final arc key art',
+    marketId: 'mkt_chainsawman_s2',
+    company: 'MAPPA',
+    region: 'JP',
+    dropsAt: '2026-06-01T00:00:00Z',
+    heat: 0.69,
+    poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/maxresdefault.jpg',
   },
+
+  // China — drama + esports
   {
     id: 'db_06',
-    artist: 'YG · Sub-Unit',
-    title: 'Jennie solo world tour announcement',
-    company: 'YG',
-    dropsAt: '2026-08-01T00:00:00Z',
-    heat: 0.69,
-    poster: 'https://i.ytimg.com/vi/ioNng23DkIM/maxresdefault.jpg',
+    artist: 'JDG',
+    title: 'JDG · 2026 Worlds roster announcement',
+    marketId: 'mkt_jdg_worlds_final_2026',
+    company: 'JDG',
+    region: 'CN',
+    dropsAt: '2026-05-08T04:00:00Z',
+    heat: 0.76,
+    poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+  },
+  {
+    id: 'db_07',
+    artist: 'iQiyi',
+    title: 'Joy of Reign · Season 2 launch',
+    company: 'iQiyi',
+    region: 'CN',
+    dropsAt: '2026-08-22T12:00:00Z',
+    heat: 0.62,
+    poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/maxresdefault.jpg',
+  },
+
+  // India — Bollywood
+  {
+    id: 'db_08',
+    artist: 'YRF · SRK',
+    title: 'Pathaan 2 · theatrical opening',
+    marketId: 'mkt_pathaan_2_box_office',
+    company: 'YRF',
+    region: 'IN',
+    dropsAt: '2026-09-10T00:00:00Z',
+    heat: 0.85,
+    poster: 'https://i.ytimg.com/vi/vqu4z34wENw/maxresdefault.jpg',
+  },
+  {
+    id: 'db_09',
+    artist: 'Dharma Productions',
+    title: 'Dharma · FY26 slate reveal',
+    company: 'Dharma',
+    region: 'IN',
+    dropsAt: '2026-05-28T10:00:00Z',
+    heat: 0.58,
+    poster: 'https://i.ytimg.com/vi/vqu4z34wENw/maxresdefault.jpg',
+  },
+
+  // SEA — esports
+  {
+    id: 'db_10',
+    artist: 'MOONTON · MLBB M6',
+    title: 'MLBB M6 World Championship · Jakarta',
+    marketId: 'mkt_mlbb_m6_record',
+    company: 'MOONTON',
+    region: 'SEA',
+    dropsAt: '2026-12-05T07:00:00Z',
+    heat: 0.73,
+    poster: 'https://i.ytimg.com/vi/qIxdS0ZZ-qU/maxresdefault.jpg',
   },
 ];
 
