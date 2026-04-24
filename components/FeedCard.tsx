@@ -274,7 +274,6 @@ export function FeedCard({ market }: Props) {
         <FeedLikeButton marketId={market.id} baseCount={market.traders} />
         <FeedCommentButton
           baseCount={Math.round(market.traders / 7)}
-          onOpen={() => openSheet(null)}
         />
         {/*
          * v2.11 — Info button. Dev feedback #2: a single button that opens
@@ -605,31 +604,47 @@ function FeedLikeButton({
 }
 
 /*
- * v2.23-5 — Comment button.
+ * v2.24-1 — Comment button: "Coming soon" demand-signal toast.
  *
- * Through v2.22-2 this popped a "Comments · coming soon" toast and
- * routed to the market detail page. That was technically honest
- * but functionally dead — a big heart between Like and Info with
- * no payoff. Per v2.23 #5 feedback, Comment now shares the same
- * bottom-sheet surface as the Info button: opens FeedDetailSheet
- * in read mode (no pre-picked side), where the reader can see
- * structured market facts + the discussion area (ships in a follow-
- * up cut next to the share/stake row in the sheet). `onOpen` is
- * piped from FeedCard's `openSheet(null)` helper.
+ * v2.23-5 routed Comment → the market detail sheet, which gave
+ * users *something* to look at but blurred the "discussion vs.
+ * market info" affordance — Info already does the same thing,
+ * and burying comments inside Info hid the demand signal.
+ *
+ * Per the v2.24 feedback round, the Comment tap is now a
+ * dedicated "Coming soon" toast that explicitly tells the user
+ * we've registered their interest and are routing it to the
+ * team. That preserves the click-through demand signal (every
+ * tap = one prioritization data point) while setting an honest
+ * expectation that comments aren't shipped yet.
+ *
+ * Toast uses `kind: 'trade'` so the visual shape is consistent
+ * with the rest of the Feed surface (same background, same
+ * dismiss behavior) and includes a Notify-me CTA so users can
+ * raise their hand more concretely if they want.
  */
 function FeedCommentButton({
   baseCount,
-  onOpen,
 }: {
   baseCount: number;
-  onOpen: () => void;
 }) {
+  const toast = useToast();
   return (
     <RailButton
       icon="💬"
       label={baseCount.toLocaleString()}
-      aria-label="View market · Comments"
-      onClick={onOpen}
+      aria-label="Comment — coming soon"
+      onClick={() => {
+        toast.push({
+          kind: 'trade',
+          title: 'Comments · coming soon',
+          body: 'Tap registered. We\'ll let the team know there\'s demand for in-feed discussion.',
+          cta: {
+            href: 'mailto:beta@conviction.trade?subject=Notify%20me%20when%20Comments%20ship',
+            label: 'Notify me',
+          },
+        });
+      }}
     />
   );
 }

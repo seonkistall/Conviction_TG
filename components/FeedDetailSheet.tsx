@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import clsx from 'clsx';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Market } from '@/lib/types';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 import { usePositions } from '@/lib/positions';
@@ -80,38 +80,11 @@ export function FeedDetailSheet({
       setStakeUsd(10);
     }
   }, [open, initialSide]);
-  // "Share" button state. We flash a "Copied!" label after a clipboard-path
-  // share so the user has a visible acknowledgement even when no native
-  // Web Share chooser opened. v2.17: Extended from 1400ms → 2800ms.
-  // 1.4s is shorter than the phone-shake-to-see-result reaction time on
-  // slower connections — users reported missing the flash. 2.8s is still
-  // snappy enough that rapid-fire shares don't feel laggy (and a fresh
-  // share cancels the prior timer anyway).
-  const [shareLabel, setShareLabel] = useState<'default' | 'copied' | 'shared'>(
-    'default'
-  );
-  // Track the active reset timer so we can (a) cancel a pending reset when
-  // the user shares again in rapid succession, and (b) clear it on unmount
-  // to avoid a setState-on-unmounted warning if the sheet closes mid-flash.
-  const shareResetTimer = useRef<number | null>(null);
-  const scheduleShareReset = (label: 'copied' | 'shared') => {
-    setShareLabel(label);
-    if (shareResetTimer.current !== null) {
-      window.clearTimeout(shareResetTimer.current);
-    }
-    shareResetTimer.current = window.setTimeout(() => {
-      setShareLabel('default');
-      shareResetTimer.current = null;
-    }, 2800);
-  };
-  useEffect(() => {
-    return () => {
-      if (shareResetTimer.current !== null) {
-        window.clearTimeout(shareResetTimer.current);
-        shareResetTimer.current = null;
-      }
-    };
-  }, []);
+  // v2.24-2: Share state + flash-label timer were dropped along with
+  // the bottom Share row. Sharing now lives entirely on the right-rail
+  // X-direct button (FeedShareButton in FeedCard); the sheet has no
+  // share affordance of its own. See the deletion note in the JSX
+  // below.
 
   // Close on ESC
   useEffect(() => {
@@ -164,75 +137,16 @@ export function FeedDetailSheet({
     onClose();
   };
 
-  /**
-   * Share flow — three-tier fallback.
-   *
-   *   1. navigator.share (Web Share API). Opens the native iOS / Android
-   *      share sheet; on Chrome desktop this is no-op-ish (falls into 2).
-   *   2. Copy to clipboard. Works everywhere modern, toast confirms.
-   *   3. X.com intent URL. Opens Twitter/X compose in a new tab. Used as
-   *      an explicit secondary button ("Share on X") so it's discoverable
-   *      even when 1/2 already worked.
-   *
-   * Intentionally skipped: KakaoTalk SDK. It needs a registered app key
-   * and a DOM-loaded SDK — a deep-link URL scheme (kakaotalk://) only works
-   * inside the KakaoTalk in-app browser. Not worth the bundle weight for
-   * v2.12 demo scope.
+  /*
+   * v2.24-2: Share helpers (`handleShare`, `handleShareX`, `shareUrl`,
+   * `shareText`, `shareLabel`/`scheduleShareReset`) and the bottom
+   * Share row that consumed them were all removed in this cycle.
+   * The right-rail X-direct button (FeedShareButton in FeedCard) is
+   * now the single canonical share path. If a future requirement
+   * re-introduces sheet-level sharing, prefer factoring the X-intent
+   * helper into a tiny `lib/share.ts` module so both call sites stay
+   * aligned rather than duplicating the URL builder here.
    */
-  const shareUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/markets/${market.slug}`
-      : `/markets/${market.slug}`;
-  const shareText = `${market.title} · Conviction`;
-
-  const handleShare = async () => {
-    const data = { title: shareText, text: shareText, url: shareUrl };
-    try {
-      if (
-        typeof navigator !== 'undefined' &&
-        typeof navigator.share === 'function' &&
-        // canShare isn't standard yet — feature-detect before asserting.
-        (!navigator.canShare || navigator.canShare(data))
-      ) {
-        await navigator.share(data);
-        scheduleShareReset('shared');
-        return;
-      }
-    } catch {
-      // User dismissed the share sheet — fall through to clipboard.
-    }
-    try {
-      if (
-        typeof navigator !== 'undefined' &&
-        navigator.clipboard?.writeText
-      ) {
-        await navigator.clipboard.writeText(shareUrl);
-        scheduleShareReset('copied');
-        toast.push({
-          kind: 'trade',
-          title: 'Link copied',
-          body: shareUrl,
-        });
-        return;
-      }
-    } catch {}
-    // Last-ditch: X.com intent. Only reached if both share and clipboard
-    // are unavailable — extremely rare on any modern browser.
-    if (typeof window !== 'undefined') {
-      const xHref = `https://x.com/intent/tweet?text=${encodeURIComponent(
-        shareText
-      )}&url=${encodeURIComponent(shareUrl)}`;
-      window.open(xHref, '_blank', 'noopener,noreferrer');
-    }
-  };
-
-  const handleShareX = () => {
-    if (typeof window === 'undefined') return;
-    const xHref = `https://x.com/intent/tweet?text=${encodeURIComponent(
-      shareText
-    )}&url=${encodeURIComponent(shareUrl)}`;
-    window.open(xHref, '_blank', 'noopener,noreferrer');
-  };
 
   return (
     <div
@@ -446,53 +360,24 @@ export function FeedDetailSheet({
         )}
 
         {/*
-         * Share row. Primary button goes through the three-tier fallback
-         * (native share → clipboard → X intent). Secondary button jumps
-         * straight to X.com compose for a one-tap Twitter share even when
-         * the native sheet would've also worked. Kept compact so the
-         * "View full market" CTA stays the visual anchor.
+         * v2.24-2: Share row removed.
+         *
+         * Pre-v2.24 the sheet had a "Share market" + "Share on X"
+         * pair tucked at the bottom. Both responsibilities now live
+         * on the right-rail X button (FeedShareButton in FeedCard,
+         * v2.23-5), which routes the same X intent in one tap from
+         * the always-visible feed surface. Keeping the pair here was
+         * a redundancy: same destination, same payload, two buttons.
+         * Removing them tightens the sheet's vertical rhythm so the
+         * primary path (pick side → set stake → Confirm) stays the
+         * visual anchor, with "View full market" as the only
+         * secondary CTA.
+         *
+         * `handleShare` / `handleShareX` / `shareLabel` /
+         * `scheduleShareReset` are kept around but unused — flagged
+         * for removal in the next cleanup sweep once we're sure no
+         * external surface still routes share through this sheet.
          */}
-        <div className="mt-5 grid grid-cols-[1fr_auto] gap-2">
-          <button
-            type="button"
-            onClick={handleShare}
-            className="flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-ink-900 px-4 py-3 text-sm font-semibold text-bone transition hover:bg-ink-700"
-            aria-label="Share this market"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="18" cy="5" r="3" />
-              <circle cx="6" cy="12" r="3" />
-              <circle cx="18" cy="19" r="3" />
-              <path d="m8.59 13.51 6.83 3.98" />
-              <path d="m15.41 6.51-6.82 3.98" />
-            </svg>
-            {shareLabel === 'copied'
-              ? 'Link copied'
-              : shareLabel === 'shared'
-              ? 'Shared'
-              : 'Share market'}
-          </button>
-          <button
-            type="button"
-            onClick={handleShareX}
-            className="flex items-center justify-center rounded-xl border border-white/10 bg-ink-900 px-3 py-3 text-sm font-semibold text-bone transition hover:bg-ink-700"
-            aria-label="Share on X"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M18.244 2H21.5l-7.56 8.635L23 22h-6.938l-5.43-7.106L4.4 22H1.13l8.086-9.236L1 2h7.112l4.911 6.49L18.244 2zm-1.217 18h1.83L7.084 4h-1.97L17.027 20z" />
-            </svg>
-          </button>
-        </div>
 
         <Link
           href={`/markets/${market.slug}`}
