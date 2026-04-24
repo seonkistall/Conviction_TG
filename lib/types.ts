@@ -127,7 +127,24 @@ export interface AITrader {
 
 export interface PortfolioPosition {
   marketId: string;
-  side: 'YES' | 'NO';
+  /**
+   * For binary markets: 'YES' | 'NO'.
+   *
+   * v2.26: Multi-outcome markets ride the same schema — `side` holds
+   * the outcome `id` (e.g. 'dem' for the Korean election's Democratic
+   * Party). The reducer keys (marketId, side) so two different
+   * outcomes on the same market still merge correctly, and a YES
+   * position on a binary market can't collide with an outcome id on
+   * a multi market (different market ids, different outcome pools).
+   */
+  side: 'YES' | 'NO' | string;
+  /**
+   * v2.26: Optional human-readable label for multi-outcome positions.
+   * Denormalized at write time so portfolio rendering doesn't have to
+   * cross-reference the market's outcomes array every render. For
+   * binary positions this is `undefined`; 'YES'/'NO' is self-describing.
+   */
+  outcomeLabel?: string;
   shares: number;
   avgPrice: number; // 0..1
   currentPrice: number; // 0..1

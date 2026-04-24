@@ -394,7 +394,13 @@ export function FeedCard({ market }: Props) {
           </div>
         ) : (
           <div className="mt-4">
-            <OutcomeBar market={market} compact />
+            {/*
+              v2.26: Opt into MultiOutcomeSheet so tapping an outcome
+              on a multi market (Korean election, LoL Worlds winner,
+              etc.) pops the inline pick-+-stake-+-confirm UX instead
+              of navigating away from the feed.
+            */}
+            <OutcomeBar market={market} compact useSheet />
           </div>
         )}
 

@@ -149,7 +149,11 @@ export function MarketCard({ market, size = 'md', livePrice }: Props) {
           {isResolved ? (
             <SettledChip closePrice={market.closePrice ?? 0} />
           ) : isMulti ? (
-            <OutcomeBar market={market} compact />
+            // v2.26: Markets-grid callers use the sheet so a card tap
+            // stays in-context rather than navigating to the detail
+            // page. Matches the FeedCard behavior and the binary
+            // YES/NO flow (FeedDetailSheet) for consistency.
+            <OutcomeBar market={market} compact useSheet />
           ) : (
             /*
              * v2.11 — real YES/NO buttons (not decorative). One tap adds to

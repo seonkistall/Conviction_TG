@@ -34,7 +34,13 @@ import { PORTFOLIO } from './markets';
 
 export interface RealizedFill {
   marketId: string;
-  side: 'YES' | 'NO';
+  /**
+   * v2.26: Binary 'YES'/'NO' or multi-outcome id (e.g. 'dem'). Same
+   * widened type as PortfolioPosition.side — see that doc comment.
+   */
+  side: 'YES' | 'NO' | string;
+  /** v2.26: Denormalized outcome label for multi fills. */
+  outcomeLabel?: string;
   shares: number;
   avgPrice: number;
   closePrice: number;
@@ -52,14 +58,17 @@ type Action =
   | {
       type: 'BUY';
       marketId: string;
-      side: 'YES' | 'NO';
+      /** v2.26: 'YES'/'NO' for binary, outcome id for multi. */
+      side: 'YES' | 'NO' | string;
+      /** v2.26: Optional human label for multi (e.g. 'Democratic Party'). */
+      outcomeLabel?: string;
       shares: number;
       price: number;
     }
   | {
       type: 'CLOSE';
       marketId: string;
-      side: 'YES' | 'NO';
+      side: 'YES' | 'NO' | string;
       closePrice: number;
     }
   | { type: 'HYDRATE'; state: Partial<PositionsState> }
@@ -102,6 +111,10 @@ function reducer(s: PositionsState, a: Action): PositionsState {
         const next: PortfolioPosition = {
           marketId: a.marketId,
           side: a.side,
+          // v2.26: Persist the outcome label on new multi positions so
+          // the portfolio table can render "Rebuild Korea" instead of
+          // the raw id 'rn'.
+          outcomeLabel: a.outcomeLabel,
           shares: a.shares,
           avgPrice: a.price,
           currentPrice: a.price,
@@ -112,6 +125,10 @@ function reducer(s: PositionsState, a: Action): PositionsState {
       const merged = mergePosition(s.positions[idx], a.shares, a.price);
       merged.marketId = a.marketId;
       merged.side = a.side;
+      // v2.26: A later buy may carry a label even if the original
+      // didn't (back-compat hydration from older localStorage). Prefer
+      // the most recent label to avoid losing it on re-merge.
+      if (a.outcomeLabel) merged.outcomeLabel = a.outcomeLabel;
       const positions = [...s.positions];
       positions[idx] = merged;
       return { ...s, positions };
@@ -145,20 +162,32 @@ interface PositionsCtx {
   positions: PortfolioPosition[];
   closed: RealizedFill[];
   hydrated: boolean;
+  /**
+   * v2.26: `side` widened to `'YES' | 'NO' | string` so multi-outcome
+   * markets can write their outcome id (e.g. 'dem', 'ppp', 'rn') as
+   * the side. Binary callers pass 'YES'/'NO' exactly as before —
+   * typing stays backwards-compatible because string literals are
+   * still assignable to the widened union.
+   */
   buy: (input: {
     marketId: string;
-    side: 'YES' | 'NO';
+    side: 'YES' | 'NO' | string;
+    outcomeLabel?: string;
     shares: number;
     price: number;
   }) => void;
-  close: (marketId: string, side: 'YES' | 'NO', closePrice: number) => void;
+  close: (
+    marketId: string,
+    side: 'YES' | 'NO' | string,
+    closePrice: number
+  ) => void;
   reset: () => void;
   /** True if the user holds any shares of that market (either side). */
   hasPosition: (marketId: string) => boolean;
   /** Get the user's position on a specific (marketId, side), or null. */
   positionOn: (
     marketId: string,
-    side: 'YES' | 'NO'
+    side: 'YES' | 'NO' | string
   ) => PortfolioPosition | null;
 }
 
@@ -226,15 +255,15 @@ export function PositionsProvider({ children }: { children: React.ReactNode }) {
   }, [s.positions, s.closed, s.hydrated]);
 
   const buy = useCallback<PositionsCtx['buy']>(
-    ({ marketId, side, shares, price }) => {
+    ({ marketId, side, outcomeLabel, shares, price }) => {
       if (shares <= 0 || price <= 0 || price >= 1) return;
-      dispatch({ type: 'BUY', marketId, side, shares, price });
+      dispatch({ type: 'BUY', marketId, side, outcomeLabel, shares, price });
     },
     []
   );
 
   const close = useCallback(
-    (marketId: string, side: 'YES' | 'NO', closePrice: number) =>
+    (marketId: string, side: 'YES' | 'NO' | string, closePrice: number) =>
       dispatch({ type: 'CLOSE', marketId, side, closePrice }),
     []
   );
@@ -247,7 +276,7 @@ export function PositionsProvider({ children }: { children: React.ReactNode }) {
   );
 
   const positionOn = useCallback(
-    (marketId: string, side: 'YES' | 'NO') =>
+    (marketId: string, side: 'YES' | 'NO' | string) =>
       s.positions.find((p) => p.marketId === marketId && p.side === side) ??
       null,
     [s.positions]

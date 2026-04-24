@@ -112,7 +112,15 @@ function HotRow({
   slug: string;
   title: string;
   poster: string;
-  side: 'YES' | 'NO';
+  /**
+   * v2.26: Widened to accept multi-outcome side ids (e.g. 'dem', 'rn')
+   * alongside the binary 'YES'/'NO'. The rendering below is still
+   * bar-chart-shaped (shows the avg fill price as a horizontal fill),
+   * which still reads correctly for outcome positions — the color
+   * tint just defaults to the neutral bone when `side` isn't a known
+   * YES/NO literal.
+   */
+  side: 'YES' | 'NO' | string;
   avgPrice: number;
   mark: number;
   livePnl: number;

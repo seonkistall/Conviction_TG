@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import clsx from 'clsx';
 import type { Market } from '@/lib/types';
 import { FeedCard } from '@/components/FeedCard';
 import { ProposeInterstitial } from '@/components/ProposeInterstitial';
@@ -65,8 +66,39 @@ export function FeedClient({ markets }: Props) {
   const positions = usePositions();
   const toast = useToast();
 
+  /*
+   * v2.26 — Pull-to-refresh state.
+   *
+   * The /feed feels most alive when it responds to the native iOS /
+   * Android overscroll-and-release gesture. We track three things:
+   *   - `pullY`    : how far the finger has pulled past scrollTop=0.
+   *                  Drives the rubberband spinner's translate + the
+   *                  "release to refresh" text.
+   *   - `pulling`  : true while the finger is down and scrollTop=0.
+   *   - `refreshing` : latched briefly after release to (a) show the
+   *                    spinner and (b) key the items array via
+   *                    `refreshSeq` to force a reshuffle animation.
+   *
+   * We don't actually re-fetch from a server (markets are a static
+   * fixture in v2 scope) — we increment `refreshSeq` which reseeds
+   * the `items` memo. Any new markets added to MARKETS after first
+   * mount would surface here.
+   */
+  const [pullY, setPullY] = useState(0);
+  const [pulling, setPulling] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshSeq, setRefreshSeq] = useState(0);
+  const pullStart = useRef<number | null>(null);
+  const PULL_THRESHOLD = 70; // px over-pull required to trigger refresh
+
   // v2.21-2: items interleaves FeedCard + ProposeInterstitial.
-  const items = useMemo(() => buildItems(markets), [markets]);
+  // v2.26: depend on refreshSeq so a pull-to-refresh rebuilds the list
+  // even when the underlying markets reference hasn't changed.
+  const items = useMemo(
+    () => buildItems(markets),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [markets, refreshSeq]
+  );
 
   // IntersectionObserver on children to track currently-visible card
   useEffect(() => {
@@ -277,9 +309,86 @@ export function FeedClient({ markets }: Props) {
         ))}
       </div>
 
+      {/*
+       * v2.26 — Pull-to-refresh visual.
+       *
+       * Sits above the scroller at the top of the viewport. Opacity
+       * and height scale with `pullY`; once past threshold the text
+       * flips to "Release to refresh". During the refreshing latch
+       * it becomes a fixed-height spinner for ~700ms. Absolute +
+       * pointer-events-none so it never eats scroll touches.
+       */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-center"
+        style={{
+          height: refreshing
+            ? 56
+            : Math.min(pullY, PULL_THRESHOLD + 30),
+          opacity:
+            refreshing || pulling || pullY > 0
+              ? Math.min(1, (refreshing ? 1 : pullY / PULL_THRESHOLD))
+              : 0,
+          transition: pulling
+            ? 'none'
+            : 'opacity 220ms ease-out, height 220ms ease-out',
+        }}
+      >
+        <div className="flex items-center gap-2 rounded-full border border-white/10 bg-ink-900/80 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-bone backdrop-blur">
+          <span
+            className={clsx(
+              'inline-block h-3 w-3 rounded-full border-2 border-bone-muted border-t-volt',
+              refreshing && 'animate-spin'
+            )}
+            style={{
+              transform: refreshing
+                ? undefined
+                : `rotate(${Math.min(360, (pullY / PULL_THRESHOLD) * 360)}deg)`,
+            }}
+          />
+          {refreshing
+            ? 'Refreshing'
+            : pullY >= PULL_THRESHOLD
+              ? 'Release to refresh'
+              : 'Pull to refresh'}
+        </div>
+      </div>
+
       <div
         ref={ref}
         className="snap-feed no-scrollbar h-full overflow-y-scroll"
+        onTouchStart={(e) => {
+          const scroller = ref.current;
+          if (!scroller || scroller.scrollTop > 2) return;
+          pullStart.current = e.touches[0]?.clientY ?? null;
+          setPulling(true);
+        }}
+        onTouchMove={(e) => {
+          if (pullStart.current === null) return;
+          const dy = (e.touches[0]?.clientY ?? 0) - pullStart.current;
+          // Only track downward drags. 0.5 dampening = classic iOS
+          // rubberband feel (finger moves twice as fast as the visual).
+          if (dy <= 0) {
+            setPullY(0);
+            return;
+          }
+          setPullY(Math.min(dy * 0.5, PULL_THRESHOLD + 40));
+        }}
+        onTouchEnd={() => {
+          const armed = pullY >= PULL_THRESHOLD;
+          setPulling(false);
+          pullStart.current = null;
+          if (armed) {
+            // Trigger refresh: bump seq to rebuild items, show spinner
+            // for 700ms, then collapse.
+            setRefreshing(true);
+            setPullY(0);
+            setRefreshSeq((n) => n + 1);
+            window.setTimeout(() => setRefreshing(false), 700);
+          } else {
+            setPullY(0);
+          }
+        }}
       >
         {items.map((it, i) => {
           if (it.kind === 'market') {
