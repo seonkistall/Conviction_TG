@@ -17,6 +17,31 @@ export function GlobalMuteFAB() {
   // block on tall portrait viewports.
   const path = usePathname() ?? '/';
   const immersive = path === '/feed' || path.startsWith('/feed/');
+  /*
+   * v2.27 — Page-gated visibility.
+   *
+   * Pre-v2.27 the FAB rendered on every route — including /portfolio,
+   * /leaderboard, /methodology, /investors, /markets/new, which have
+   * no video and thus nothing to mute. A VC opening /investors saw a
+   * "Sound off" chip floating at bottom-left with no corresponding
+   * audio source on the page. This reads as unfinished UI.
+   *
+   * The FAB now only surfaces on routes that render `<AutoVideo />`:
+   * the landing (hero + featured + grid + debut calendar), market
+   * detail (hero video), narratives (basket thumbnails), trader
+   * detail (hero clip), and worlds-2026 (hub videos). Every other
+   * route hides the FAB entirely.
+   *
+   * Whitelist rather than blacklist so new pages default to "no FAB"
+   * until the author opts in.
+   */
+  const showFab =
+    path === '/' ||
+    path.startsWith('/markets/') && !path.startsWith('/markets/new') ||
+    path.startsWith('/narratives/') ||
+    path.startsWith('/traders/') ||
+    path.startsWith('/worlds-');
+  const hideCompletely = !showFab && !immersive;
 
   /*
    * v2.20-7 — First-visit "Tap to hear" hint.
@@ -55,6 +80,11 @@ export function GlobalMuteFAB() {
       } catch {}
     }
   };
+
+  // v2.27: Short-circuit before any JSX when the current route has
+  // no video surface to mute. Keeps the DOM free of a dangling
+  // "Sound off" chip that would otherwise confuse evaluators.
+  if (hideCompletely) return null;
 
   return (
     <div

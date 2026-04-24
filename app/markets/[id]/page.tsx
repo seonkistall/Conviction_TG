@@ -20,6 +20,28 @@ import {
 
 const SITE_URL = 'https://conviction-fe.vercel.app';
 
+/*
+ * v2.27 — `new Date(iso).toLocaleString()` rendered differently on
+ * server (Vercel's Node.js — en-US + UTC) vs client (user's locale
+ * + timezone), triggering React hydration warning #425 on the market
+ * hero timeline. Switched to an explicit en-US UTC formatter so SSR
+ * and client agree byte-for-byte. Showing UTC is the honest choice
+ * for a global prediction market — the exchange settles on the same
+ * clock the Oracle uses, not the viewer's local time.
+ */
+const UTC_FMT = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: 'UTC',
+  timeZoneName: 'short',
+});
+function fmtDateUTC(iso: string): string {
+  return UTC_FMT.format(new Date(iso));
+}
+
 export function generateStaticParams() {
   return MARKETS.map((m) => ({ id: m.slug }));
 }
@@ -273,12 +295,12 @@ export default function MarketDetailPage({
                 <TimelineItem
                   dot="bg-bone-muted"
                   label="Trading ends"
-                  value={new Date(m.endsAt).toLocaleString()}
+                  value={fmtDateUTC(m.endsAt)}
                 />
                 <TimelineItem
                   dot="border border-bone-muted"
                   label="Resolution"
-                  value={new Date(m.resolvesAt).toLocaleString()}
+                  value={fmtDateUTC(m.resolvesAt)}
                 />
               </ol>
             </div>
