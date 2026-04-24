@@ -16,7 +16,7 @@ interface Slide {
 
 const slides: Slide[] = [
   {
-    tag: '01 · Asia Native',
+    tag: '01 · APAC-native',
     titleKey: 'onb.1.title',
     bodyKey: 'onb.1.body',
     bg: 'from-conviction/30 via-ink-900 to-ink-900',
@@ -32,7 +32,15 @@ const slides: Slide[] = [
     ),
   },
   {
-    tag: '02 · Evidence First',
+    /*
+      v2.27-2: Slide 2 now pitches permissionless creation, not
+      evidence. The previous evidence visual moved to Slide 3 below.
+      Visual is a mocked wizard flow — user types a question, 13
+      scrapers grade it, the market ships. This is the single
+      clearest way to communicate Conviction's UGC-at-meme-speed
+      moat in ~6 seconds of dwell.
+    */
+    tag: '02 · Permissionless',
     titleKey: 'onb.2.title',
     bodyKey: 'onb.2.body',
     bg: 'from-volt/20 via-ink-900 to-ink-900',
@@ -40,72 +48,74 @@ const slides: Slide[] = [
       <div className="space-y-2 rounded-2xl border border-volt/30 bg-ink-900 p-4">
         <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-volt">
           <span className="live-dot" style={{ width: 6, height: 6 }} />
-          Oracle · Qwen3 → Sonnet-4.6
+          AI wizard · 45s
+        </div>
+        <div className="rounded-md border border-dashed border-volt/30 bg-ink-800 px-2 py-2 text-left text-[11px] italic text-bone">
+          &quot;Will BLACKPINK release a full-group album in 2026?&quot;
         </div>
         <div className="space-y-1.5 text-left">
-          {['Weverse fan cafe heat', 'Melon streaming velocity', 'Naver ratings sentiment', 'LCK patch diff v14.3'].map(
-            (s, i) => (
-              <div
-                key={s}
-                className="flex items-center gap-2 rounded-md bg-ink-800 px-2 py-1.5 text-[11px] text-bone-muted"
-              >
-                <span
-                  className={`h-2 w-2 rounded-full ${i < 3 ? 'bg-yes' : 'bg-volt'}`}
-                />
-                {s}
-              </div>
-            )
-          )}
+          {[
+            { l: 'Parse + domain route', s: 'ok' },
+            { l: '13-scraper grading', s: 'ok' },
+            { l: 'Qwen3 resolution spec', s: 'ok' },
+            { l: 'Sonnet-4.6 verify', s: 'ok' },
+            { l: 'Publish live', s: 'run' },
+          ].map((row) => (
+            <div
+              key={row.l}
+              className="flex items-center gap-2 rounded-md bg-ink-800 px-2 py-1.5 text-[11px] text-bone-muted"
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${row.s === 'ok' ? 'bg-yes' : 'bg-volt'}`}
+              />
+              {row.l}
+            </div>
+          ))}
         </div>
         <div className="rounded-md bg-volt/10 px-2 py-1.5 text-center font-mono text-[11px] font-bold text-volt">
-          Confidence · 0.88
+          Cost · $0.08 · shipped
         </div>
       </div>
     ),
   },
   {
-    tag: '03 · Conviction feed',
+    /*
+      v2.27-2: Slide 3 now shows the Oracle evidence stack (moved
+      from v2.17's gesture tutorial to here). Gesture hints live on
+      the actual feed page now; this slide's job is to establish
+      that every price is auditable — 23 sources, two-stage LLM
+      judging, human signoff — and that you can drill into the
+      evidence bundle on any market.
+    */
+    tag: '03 · Auditable oracle',
     titleKey: 'onb.3.title',
     bodyKey: 'onb.3.body',
     bg: 'from-conviction/20 via-volt/10 to-ink-900',
-    // v2.17 — Previous visual showed a static phone with right-rail icons
-    // (♥ + ↗) but never taught the primary gestures: double-tap = YES,
-    // single-tap = global mute. These are the main ways a reader
-    // interacts with the feed, and leaving them to a source-code comment
-    // was the biggest gulf-of-execution gap in the whole product. We now
-    // label the two taps explicitly with a pulsing dot + caption.
     visual: (
-      <div className="relative mx-auto h-52 w-36 overflow-hidden rounded-3xl border border-white/15 bg-ink-900">
-        <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-conviction/30 to-transparent" />
-        <div className="absolute bottom-3 left-3 right-3 space-y-1">
-          <div className="h-1 w-10 rounded-full bg-volt" />
-          <div className="text-[10px] font-bold leading-tight text-bone">
-            T1 wins Worlds 2026?
-          </div>
-          <div className="flex gap-1 pt-1">
-            <div className="flex-1 rounded bg-yes/90 py-0.5 text-center text-[9px] font-bold text-ink-900">
-              YES ¢71
+      <div className="space-y-2 rounded-2xl border border-conviction/30 bg-ink-900 p-4">
+        <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-widest text-conviction">
+          <span className="live-dot" style={{ width: 6, height: 6 }} />
+          Evidence · 23 sources
+        </div>
+        <div className="space-y-1.5 text-left">
+          {[
+            'Weverse · BLACKPINK fan-cafe heat',
+            'Naver · HYBE Q4-25 earnings call',
+            'Melon · streaming velocity (7d)',
+            'LA SoFi · ticketing block hold',
+            'Chroma RAG · group-activity base rate',
+          ].map((s) => (
+            <div
+              key={s}
+              className="flex items-center gap-2 rounded-md bg-ink-800 px-2 py-1.5 text-[11px] text-bone-muted"
+            >
+              <span className="h-2 w-2 rounded-full bg-yes" />
+              {s}
             </div>
-            <div className="flex-1 rounded bg-no/80 py-0.5 text-center text-[9px] font-bold text-ink-900">
-              NO ¢29
-            </div>
-          </div>
+          ))}
         </div>
-        {/* Double-tap gesture hint: pulsing ring centered on the card */}
-        <div
-          className="pointer-events-none absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2"
-          aria-hidden="true"
-        >
-          <span className="absolute inline-flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full bg-volt/30" />
-          <span className="relative inline-flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-volt text-[11px] font-bold text-ink-900">
-            2×
-          </span>
-        </div>
-        <div className="absolute left-2 top-2 rounded-md bg-ink-900/85 px-1.5 py-0.5 text-[9px] font-semibold text-volt">
-          2× tap · YES
-        </div>
-        <div className="absolute right-2 top-2 rounded-md bg-ink-900/85 px-1.5 py-0.5 text-[9px] font-semibold text-bone-muted">
-          1× tap · mute
+        <div className="rounded-md bg-conviction/10 px-2 py-1.5 text-center font-mono text-[11px] font-bold text-conviction">
+          Confidence · 0.88 · auditable
         </div>
       </div>
     ),

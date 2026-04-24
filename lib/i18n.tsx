@@ -86,15 +86,30 @@ const EN: Dict = {
   'onb.skip': 'Skip',
   'onb.next': 'Next',
   'onb.start': 'Start trading',
+  /*
+   * v2.27-2: Rewrote all three slides so the first-visit intro leads
+   * with the two moats that actually differentiate Conviction —
+   * permissionless market creation and the APAC-native evidence
+   * swarm — rather than reciting Polymarket-shaped feature copy.
+   *
+   *   Slide 1: APAC coverage (was already in this ballpark; sharpened).
+   *   Slide 2: Permissionless creation (was "AI-graded evidence", which
+   *            a reader could mistake for "AI-curated markets" —
+   *            rewritten to emphasize "any user proposes in 45s").
+   *   Slide 3: Oracle transparency (was a gesture tutorial, which is
+   *            valuable but didn't land the differentiation — moved
+   *            gesture hints into the feed page's own UI and replaced
+   *            this slide with the Oracle's evidence-bundle story).
+   */
   'onb.1.title': 'Trade every APAC narrative',
   'onb.1.body':
-    'K-pop, anime, LCK vs LPL, NPB, Bollywood, BTC at the Tokyo open — every APAC thesis priced in ¢.',
-  'onb.2.title': 'AI-graded evidence',
+    'K-pop comebacks, LCK vs LPL, NPB, Bollywood openings, anime ratings, APAC macro — every narrative 4 billion people care about, priced live in ¢.',
+  'onb.2.title': 'Propose the next market in 45s',
   'onb.2.body':
-    'Qwen3 drafts, Sonnet-4.6 verifies. 23 scrapers keep every market honest — tap any AI dial to inspect the evidence bundle.',
-  'onb.3.title': 'Feed with feel',
+    'Conviction is the only permissionless APAC prediction market. Any user proposes — 13 scrapers grade it — the best ones ship. The catalog grows at meme-speed, not curator-speed.',
+  'onb.3.title': 'An Oracle you can audit',
   'onb.3.body':
-    'TikTok-style vertical scroll. Double-tap a card for YES. Single-tap to mute. The gesture is the UI — no buttons to hunt for.',
+    '23 evidence sources (Naver, Weverse, Weibo, Pixiv, YouTube…) + Qwen3 → Sonnet-4.6 two-stage judging + human signoff. Tap the AI dial on any market to see the sources yourself.',
 
   'mobnav.markets': 'Markets',
   'mobnav.feed': 'Feed',

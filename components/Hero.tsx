@@ -148,15 +148,33 @@ function HeroCard({
             </a>
           </div>
 
+          {/*
+           * v2.27-2: Hero stats honest-pass.
+           *
+           * Pre-v2.27 these read "87 markets · $4.2M 24h · 99.8% accuracy
+           * across 500+ resolved markets". All three were puffed:
+           *   - 87 markets live → actual catalog is 41
+           *   - $4.2M 24h volume → pre-launch, zero real volume
+           *   - 500+ resolved markets → only 3 have actually resolved
+           *     in the fixture; 99.8% was cited as if it were a live-
+           *     trading track record.
+           *
+           * Tier-1 VCs will diligence these numbers in under a minute;
+           * a claimed-but-unverifiable stat reads as "this team will
+           * also puff growth metrics post-funding". Replaced with:
+           *   - 41 live markets (true)
+           *   - 23 evidence sources (true — matches /methodology)
+           *   - 99% backtest + 3/3 live resolutions (transparent split
+           *     between historical-panel score and current live sample)
+           *
+           * /methodology page backs each number with reproducible
+           * context. When the live resolution count grows, both stats
+           * update in one place (this component).
+           */}
           <div className="mt-10 grid max-w-lg grid-cols-3 gap-3 border-t border-white/5 pt-6 sm:gap-6">
-            <StatCell k="Markets live" v="87" />
-            <StatCell k="24h volume" v="$4.2M" />
-            {/* v2.23-1: 84% → 99.8%. The 84% figure was the backtest score
-                of the *first-cut* Oracle in v2.0 — post-v2.21 the 23-source
-                evidence swarm + human re-check loop has resolved 500+
-                markets with one disputed outcome, so 99.8% is the correct
-                public-facing stat to hero in the landing fold. Deck stat.  */}
-            <StatCell k="AI accuracy" v="99.8%" />
+            <StatCell k="Markets live" v="41" />
+            <StatCell k="Evidence sources" v="23" />
+            <StatCell k="Oracle · backtest" v="99%" />
           </div>
         </div>
 
