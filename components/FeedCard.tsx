@@ -16,6 +16,8 @@ import { usePositions } from '@/lib/positions';
 import { useToast } from '@/lib/toast';
 import { useMute } from '@/lib/mute';
 import { useT } from '@/lib/i18n';
+import { openXIntent } from '@/lib/share';
+import { useWatchlist } from '@/lib/watchlist';
 
 interface Props {
   market: Market;
@@ -546,27 +548,14 @@ function QuickBet({
 
 /*
  * v2.22-2 — Like button. Toggles a per-market "liked" bit in
- * localStorage so the state persists across reloads. Count shown is
- * `baseCount + liked? 1 : 0` so the card's trader count still
- * reflects the mock data but nudges by the user's own tap. Heart fills
- * + volt-tints when liked; icon stays outlined otherwise.
+ * localStorage so the state persists across reloads.
+ *
+ * v2.25: Storage moved to `lib/watchlist.ts` so /portfolio's new
+ * Watchlist tab reads the exact same set. The local-only
+ * `LIKE_STORAGE_KEY` + `readLikes`/`writeLikes` helpers that used to
+ * live here are gone; `useWatchlist()` owns the key + serialization
+ * round-trip now.
  */
-const LIKE_STORAGE_KEY = 'cv_feed_likes_v1';
-function readLikes(): Set<string> {
-  if (typeof window === 'undefined') return new Set();
-  try {
-    const raw = localStorage.getItem(LIKE_STORAGE_KEY);
-    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
-  } catch {
-    return new Set();
-  }
-}
-function writeLikes(s: Set<string>) {
-  try {
-    localStorage.setItem(LIKE_STORAGE_KEY, JSON.stringify(Array.from(s)));
-  } catch {}
-}
-
 function FeedLikeButton({
   marketId,
   baseCount,
@@ -574,31 +563,16 @@ function FeedLikeButton({
   marketId: string;
   baseCount: number;
 }) {
-  const [liked, setLiked] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-    setLiked(readLikes().has(marketId));
-  }, [marketId]);
-  const onClick = () => {
-    const set = readLikes();
-    if (set.has(marketId)) {
-      set.delete(marketId);
-      setLiked(false);
-    } else {
-      set.add(marketId);
-      setLiked(true);
-    }
-    writeLikes(set);
-  };
-  const count = baseCount + (mounted && liked ? 1 : 0);
+  const { has, toggle, hydrated } = useWatchlist();
+  const liked = has(marketId);
+  const count = baseCount + (hydrated && liked ? 1 : 0);
   return (
     <RailButton
       icon={liked ? '♥' : '♡'}
       label={count.toLocaleString()}
       active={liked}
-      onClick={onClick}
-      aria-label={liked ? 'Remove like' : 'Like this market'}
+      onClick={() => toggle(marketId)}
+      aria-label={liked ? 'Remove from watchlist' : 'Add to watchlist'}
     />
   );
 }
@@ -680,14 +654,9 @@ function FeedShareButton({
   const onShare = () => {
     if (typeof window === 'undefined') return;
     const url = `${window.location.origin}/markets/${slug}`;
-    // Includes the canonical @conviction_apac handle so any reshare
-    // on X threads back to the brand without us having to pay to
-    // acquire the namespace ourselves.
-    const text = `${title} — live on @conviction_apac`;
-    const xHref = `https://x.com/intent/tweet?text=${encodeURIComponent(
-      text
-    )}&url=${encodeURIComponent(url)}`;
-    window.open(xHref, '_blank', 'noopener,noreferrer');
+    // v2.25: Routed through the shared `lib/share.ts` helper so the
+    // X handle + tweet copy stay in lockstep with MarketHeroShare.
+    openXIntent({ title, url });
     toast.push({
       kind: 'trade',
       title: 'Opening X',

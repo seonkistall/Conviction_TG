@@ -62,7 +62,23 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           ? crypto.randomUUID()
           : `tst_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
       const next: Toast = { id, ttl: 3500, ...t };
-      setToasts((list) => [next, ...list].slice(0, 4));
+      // v2.25: Cap stack at 3 (was 4). 3 is the largest stack a phone
+      // user can read at a glance without the bottom one falling off
+      // a 375px-wide viewport. Older toasts get evicted FIFO; their
+      // timers self-clear via the dismiss path on the next render.
+      setToasts((list) => {
+        const stacked = [next, ...list];
+        const evicted = stacked.slice(3);
+        // Cancel timers for evicted toasts so we don't leak handles.
+        evicted.forEach((e) => {
+          const h = timers.current.get(e.id);
+          if (h) {
+            clearTimeout(h);
+            timers.current.delete(e.id);
+          }
+        });
+        return stacked.slice(0, 3);
+      });
       const ttl = next.ttl ?? 3500;
       if (ttl > 0) {
         const h = setTimeout(() => dismiss(id), ttl);

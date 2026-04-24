@@ -8,6 +8,7 @@ import { ResolvedBanner } from './ResolvedBanner';
 import { SettledChip } from './SettledChip';
 import { QuickBetActions } from './QuickBetActions';
 import { EvidenceDialButton } from './EvidenceDialButton';
+import { LivePrice } from './LivePrice';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 
 interface Props {
@@ -99,25 +100,30 @@ export function MarketCard({ market, size = 'md', livePrice }: Props) {
         <div className="mt-3 flex items-end justify-between gap-3">
           <div>
             <div className="flex items-baseline gap-2">
-              <span
-                className={clsx(
-                  'font-mono text-3xl font-bold tabular-nums text-bone',
-                  // v2.15 — when fed by `<LiveMarketGrid>`, the number itself
-                  // changes every tick, which is the dominant signal. We
-                  // keep the color stable (loud volt was visually noisy
-                  // across a 12-card grid) and only let the digits move.
-                  isLive && 'transition-opacity'
-                )}
-                // v2.16: Removed aria-live. Every tick was queueing a polite
-                // announcement on every visible card — across a 12-card
-                // grid that's a flood. The price is already in the parent
-                // Link's aria-label, so SR users hear it once when they
-                // focus the card. Significant per-grid moves are surfaced
-                // in a dedicated sr-only live region inside
-                // <LiveMarketGrid> (debounced + threshold-gated).
-              >
-                {pct(displayProb)}
-              </span>
+              {/*
+               * v2.25: Swapped the static `pct(displayProb)` number for
+               * `<LivePrice showDirection />`. The digits still update
+               * per-tick but now a tiny ▲/▼ glyph appears next to them
+               * for ~600ms on every change, with the text briefly
+               * flashing green/red. Two reasons this matters:
+               *   1. At-a-glance signal that "this market actually
+               *      moves" — evaluators skimming the grid previously
+               *      had to stare at individual numbers to notice the
+               *      tick was live.
+               *   2. Polymarket/Kalshi house style. Matching their
+               *      ambient motion makes Conviction feel like the
+               *      same product class rather than a static mock.
+               * SSR safety: LivePrice ships the seed text server-side
+               * and hydrates to the provider's value, so no layout
+               * shift on first paint.
+               */}
+              <LivePrice
+                marketId={market.id}
+                seed={displayProb}
+                format="percent"
+                showDirection
+                className="text-3xl font-bold text-bone"
+              />
               <span className="text-[11px] font-medium uppercase tracking-wider text-bone-muted line-clamp-1">
                 {topLabel}
               </span>

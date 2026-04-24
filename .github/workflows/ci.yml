@@ -55,18 +55,34 @@ jobs:
           path: ~/.cache/ms-playwright
           key: pw-${{ runner.os }}-${{ steps.pw.outputs.version }}
 
+      # v2.25: Also install webkit + its system libs so the WebKit
+      # mobile project (mobile-iphone-14-webkit) can actually run on
+      # CI. Previously webkit was in the playwright config but the
+      # runner skipped it because libgtk-4 / libgraphene / libsecret
+      # weren't installed — real Safari regressions slipped through.
+      # `--with-deps webkit` pulls the right apt packages; the Chromium
+      # entry above still handles the Chrome-flavored projects.
       - name: Install Playwright browsers
         if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium webkit
 
       - name: Install Playwright system deps
         if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: npx playwright install-deps chromium
+        run: npx playwright install-deps chromium webkit
 
       - run: npm run build
 
       - name: Run Playwright smoke (chromium)
         run: npx playwright test --project=chromium
+
+      # v2.25: Mobile smoke including webkit. Runs after the chromium
+      # smoke so a webkit-only flake doesn't block the chromium report
+      # upload. Keep mobile projects green to catch the Safari-specific
+      # quirks (backdrop-filter stacking, dvh handling, scroll-snap
+      # stop) that don't surface on Chromium-over-iPhone-device-metrics.
+      - name: Run Playwright mobile smoke
+        run: npx playwright test --project=mobile-iphone-se --project=mobile-iphone-14 --project=mobile-iphone-14-webkit --project=mobile-pixel-5 --project=mobile-galaxy-s9plus --project=mobile-android-tall
+        continue-on-error: false
 
       # Always upload the report — easier to debug a CI-only failure
       # than to re-run locally with `--reporter=html`.

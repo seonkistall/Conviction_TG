@@ -14,6 +14,7 @@ import { JsonLd } from '@/components/JsonLd';
 import { ResolvedBanner } from '@/components/ResolvedBanner';
 import {
   MarketHeroShare,
+  NotifyMeButton,
   PriceChartWithRange,
 } from '@/components/MarketHeroActions';
 
@@ -200,7 +201,18 @@ export default function MarketDetailPage({
                   <EdgeBadge pp={m.edgePP} size="md" />
                 )}
               </div>
-              <MarketHeroShare title={m.title} slug={m.slug} />
+              {/*
+                v2.25: Notify-me + Share live side by side as a
+                single action cluster on the market hero. Notify-me
+                comes first (left of Share) because it's the
+                higher-value signal — a subscribe intent is worth
+                more than a share impression, and placing it on the
+                left puts it in the reading-order primary slot.
+              */}
+              <div className="flex items-center gap-2">
+                <NotifyMeButton title={m.title} slug={m.slug} />
+                <MarketHeroShare title={m.title} slug={m.slug} />
+              </div>
             </div>
             <div className="absolute inset-x-0 bottom-0 p-6">
               <h1 className="font-display text-3xl leading-[1.05] text-bone md:text-5xl">

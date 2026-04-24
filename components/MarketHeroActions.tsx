@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useToast } from '@/lib/toast';
+import { openXIntent } from '@/lib/share';
+import { BRAND_BETA_EMAIL } from '@/lib/constants';
 import { PriceChart } from './PriceChart';
 
 /**
@@ -70,12 +72,10 @@ export function MarketHeroShare({
     } catch {
       /* clipboard unavailable */
     }
-    if (typeof window !== 'undefined') {
-      const xHref = `https://x.com/intent/tweet?text=${encodeURIComponent(
-        title
-      )}&url=${encodeURIComponent(url)}`;
-      window.open(xHref, '_blank', 'noopener,noreferrer');
-    }
+    // v2.25: X fallback now routed through the shared `openXIntent`
+    // helper in `lib/share.ts` — same tweet copy as FeedShareButton,
+    // so a future brand-handle change is a one-line edit.
+    openXIntent({ title, url });
   };
 
   const displayLabel =
@@ -90,6 +90,69 @@ export function MarketHeroShare({
     >
       {displayLabel}
     </button>
+  );
+}
+
+/**
+ * v2.25 — Per-market "Notify me when this resolves" button.
+ *
+ * Problem this solves: when sign-in eventually ships, "notify me on
+ * resolve" is the killer hook. But we don't have accounts yet, so
+ * there's nowhere to persist the subscription. Stubbing this now as
+ * a `mailto:` link with the market title + slug prefilled gives us:
+ *
+ *   1. A real demand signal (every unique subject line = one user
+ *      raising their hand for a specific market).
+ *   2. An honest "it'll ship when sign-in ships" message, instead of
+ *      faking a subscription that goes nowhere.
+ *   3. Zero backend required — mailto: goes straight to the beta
+ *      inbox, Cloudflare email routing forwards to the team.
+ *
+ * UI-wise it sits next to the Share button on the market hero. Same
+ * pill shape so the two look like peers.
+ */
+export function NotifyMeButton({
+  title,
+  slug,
+}: {
+  title: string;
+  slug: string;
+}) {
+  const { push } = useToast();
+  const subject = `Notify me: ${title}`;
+  const body = [
+    'Hi Conviction team,',
+    '',
+    `Please notify me when this market resolves:`,
+    `https://conviction-fe.vercel.app/markets/${slug}`,
+    '',
+    'Thanks!',
+  ].join('\n');
+  const href = `mailto:${BRAND_BETA_EMAIL}?subject=${encodeURIComponent(
+    subject
+  )}&body=${encodeURIComponent(body)}`;
+
+  return (
+    <a
+      href={href}
+      onClick={() => {
+        // Fire a toast so users on desktop (where mailto: may open
+        // a blank Outlook/Mail app they don't use) still get visible
+        // confirmation that the tap registered. Route into /portfolio
+        // so they can keep exploring.
+        push({
+          kind: 'trade',
+          title: 'Notify list added',
+          body: `We'll email when "${title}" resolves.`,
+          cta: { href: '/portfolio', label: 'Open portfolio' },
+        });
+      }}
+      aria-label={`Notify me when ${title} resolves`}
+      className="press flex items-center gap-1.5 rounded-full border border-white/10 bg-ink-900/80 px-3 py-1.5 text-xs font-semibold text-bone backdrop-blur hover:bg-ink-900"
+    >
+      <span aria-hidden="true">🔔</span>
+      Notify me
+    </a>
   );
 }
 

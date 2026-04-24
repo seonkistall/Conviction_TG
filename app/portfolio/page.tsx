@@ -13,6 +13,8 @@ import { formatUSD } from '@/lib/format';
 import { PriceChart } from '@/components/PriceChart';
 import { Sparkline } from '@/components/Sparkline';
 import { HotPositions } from '@/components/HotPositions';
+import { Watchlist } from '@/components/Watchlist';
+import { ConvictionScoreCard } from '@/components/ConvictionScoreCard';
 import { usePositions } from '@/lib/positions';
 import { useToast } from '@/lib/toast';
 
@@ -315,8 +317,20 @@ export default function PortfolioPage() {
           )}
         </div>
 
-        {/* Activity column — Hot positions first, then raw activity feed. */}
+        {/*
+         * Activity column — Watchlist → Hot positions → raw activity feed.
+         *
+         * v2.25: Watchlist added at top of the column. The user's heart-
+         * tapped markets from /feed had no read surface previously; this
+         * promotes them into the "I care about this" slot, directly
+         * above the currently-held positions. Hot positions move down
+         * one slot but remain above Activity — the ranking matches user
+         * intent (saving something = forward-looking intent; holding
+         * something = active state; activity = past).
+         */}
         <div className="md:col-span-4 space-y-6">
+          <ConvictionScoreCard />
+          <Watchlist />
           <HotPositions />
           <h3 className="font-display text-3xl text-bone">Activity</h3>
           <ul className="mt-4 space-y-3">

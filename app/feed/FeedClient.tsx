@@ -23,7 +23,8 @@ import { useToast } from '@/lib/toast';
  */
 type FeedItem =
   | { kind: 'market'; market: Market }
-  | { kind: 'propose' };
+  | { kind: 'propose' }
+  | { kind: 'end' };
 
 function buildItems(markets: Market[]): FeedItem[] {
   const out: FeedItem[] = [];
@@ -35,6 +36,19 @@ function buildItems(markets: Market[]): FeedItem[] {
       out.push({ kind: 'propose' });
     }
   });
+  /*
+   * v2.25: Terminator card at the end of the feed.
+   *
+   * Pre-v2.25 the feed hard-stopped at the last market — there was no
+   * "I'm done" signal, which mapped poorly onto TikTok muscle memory
+   * where users expect either infinite content or an explicit
+   * end-state. The terminator closes the loop with a "You're all
+   * caught up — propose the next market" CTA, converting the end of
+   * scroll into a funnel into /markets/new. Double-duty: reinforces
+   * the permissionless moat exactly when the user has just consumed
+   * the full catalog.
+   */
+  out.push({ kind: 'end' });
   return out;
 }
 
@@ -267,13 +281,15 @@ export function FeedClient({ markets }: Props) {
         ref={ref}
         className="snap-feed no-scrollbar h-full overflow-y-scroll"
       >
-        {items.map((it, i) =>
-          it.kind === 'market' ? (
-            <FeedCard key={`m-${it.market.id}`} market={it.market} />
-          ) : (
-            <ProposeInterstitial key={`p-${i}`} />
-          )
-        )}
+        {items.map((it, i) => {
+          if (it.kind === 'market') {
+            return <FeedCard key={`m-${it.market.id}`} market={it.market} />;
+          }
+          if (it.kind === 'propose') {
+            return <ProposeInterstitial key={`p-${i}`} />;
+          }
+          return <FeedEndCard key={`e-${i}`} total={markets.length} />;
+        })}
       </div>
 
       {/* Desktop-only keyboard-nav hint + help overlay. Hidden on touch. */}
@@ -320,6 +336,76 @@ export function FeedClient({ markets }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * v2.25 — End-of-feed terminator card.
+ *
+ * Rendered as the last item after every market + interstitial. Same
+ * snap-start geometry as other feed items so it docks cleanly at
+ * 100dvh, giving users the "I'm done" signal rather than leaving
+ * them scrolling into emptiness. The Propose CTA routes into the
+ * permissionless wizard (/markets/new) — the funnel we want to bias
+ * toward at exactly the moment the user has signaled "I want more".
+ *
+ * A secondary "Back to top" button lets them loop the feed without
+ * navigating away, since localStorage-backed likes + positions make
+ * re-browsing worthwhile.
+ */
+function FeedEndCard({ total }: { total: number }) {
+  return (
+    <article
+      className="snap-start flex h-[100dvh] w-full flex-col items-center justify-center bg-gradient-to-b from-ink-900 via-ink-800 to-ink-900 px-6"
+      aria-label="End of feed"
+    >
+      <div className="w-full max-w-sm space-y-5 text-center">
+        <div aria-hidden="true" className="text-5xl">🏁</div>
+        <div>
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
+            You&apos;re all caught up
+          </div>
+          <h2 className="mt-2 font-display text-3xl leading-tight text-bone">
+            You&apos;ve seen all {total} live markets.
+          </h2>
+          <p className="mt-2 text-sm leading-relaxed text-bone-muted">
+            Every APAC narrative worth trading gets its own market. Miss
+            one? You can propose the next one in 45 seconds — 23-source
+            AI decides if it ships.
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Link
+            href="/markets/new"
+            className="rounded-full bg-volt px-5 py-3 text-sm font-bold text-ink-900 transition hover:bg-volt-dark active:scale-[0.98]"
+          >
+            ✨ Propose a market
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window === 'undefined') return;
+              // Scroll the feed scroller (the closest `.snap-feed`
+              // ancestor) back to the top. This is intentionally
+              // JS-driven rather than a <Link href="/feed"> because
+              // a navigate would tear down autoplay state across all
+              // visible iframes and lose the global MuteProvider's
+              // current owner; scrolling preserves both.
+              const scroller = (document.querySelector('.snap-feed') as HTMLElement | null);
+              scroller?.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="rounded-full border border-white/10 bg-ink-800 px-5 py-3 text-sm font-semibold text-bone transition hover:bg-ink-700 active:scale-[0.98]"
+          >
+            ↺ Back to top
+          </button>
+        </div>
+
+        <div className="pt-4 text-[10px] text-bone-muted/70">
+          Tip: tap the heart on any market to save it to your Watchlist.
+        </div>
+      </div>
+    </article>
   );
 }
 

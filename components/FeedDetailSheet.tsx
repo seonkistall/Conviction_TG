@@ -7,6 +7,7 @@ import type { Market } from '@/lib/types';
 import { formatUSD, pct, timeUntil } from '@/lib/format';
 import { usePositions } from '@/lib/positions';
 import { useToast } from '@/lib/toast';
+import { STAKE_PRESETS, DEFAULT_STAKE_USD, type StakePreset } from '@/lib/constants';
 
 /**
  * v2.11 — Market detail sheet for /feed cards.
@@ -48,14 +49,12 @@ interface Props {
   initialSide?: 'YES' | 'NO';
 }
 
-/**
- * v2.23-6: Stake presets. Matches the OrderBook presets on the market
- * detail page (single source of truth: $5 / $10 / $25 / $100). The
- * active preset and any custom amount live in component state and
- * decide the share count when the user confirms.
+/*
+ * v2.25 — Stake presets ($5/$10/$25/$100) now live in lib/constants.ts.
+ * Three surfaces shared the same literal pre-v2.25 (FeedDetailSheet,
+ * OrderBook, QuickBetActions). Centralized so a future product change
+ * is a single-file edit. Import is at the top of this module.
  */
-const STAKE_PRESETS = [5, 10, 25, 100] as const;
-type StakePreset = (typeof STAKE_PRESETS)[number];
 
 export function FeedDetailSheet({
   market,
@@ -69,15 +68,16 @@ export function FeedDetailSheet({
   // (or the "likely" side for Info-button opens). Users can toggle
   // YES/NO freely inside the sheet before confirming.
   const [side, setSide] = useState<'YES' | 'NO' | null>(initialSide ?? null);
-  // Stake in dollars. Default to $10 (matches the old direct-buy size
-  // so the sheet feels like a strict superset of the old behavior).
-  const [stakeUsd, setStakeUsd] = useState<StakePreset>(10);
+  // Stake in dollars. Default to DEFAULT_STAKE_USD ($10 — matches the
+  // old direct-buy size so the sheet feels like a strict superset of
+  // the old behavior).
+  const [stakeUsd, setStakeUsd] = useState<StakePreset>(DEFAULT_STAKE_USD);
   // Reset the selected side + stake any time the sheet re-opens, so a
   // second open doesn't inherit the previous side.
   useEffect(() => {
     if (open) {
       setSide(initialSide ?? null);
-      setStakeUsd(10);
+      setStakeUsd(DEFAULT_STAKE_USD);
     }
   }, [open, initialSide]);
   // v2.24-2: Share state + flash-label timer were dropped along with
