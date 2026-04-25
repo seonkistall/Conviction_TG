@@ -15,6 +15,7 @@ import { Sparkline } from '@/components/Sparkline';
 import { HotPositions } from '@/components/HotPositions';
 import { Watchlist } from '@/components/Watchlist';
 import { ConvictionScoreCard } from '@/components/ConvictionScoreCard';
+import { ShareConvictionButton } from '@/components/ShareConvictionButton';
 import { usePositions } from '@/lib/positions';
 import { useToast } from '@/lib/toast';
 
@@ -252,23 +253,43 @@ export default function PortfolioPage() {
                             </div>
                           </td>
                           <td className="p-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                close(p.marketId, p.side, mark);
-                                push({
-                                  kind: 'trade',
-                                  title: `Closed ${p.side} · ${p.shares.toLocaleString()} shares`,
-                                  body: `${mk.title} · Realized ${
-                                    livePnl >= 0 ? '+' : ''
-                                  }$${livePnl.toFixed(2)}`,
-                                  amount: `¢${Math.round(mark * 100)}`,
-                                });
-                              }}
-                              className="rounded-md border border-white/10 bg-ink-900 px-2.5 py-1 text-[11px] text-bone hover:bg-ink-700"
-                            >
-                              Close
-                            </button>
+                            {/*
+                             * v2.28-2 — Share + Close stack.
+                             *
+                             * Share lives next to Close because the two
+                             * actions split the position's "I'm done"
+                             * mood into two paths: brag the win (Share)
+                             * vs. take the win (Close). Putting them in
+                             * the same column keeps the row width tidy
+                             * on mobile while making the viral loop
+                             * one-tap from the table.
+                             */}
+                            <div className="flex items-center justify-end gap-1">
+                              <ShareConvictionButton
+                                marketId={p.marketId}
+                                side={p.side}
+                                shares={p.shares}
+                                avgPrice={p.avgPrice}
+                                markPrice={mark}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  close(p.marketId, p.side, mark);
+                                  push({
+                                    kind: 'trade',
+                                    title: `Closed ${p.side} · ${p.shares.toLocaleString()} shares`,
+                                    body: `${mk.title} · Realized ${
+                                      livePnl >= 0 ? '+' : ''
+                                    }$${livePnl.toFixed(2)}`,
+                                    amount: `¢${Math.round(mark * 100)}`,
+                                  });
+                                }}
+                                className="rounded-md border border-white/10 bg-ink-900 px-2.5 py-1 text-[11px] text-bone hover:bg-ink-700"
+                              >
+                                Close
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
