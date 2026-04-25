@@ -3,12 +3,6 @@ import {
   Inter,
   Instrument_Serif,
   JetBrains_Mono,
-  Noto_Sans_KR,
-  Noto_Sans_SC,
-  Noto_Sans_JP,
-  Noto_Serif_KR,
-  Noto_Serif_SC,
-  Noto_Serif_JP,
 } from 'next/font/google';
 import './globals.css';
 import { ChromeShell } from '@/components/ChromeShell';
@@ -60,62 +54,33 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-// Korean — use `preload: false` for CJK because each subset is large and we
-// want the browser to only fetch them when a Korean glyph is actually painted.
-const notoSansKR = Noto_Sans_KR({
-  weight: ['400', '500', '700', '900'],
-  variable: '--font-noto-sans-kr',
-  display: 'swap',
-  preload: false,
-});
-
-// Simplified Chinese
-const notoSansSC = Noto_Sans_SC({
-  weight: ['400', '500', '700', '900'],
-  variable: '--font-noto-sans-sc',
-  display: 'swap',
-  preload: false,
-});
-
-// Japanese
-const notoSansJP = Noto_Sans_JP({
-  weight: ['400', '500', '700', '900'],
-  variable: '--font-noto-sans-jp',
-  display: 'swap',
-  preload: false,
-});
-
-const notoSerifKR = Noto_Serif_KR({
-  weight: ['400', '700'],
-  variable: '--font-noto-serif-kr',
-  display: 'swap',
-  preload: false,
-});
-
-const notoSerifSC = Noto_Serif_SC({
-  weight: ['400', '700'],
-  variable: '--font-noto-serif-sc',
-  display: 'swap',
-  preload: false,
-});
-
-const notoSerifJP = Noto_Serif_JP({
-  weight: ['400', '700'],
-  variable: '--font-noto-serif-jp',
-  display: 'swap',
-  preload: false,
-});
-
+/*
+ * v2.27-4 — Removed all 6 Noto CJK fonts (Sans/Serif × KR/SC/JP).
+ *
+ * The previous setup loaded Noto Sans/Serif KR + SC + JP at 4 weights
+ * each from Google Fonts via `next/font/google`. Even with
+ * `preload: false`, the Next bundler emitted 33 woff2 files totaling
+ * ~1055KB on the landing page — a ~36% chunk of the entire 2.9MB
+ * payload. Lighthouse scored that as a pure-bytes loss.
+ *
+ * The reason: globals.css listed every Noto variant in `--font-sans`,
+ * `--font-display`, and `--font-mono` fallback chains. Browsers
+ * eagerly preload fonts that match the active font-family, so the
+ * Noto files loaded on every visit even when no CJK glyph appeared.
+ *
+ * Trade-off: Korean / Japanese / Chinese rendering. macOS, iOS,
+ * Windows 10+, modern Android, and ChromeOS all ship with bundled
+ * CJK system fonts (Apple SD Gothic Neo / Yu Gothic / Source Han / etc).
+ * The `system-ui, -apple-system` fallback in globals.css covers
+ * those without us having to ship a 1MB font payload.
+ *
+ * Kept: Inter (latin), Instrument Serif (latin), JetBrains Mono
+ * (latin). All used heavily on every page.
+ */
 const fontVariables = [
   inter.variable,
   instrumentSerif.variable,
   jetbrainsMono.variable,
-  notoSansKR.variable,
-  notoSansSC.variable,
-  notoSansJP.variable,
-  notoSerifKR.variable,
-  notoSerifSC.variable,
-  notoSerifJP.variable,
 ].join(' ');
 
 const SITE_URL = 'https://conviction-fe.vercel.app';

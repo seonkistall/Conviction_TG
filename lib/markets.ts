@@ -39,7 +39,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'ioNng23DkIM',
-      poster: 'https://i.ytimg.com/vi/ioNng23DkIM/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/ioNng23DkIM/hqdefault.jpg',
       start: 25,
     },
     tags: ['BLACKPINK', 'YG', 'Comeback', 'Album'],
@@ -68,7 +68,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'AOTfM6H8XOo',
-      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/hqdefault.jpg',
       start: 8,
     },
     tags: ['LoL', 'T1', 'Faker', 'LCK'],
@@ -105,7 +105,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '5FrhtahQiRc',
-      poster: 'https://i.ytimg.com/vi/5FrhtahQiRc/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/5FrhtahQiRc/hqdefault.jpg',
       start: 30,
     },
     tags: ['LoL', 'Worlds', 'LCK', 'LPL'],
@@ -133,7 +133,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '1MFylXgM7BM',
-      poster: 'https://i.ytimg.com/vi/1MFylXgM7BM/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/1MFylXgM7BM/hqdefault.jpg',
       start: 18,
     },
     tags: ['Football', 'EPL', 'Son Heung-min'],
@@ -166,7 +166,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '0C5rGB5VtdQ',
-      poster: 'https://i.ytimg.com/vi/0C5rGB5VtdQ/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/0C5rGB5VtdQ/hqdefault.jpg',
       start: 5,
     },
     tags: ['Netflix', 'Squid Game', 'K-Drama'],
@@ -195,7 +195,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'V37TaRdVUQY',
-      poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/hqdefault.jpg',
       start: 15,
     },
     tags: ['NewJeans', 'ADOR', 'HYBE'],
@@ -234,7 +234,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'gdZLi9oWNZg',
-      poster: 'https://i.ytimg.com/vi/gdZLi9oWNZg/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/gdZLi9oWNZg/hqdefault.jpg',
     },
     tags: ['MAMA', 'K-Pop', 'Awards', 'Daesang'],
     status: 'live',
@@ -261,7 +261,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'BAaqCYwZQjM',
-      poster: 'https://i.ytimg.com/vi/BAaqCYwZQjM/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/BAaqCYwZQjM/hqdefault.jpg',
     },
     tags: ['KBO', 'Baseball', 'Kiwoom'],
     status: 'resolved',
@@ -292,7 +292,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '5zeg52IGlaA',
-      poster: 'https://i.ytimg.com/vi/5zeg52IGlaA/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/5zeg52IGlaA/hqdefault.jpg',
       start: 3,
     },
     tags: ['BTC', 'Crypto', 'Macro'],
@@ -320,7 +320,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '2AcB6iWcL24',
-      poster: 'https://i.ytimg.com/vi/2AcB6iWcL24/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/2AcB6iWcL24/hqdefault.jpg',
       start: 4,
     },
     tags: ['Manga', 'Shonen Jump', 'One Piece'],
@@ -347,7 +347,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '5xH0HfJHsaY',
-      poster: 'https://i.ytimg.com/vi/5xH0HfJHsaY/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/5xH0HfJHsaY/hqdefault.jpg',
       start: 30,
     },
     tags: ['Oscars', 'Bong Joon-ho', 'Film'],
@@ -379,7 +379,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '43EPmlTiSxo',
-      poster: 'https://i.ytimg.com/vi/43EPmlTiSxo/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/43EPmlTiSxo/hqdefault.jpg',
       start: 2,
     },
     tags: ['Nikkei', 'Japan', 'Macro'],
@@ -406,7 +406,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'gdZLi9oWNZg',
-      poster: 'https://i.ytimg.com/vi/gdZLi9oWNZg/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/gdZLi9oWNZg/hqdefault.jpg',
       start: 40,
     },
     tags: ['BTS', 'HYBE', 'Tour'],
@@ -465,7 +465,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '8D5AyJAXqiE',
-      poster: 'https://i.ytimg.com/vi/8D5AyJAXqiE/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/8D5AyJAXqiE/hqdefault.jpg',
       start: 8,
     },
     tags: ['C-Drama', 'Tencent', 'Douban', 'China'],
@@ -501,7 +501,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'C3GouGa0noM',
-      poster: 'https://i.ytimg.com/vi/C3GouGa0noM/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/C3GouGa0noM/hqdefault.jpg',
       start: 25,
     },
     tags: ['LoL', 'LPL', 'JDG', 'Knight', 'China'],
@@ -529,7 +529,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '09hVCl960jY',
-      poster: 'https://i.ytimg.com/vi/09hVCl960jY/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/09hVCl960jY/hqdefault.jpg',
       start: 8,
     },
     tags: ['CSL', 'Football', 'Shanghai Port', 'China'],
@@ -556,7 +556,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '66-eOImoiOY',
-      poster: 'https://i.ytimg.com/vi/66-eOImoiOY/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/66-eOImoiOY/hqdefault.jpg',
       start: 6,
     },
     tags: ['BYD', 'Tesla', 'EV', 'Macro'],
@@ -613,7 +613,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'dFlDRhvM4L0',
-      poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/hqdefault.jpg',
     },
     tags: ['Anime', 'MAPPA', 'Chainsaw Man', 'Japan'],
     status: 'live',
@@ -641,7 +641,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'ZRtdQ81jPUQ',
-      poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/hqdefault.jpg',
       start: 20,
     },
     tags: ['J-Pop', 'YOASOBI', 'Oricon', 'Japan'],
@@ -696,7 +696,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '2nZt4XVxQ2k',
-      poster: 'https://i.ytimg.com/vi/2nZt4XVxQ2k/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/2nZt4XVxQ2k/hqdefault.jpg',
       start: 2,
     },
     tags: ['USD/JPY', 'BOJ', 'Macro', 'Japan'],
@@ -734,7 +734,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '6P3E7NGhBNg',
-      poster: 'https://i.ytimg.com/vi/6P3E7NGhBNg/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/6P3E7NGhBNg/hqdefault.jpg',
       start: 5,
     },
     tags: ['LoL', 'LCK', 'T1', 'Faker', 'Korea'],
@@ -762,7 +762,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '3d7CbPj5HTw',
-      poster: 'https://i.ytimg.com/vi/3d7CbPj5HTw/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/3d7CbPj5HTw/hqdefault.jpg',
       start: 20,
     },
     tags: ['LoL', 'Faker', 'Worlds', 'MVP'],
@@ -791,7 +791,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '1Z6CHioIn3s',
-      poster: 'https://i.ytimg.com/vi/1Z6CHioIn3s/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/1Z6CHioIn3s/hqdefault.jpg',
       start: 15,
     },
     tags: ['LoL', 'Knight', 'JDG', 'LPL', 'Player Prop'],
@@ -826,7 +826,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '5ZSEDfslRxk',
-      poster: 'https://i.ytimg.com/vi/5ZSEDfslRxk/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/5ZSEDfslRxk/hqdefault.jpg',
       start: 2,
     },
     tags: ['Korea', 'Election', 'Politics', '2027'],
@@ -874,7 +874,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '66-eOImoiOY',
-      poster: 'https://i.ytimg.com/vi/66-eOImoiOY/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/66-eOImoiOY/hqdefault.jpg',
     },
     tags: ['Bollywood', 'SRK', 'India', 'Box Office'],
     status: 'live',
@@ -906,7 +906,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'AOTfM6H8XOo',
-      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/hqdefault.jpg',
       start: 12,
     },
     tags: ['Cricket', 'IPL', 'India', 'Streaming'],
@@ -937,7 +937,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'ZRtdQ81jPUQ',
-      poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/hqdefault.jpg',
     },
     tags: ['J-Pop', 'YOASOBI', 'Japan', 'Billboard'],
     status: 'live',
@@ -968,7 +968,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'dFlDRhvM4L0',
-      poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/hqdefault.jpg',
     },
     tags: ['Anime', 'Demon Slayer', 'ufotable', 'Aniplex'],
     status: 'live',
@@ -998,7 +998,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'AOTfM6H8XOo',
-      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/hqdefault.jpg',
       start: 28,
     },
     tags: ['NPB', 'Yakult', 'Japan', 'Baseball'],
@@ -1057,7 +1057,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'AOTfM6H8XOo',
-      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/hqdefault.jpg',
       start: 15,
     },
     tags: ['LoL', 'LPL', 'JDG', 'Knight', 'Worlds'],
@@ -1090,7 +1090,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'AOTfM6H8XOo',
-      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/hqdefault.jpg',
       start: 5,
     },
     tags: ['MLBB', 'MOONTON', 'Indonesia', 'SEA Esports'],
@@ -1121,7 +1121,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'V37TaRdVUQY',
-      poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/hqdefault.jpg',
     },
     tags: ['K-Pop', 'IVE', 'MAMA', 'Daesang', 'Starship'],
     status: 'live',
@@ -1343,7 +1343,7 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
     media: {
       kind: 'youtube',
       src: 'gdZLi9oWNZg',
-      poster: 'https://i.ytimg.com/vi/gdZLi9oWNZg/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/gdZLi9oWNZg/hqdefault.jpg',
       start: 30,
     },
   },
@@ -1362,7 +1362,7 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
     media: {
       kind: 'youtube',
       src: '3Hb61Cs0zFY',
-      poster: 'https://i.ytimg.com/vi/3Hb61Cs0zFY/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/3Hb61Cs0zFY/hqdefault.jpg',
       start: 5,
     },
   },
@@ -1386,7 +1386,7 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
     media: {
       kind: 'youtube',
       src: '4Twd965VzX4',
-      poster: 'https://i.ytimg.com/vi/4Twd965VzX4/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/4Twd965VzX4/hqdefault.jpg',
       start: 8,
     },
   },
@@ -1408,7 +1408,7 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
     media: {
       kind: 'youtube',
       src: 'ZRtdQ81jPUQ',
-      poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/hqdefault.jpg',
       start: 12,
     },
   },
@@ -1430,7 +1430,7 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
     media: {
       kind: 'youtube',
       src: '0oxqSkJlNzg',
-      poster: 'https://i.ytimg.com/vi/0oxqSkJlNzg/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/0oxqSkJlNzg/hqdefault.jpg',
       start: 3,
     },
   },
@@ -1450,7 +1450,7 @@ export const NARRATIVE_INDICES: NarrativeIndex[] = [
     media: {
       kind: 'youtube',
       src: 'AA-sv3ilNBE',
-      poster: 'https://i.ytimg.com/vi/AA-sv3ilNBE/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/AA-sv3ilNBE/hqdefault.jpg',
       start: 3,
     },
   },
@@ -1500,7 +1500,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'KR',
     dropsAt: '2026-06-21T00:00:00Z',
     heat: 0.91,
-    poster: 'https://i.ytimg.com/vi/ioNng23DkIM/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/ioNng23DkIM/hqdefault.jpg',
   },
   {
     id: 'db_02',
@@ -1514,7 +1514,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     // v2.22-4: Use Chainsaw Man poster (MAPPA, stable) as a safer
     // anime-action visual until a verified Demon Slayer thumbnail
     // lands in the asset pipeline.
-    poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/hqdefault.jpg',
   },
   {
     // v2.23-3 — First Spawn slot (new). Netflix hasn't confirmed a
@@ -1527,7 +1527,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'KR',
     dropsAt: '2026-10-12T00:00:00Z',
     heat: 0.87,
-    poster: 'https://i.ytimg.com/vi/oqxAJKy0ii4/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/oqxAJKy0ii4/hqdefault.jpg',
   },
 
   // Pair 2 → Spawn
@@ -1540,7 +1540,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'KR',
     dropsAt: '2026-11-28T12:00:00Z',
     heat: 0.78,
-    poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/hqdefault.jpg',
   },
   {
     id: 'db_05',
@@ -1551,7 +1551,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'CN',
     dropsAt: '2026-05-08T04:00:00Z',
     heat: 0.76,
-    poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/hqdefault.jpg',
   },
   {
     id: 'db_06',
@@ -1561,7 +1561,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'IN',
     dropsAt: '2026-05-28T10:00:00Z',
     heat: 0.58,
-    poster: 'https://i.ytimg.com/vi/66-eOImoiOY/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/66-eOImoiOY/hqdefault.jpg',
   },
 
   // Pair 3 → Spawn
@@ -1574,7 +1574,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'JP',
     dropsAt: '2026-07-18T10:00:00Z',
     heat: 0.72,
-    poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/ZRtdQ81jPUQ/hqdefault.jpg',
   },
   {
     id: 'db_08',
@@ -1588,7 +1588,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     // v2.22-4: Reuse the verified SRK/Bollywood MV poster so both the
     // calendar card and the market card pull from the same reliable
     // video asset.
-    poster: 'https://i.ytimg.com/vi/66-eOImoiOY/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/66-eOImoiOY/hqdefault.jpg',
   },
   {
     id: 'db_09',
@@ -1611,7 +1611,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'JP',
     dropsAt: '2026-06-01T00:00:00Z',
     heat: 0.69,
-    poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/dFlDRhvM4L0/hqdefault.jpg',
   },
   {
     id: 'db_11',
@@ -1624,7 +1624,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     heat: 0.73,
     // v2.22-4: Reuse verified Worlds esports poster — both are
     // competitive-gaming finals, same visual lane.
-    poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/AOTfM6H8XOo/hqdefault.jpg',
   },
   {
     // v2.23-3 — Last Spawn slot (new). SM Town Live Tokyo Dome is
@@ -1638,7 +1638,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'JP',
     dropsAt: '2026-08-02T10:00:00Z',
     heat: 0.64,
-    poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/V37TaRdVUQY/hqdefault.jpg',
   },
 ];
 

@@ -10,13 +10,21 @@
    * so we just stack them in priority order and let the browser pick the
    * first one that has a glyph for the character being rendered.
    */
-  --font-sans: var(--font-inter), var(--font-noto-sans-kr), var(--font-noto-sans-sc),
-    var(--font-noto-sans-jp), system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
-  --font-display: var(--font-instrument-serif), var(--font-noto-serif-kr),
-    var(--font-noto-serif-sc), var(--font-noto-serif-jp), Georgia, 'Times New Roman', serif;
-  --font-mono: var(--font-jetbrains-mono), var(--font-noto-sans-kr), var(--font-noto-sans-sc),
-    var(--font-noto-sans-jp), ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  /*
+   * v2.27-4: Dropped Noto CJK fallbacks from all three stacks. See the
+   * note in app/layout.tsx — `system-ui` + `-apple-system` already
+   * resolve to the OS-bundled CJK font (Apple SD Gothic / Yu Gothic /
+   * Source Han) on every modern platform, so we don't have to ship a
+   * 1MB Noto subset to cover Korean political-party labels and one or
+   * two Japanese tags. Latin + emoji glyphs still come from Inter /
+   * Instrument Serif / JetBrains Mono as before.
+   */
+  --font-sans: var(--font-inter), system-ui, -apple-system, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: var(--font-instrument-serif), Georgia, 'Times New Roman',
+    serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, 'SF Mono', Menlo,
+    Consolas, monospace;
   --grid-line: rgba(255, 255, 255, 0.04);
 }
 
