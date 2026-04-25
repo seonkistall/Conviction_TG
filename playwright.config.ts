@@ -56,29 +56,29 @@ export default defineConfig({
     {
       name: 'mobile-iphone-se',
       use: { ...devices['iPhone SE'], browserName: 'chromium' }, // 375 × 667
-      testMatch: /(mobile|visual)\.spec\.ts/,
+      testMatch: /(mobile|visual|warm-landing)\.spec\.ts/,
     },
     {
       name: 'mobile-iphone-14',
       use: { ...devices['iPhone 14'], browserName: 'chromium' }, // 390 × 844
-      testMatch: /(mobile|visual)\.spec\.ts/,
+      testMatch: /(mobile|visual|warm-landing)\.spec\.ts/,
     },
     {
       name: 'mobile-iphone-14-webkit',
       // Same device metrics, but WebKit engine — catches real Safari
       // differences (backdrop-filter, Date parsing, scroll-snap quirks).
       use: { ...devices['iPhone 14'], browserName: 'webkit' },
-      testMatch: /(mobile|visual)\.spec\.ts/,
+      testMatch: /(mobile|visual|warm-landing)\.spec\.ts/,
     },
     {
       name: 'mobile-pixel-5',
       use: { ...devices['Pixel 5'], browserName: 'chromium' }, // 393 × 851
-      testMatch: /(mobile|visual)\.spec\.ts/,
+      testMatch: /(mobile|visual|warm-landing)\.spec\.ts/,
     },
     {
       name: 'mobile-galaxy-s9plus',
       use: { ...devices['Galaxy S9+'], browserName: 'chromium' }, // 320 × 658
-      testMatch: /(mobile|visual)\.spec\.ts/,
+      testMatch: /(mobile|visual|warm-landing)\.spec\.ts/,
     },
     {
       // Tall-portrait Android emulation — matches the Galaxy S25 Ultra class
@@ -95,7 +95,7 @@ export default defineConfig({
         userAgent:
           'Mozilla/5.0 (Linux; Android 14; SM-S928U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Mobile Safari/537.36',
       },
-      testMatch: /(mobile|visual)\.spec\.ts/,
+      testMatch: /(mobile|visual|warm-landing)\.spec\.ts/,
     },
   ],
   webServer: isProduction

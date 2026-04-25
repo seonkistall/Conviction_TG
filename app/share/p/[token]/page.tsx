@@ -42,13 +42,17 @@ export async function generateMetadata({ params }: Props) {
   }
   const m = getMarket(payload.m);
   const { pnlUsd } = pnlFromPayload(payload);
-  const sign = pnlUsd >= 0 ? '+' : '';
+  // v2.28 hotfix: format as `-$232` (sign before $) instead of `$-232`
+  // (sign after $). Same format as the visual OG card so the page
+  // <title>, og:title, and OG image agree across every share surface.
+  const sign = pnlUsd >= 0 ? '+' : '-';
+  const absUsd = Math.abs(pnlUsd).toFixed(0);
   const handle = payload.h ? `@${payload.h}` : '@trader';
   return {
-    title: `${handle} ${sign}$${pnlUsd.toFixed(0)} on ${m?.title ?? 'a market'} · Conviction`,
-    description: `${handle} is ${sign}$${pnlUsd.toFixed(0)} on ${payload.s} ${payload.sh} shares. Trade the same APAC narrative on Conviction.`,
+    title: `${handle} ${sign}$${absUsd} on ${m?.title ?? 'a market'} · Conviction`,
+    description: `${handle} is ${sign}$${absUsd} on ${payload.s} ${payload.sh} shares. Trade the same APAC narrative on Conviction.`,
     openGraph: {
-      title: `${handle} ${sign}$${pnlUsd.toFixed(0)} · ${m?.title ?? 'Conviction'}`,
+      title: `${handle} ${sign}$${absUsd} · ${m?.title ?? 'Conviction'}`,
       type: 'website',
     },
   };
@@ -63,7 +67,10 @@ export default function ShareReceiptPage({ params }: Props) {
   const m = getMarket(payload.m);
   const { pnlUsd, pnlPct } = pnlFromPayload(payload);
   const isWin = pnlUsd >= 0;
-  const sign = isWin ? '+' : '';
+  // v2.28 hotfix: losses get an explicit '-' prefix. Critical for the
+  // OG card thumbnail in social feeds (red color alone isn't enough)
+  // and matches what screen readers verbalize.
+  const sign = isWin ? '+' : '-';
   const handle = payload.h ? `@${payload.h}` : '@trader';
 
   // Graceful expired state — market rotated out of the catalog.
@@ -129,7 +136,7 @@ export default function ShareReceiptPage({ params }: Props) {
             }`}
           >
             {sign}
-            {pnlPct.toFixed(1)}%
+            {Math.abs(pnlPct).toFixed(1)}%
           </div>
         </div>
 

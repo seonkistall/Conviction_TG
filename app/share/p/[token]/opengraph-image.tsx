@@ -69,7 +69,11 @@ export default async function Image({
   const m = getMarket(payload.m);
   const { pnlUsd, pnlPct } = pnlFromPayload(payload);
   const isWin = pnlUsd >= 0;
-  const sign = isWin ? '+' : '';
+  // v2.28 hotfix: losses must render an explicit '-' prefix, not blank.
+  // Pre-fix the lose card showed "$232.00" with no sign; the red color
+  // alone wasn't enough — viewers reading the X preview at thumbnail
+  // size couldn't tell a loss from a win unless they zoomed in.
+  const sign = isWin ? '+' : '-';
   const winColor = '#C6FF3D'; // volt
   const loseColor = '#F04438'; // alert
   const pnlColor = isWin ? winColor : loseColor;
@@ -221,7 +225,9 @@ export default async function Image({
               opacity: 0.85,
             }}
           >
-            {`${sign}${pnlPct.toFixed(1)}%`}
+            {/* abs() because `sign` already carries the +/- — pnlPct is
+                signed and would compose to '--40.8%' otherwise. */}
+            {`${sign}${Math.abs(pnlPct).toFixed(1)}%`}
           </div>
         </div>
 

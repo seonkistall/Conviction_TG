@@ -85,11 +85,15 @@ export function ShareConvictionButton({
       const url = `${origin}/share/p/${token}`;
 
       const pnl = shares * (markPrice - avgPrice);
-      const sign = pnl >= 0 ? '+' : '';
+      // v2.28 hotfix: format as `-$232` instead of `$-232` so the X
+      // intent + tweet body match the OG card's sign convention.
+      const sign = pnl >= 0 ? '+' : '-';
+      const absPnl = Math.abs(pnl).toFixed(0);
       const pct = avgPrice > 0 ? (markPrice / avgPrice - 1) * 100 : 0;
+      const absPct = Math.abs(pct).toFixed(1);
       // X (Twitter) intent text — punchy, fits the 280-char ceiling
       // even with the full URL appended by X's auto-shortener.
-      const xText = `${sign}$${pnl.toFixed(0)} on Conviction · ${side} ${shares.toLocaleString()} shares · ${sign}${pct.toFixed(1)}%`;
+      const xText = `${sign}$${absPnl} on Conviction · ${side} ${shares.toLocaleString()} shares · ${sign}${absPct}%`;
 
       // Native share sheet — best UX on mobile by far. Falls back
       // gracefully when the API isn't there (desktop Safari, all
@@ -139,7 +143,7 @@ export function ShareConvictionButton({
         kind: 'trade',
         title: 'Link copied',
         body: 'Opened X composer in a new tab.',
-        amount: `${sign}$${pnl.toFixed(0)}`,
+        amount: `${sign}$${absPnl}`,
       });
     } finally {
       // Tiny debounce so accidental double-taps don't open two tabs.
