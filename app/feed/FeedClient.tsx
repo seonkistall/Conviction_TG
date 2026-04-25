@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import type { Market } from '@/lib/types';
 import { FeedCard } from '@/components/FeedCard';
+import { LiveActivityTicker } from '@/components/LiveActivityTicker';
 import { ProposeInterstitial } from '@/components/ProposeInterstitial';
 import { useT } from '@/lib/i18n';
 import { usePositions } from '@/lib/positions';
@@ -251,6 +252,21 @@ export function FeedClient({ markets }: Props) {
      * 72px left rail.
      */
     <div className="relative mx-auto h-[100dvh] w-full md:max-w-[420px]">
+      {/*
+       * v2.28-1 — Live activity ticker. Pinned to the top of the
+       * immersive column; sits ABOVE the progress rail (z-30) but its
+       * outer container is `pointer-events-none` so the rail still
+       * paints unobstructed. Hidden on the end-of-feed terminator so
+       * the "🏁 You're all caught up" moment isn't competing with
+       * a "Just now: @oracle.seoul …" ticker referring to markets the
+       * user has already exhausted scrolling past.
+       *
+       * The ticker is the single biggest "this is alive" signal a
+       * first-time visitor reads in their first 5 seconds on /feed —
+       * Polymarket and Kalshi both ship one for exactly this reason.
+       */}
+      {items[idx]?.kind !== 'end' && <LiveActivityTicker />}
+
       {/*
        * Top progress rail. 2px volt bar that fills left→right as the
        * reader advances through the feed. Sits above the safe-area
