@@ -1,5 +1,6 @@
 import { MARKETS, TRENDING_MARKETS, LIVE_MARKETS } from '@/lib/markets';
 import { Hero } from '@/components/Hero';
+import { FeedTeaser } from '@/components/FeedTeaser';
 import { TrendingStrip } from '@/components/TrendingStrip';
 import { CategoryTabs } from '@/components/CategoryTabs';
 import { NarrativeIndices } from '@/components/NarrativeIndices';
@@ -16,6 +17,18 @@ export default function LandingPage() {
     <>
       <LiveTicker markets={LIVE_MARKETS} />
       <Hero markets={MARKETS} />
+      {/*
+       * v2.29-1 — Feed teaser between Hero and TrendingStrip.
+       *
+       * Sits in the highest-attention slot below the fold so the
+       * immersive feed (Conviction's distinctive product surface)
+       * gets surfaced within 5 seconds of a first-time visitor's
+       * scroll. Each mini-card deep-links via /feed?m=<slug> into
+       * v2.28-3's warm-landing flow (auto-opens order sheet) — one-
+       * tap path from "I just saw this on the homepage" to "I'm
+       * looking at YES/NO on this market".
+       */}
+      <FeedTeaser markets={LIVE_MARKETS} />
       <TrendingStrip markets={TRENDING_MARKETS} />
 
       {/* Asia-native moats */}

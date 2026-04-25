@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getMarket } from '@/lib/markets';
-import { decodeSharePayload, pnlFromPayload } from '@/lib/shareToken';
+import {
+  decodeSharePayload,
+  pnlFromPayload,
+  tokenFingerprint,
+} from '@/lib/shareToken';
 
 /**
  * v2.28-2 — Public landing for a shared "conviction receipt".
@@ -72,6 +76,11 @@ export default function ShareReceiptPage({ params }: Props) {
   // and matches what screen readers verbalize.
   const sign = isWin ? '+' : '-';
   const handle = payload.h ? `@${payload.h}` : '@trader';
+  // v2.29-3: tip vs position branch. See OG image renderer for the
+  // matching logic — both surfaces must agree so the page hero and
+  // the OG preview tell the same story.
+  const isTip = payload.k === 'tip' || payload.sh === 0;
+  const stanceCents = Math.round(payload.cp * 100);
 
   // Graceful expired state — market rotated out of the catalog.
   if (!m) {
@@ -106,39 +115,79 @@ export default function ShareReceiptPage({ params }: Props) {
   return (
     <main className="mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center px-5 py-8">
       <div className="w-full overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-ink-800 to-ink-900 shadow-2xl">
-        {/* Header band */}
+        {/*
+         * Header band.
+         *
+         * v2.29-2: shows the receipt fingerprint next to the brand.
+         * The hover/click hint below explains what it is in plain
+         * English so the badge isn't mystery jargon — important for
+         * trust in a pre-launch product where users don't yet have
+         * received-wisdom about Conviction's verification model.
+         */}
         <div className="flex items-center justify-between bg-ink-900/80 px-5 py-3">
           <div className="flex items-center gap-2">
             <span className="text-volt text-base font-bold tracking-widest">
               CONVICTION
             </span>
           </div>
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
-            Shared receipt
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              title="Receipt fingerprint — a hash of this share's contents. Changes if anything is altered."
+              className="rounded-md bg-volt/10 px-2 py-0.5 font-mono text-[10px] font-semibold tracking-widest text-volt"
+            >
+              VERIFIED · {tokenFingerprint(params.token)}
+            </span>
+          </div>
         </div>
 
-        {/* P&L hero — the brag */}
-        <div className="px-6 py-7 text-center">
-          <div className="text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
-            {handle} · {payload.s} · {payload.sh.toLocaleString()} shares
+        {/*
+         * Hero — branches on tip vs position.
+         *
+         * v2.29-3: tips have no P&L, so we lead with the stance:
+         *   "ENDORSES YES @ ¢62"
+         * The volt color on YES, white on NO mirrors the YES/NO
+         * semantic mapping used throughout the app.
+         */}
+        {isTip ? (
+          <div className="px-6 py-7 text-center">
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
+              {handle} · ENDORSES
+            </div>
+            <div className="mt-3 flex items-baseline justify-center gap-3">
+              <span
+                className={`font-display text-6xl font-extrabold tracking-tight ${
+                  payload.s === 'YES' ? 'text-yes' : 'text-bone'
+                }`}
+              >
+                {payload.s}
+              </span>
+              <span className="font-mono text-3xl tabular-nums text-bone-muted">
+                @ ¢{stanceCents}
+              </span>
+            </div>
           </div>
-          <div
-            className={`mt-3 font-mono text-6xl font-extrabold tracking-tight tabular-nums ${
-              isWin ? 'text-yes' : 'text-no'
-            }`}
-          >
-            {sign}${Math.abs(pnlUsd).toFixed(2)}
+        ) : (
+          <div className="px-6 py-7 text-center">
+            <div className="text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
+              {handle} · {payload.s} · {payload.sh.toLocaleString()} shares
+            </div>
+            <div
+              className={`mt-3 font-mono text-6xl font-extrabold tracking-tight tabular-nums ${
+                isWin ? 'text-yes' : 'text-no'
+              }`}
+            >
+              {sign}${Math.abs(pnlUsd).toFixed(2)}
+            </div>
+            <div
+              className={`mt-1 font-mono text-base tabular-nums ${
+                isWin ? 'text-yes' : 'text-no'
+              }`}
+            >
+              {sign}
+              {Math.abs(pnlPct).toFixed(1)}%
+            </div>
           </div>
-          <div
-            className={`mt-1 font-mono text-base tabular-nums ${
-              isWin ? 'text-yes' : 'text-no'
-            }`}
-          >
-            {sign}
-            {Math.abs(pnlPct).toFixed(1)}%
-          </div>
-        </div>
+        )}
 
         {/* Market reference */}
         <Link
@@ -166,8 +215,8 @@ export default function ShareReceiptPage({ params }: Props) {
           </div>
         </Link>
 
-        {/* Avg / now strip */}
-        <div className="grid grid-cols-2 border-t border-white/5 bg-ink-900/40 px-5 py-3 text-center">
+        {/* Avg / now strip — hidden in tip mode (no entry to show). */}
+        {!isTip && <div className="grid grid-cols-2 border-t border-white/5 bg-ink-900/40 px-5 py-3 text-center">
           <div>
             <div className="text-[10px] uppercase tracking-widest text-bone-muted">
               Avg entry
@@ -184,7 +233,7 @@ export default function ShareReceiptPage({ params }: Props) {
               ¢{Math.round(payload.cp * 100)}
             </div>
           </div>
-        </div>
+        </div>}
 
         {/*
          * CTA — the conversion.
@@ -210,6 +259,26 @@ export default function ShareReceiptPage({ params }: Props) {
         >
           Read full market detail
         </Link>
+      </div>
+
+      {/*
+       * v2.29-4 — IG / Threads / 1:1 image link.
+       *
+       * IG and Threads don't scrape OG cards — the user posts an
+       * image directly. This row offers the 1:1 (1080×1080) variant
+       * served by the og-square route handler. Opens in a new tab so
+       * the user can right-click → Save Image (desktop) or long-press
+       * → Download (mobile). Marked rel=external for SEO sanity.
+       */}
+      <div className="mt-4 flex w-full max-w-xs items-center justify-center gap-3 text-[11px] uppercase tracking-widest text-bone-muted">
+        <a
+          href={`/share/p/${params.token}/og-square`}
+          target="_blank"
+          rel="noopener noreferrer external"
+          className="rounded-full border border-white/10 bg-ink-800 px-3 py-1.5 hover:bg-ink-700 hover:text-bone"
+        >
+          ↓ Save IG / Threads image
+        </a>
       </div>
 
       <p className="mt-5 max-w-xs text-center text-[11px] leading-relaxed text-bone-muted">

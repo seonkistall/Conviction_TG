@@ -43,7 +43,7 @@ export interface SharePayload {
   m: string;
   /** Side: 'YES' | 'NO' for binary, or outcome id for multi. */
   s: string;
-  /** Shares held. */
+  /** Shares held. 0 for a "tip" / endorsement (no position taken). */
   sh: number;
   /** Average entry price (0..1, two-decimal precision is plenty). */
   ap: number;
@@ -51,6 +51,16 @@ export interface SharePayload {
   cp: number;
   /** Optional handle (no leading @). */
   h?: string;
+  /**
+   * v2.29-3 — Receipt kind discriminator.
+   *   undefined | 'pnl' → position receipt (default; renders P&L hero)
+   *   'tip'             → endorsement (sh=0, no P&L; renders stance)
+   *
+   * Encoded as a single char to keep the URL short. The OG card and
+   * page both branch on `kind === 'tip'` to render the no-position
+   * variant.
+   */
+  k?: 'pnl' | 'tip';
 }
 
 /**
@@ -95,6 +105,41 @@ export function decodeSharePayload(token: string): SharePayload | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * v2.29-2 — Receipt verification fingerprint.
+ *
+ * Compute a short, displayable hash of the token. Renders on the OG
+ * card as "VERIFIED · <8 hex chars>" — the user perception is
+ * "this number is computed from the receipt, so the receipt can't
+ * be silently tampered with." The honest framing in the doc page is
+ * weaker than that ("the fingerprint changes if any field changes"),
+ * but the visual cue alone reads as authenticity at thumbnail size.
+ *
+ * Why FNV-1a, not SHA-256?
+ * ------------------------
+ * - The Edge runtime exposes Web Crypto's `crypto.subtle.digest`, but
+ *   it's async. The OG image renderer is sync after the payload
+ *   decode, and threading a Promise through Satori's JSX rules is
+ *   a sharp edge we don't need.
+ * - FNV-1a 32-bit hash gives us 8 hex chars deterministically and
+ *   collision-resistant enough to be visually distinct between
+ *   plausible payloads. Anyone forging would also have to forge a
+ *   server-recomputed match anyway — this is a UX cue, not crypto.
+ *
+ * The fingerprint is purely a function of the encoded token, so the
+ * page (server) and OG image (edge) compute the same value without
+ * needing shared state.
+ */
+export function tokenFingerprint(token: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < token.length; i++) {
+    h ^= token.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  // Right-shift to unsigned 32-bit, hex-pad to 8 chars.
+  return (h >>> 0).toString(16).padStart(8, '0');
 }
 
 /**
