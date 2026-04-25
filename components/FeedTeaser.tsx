@@ -130,13 +130,21 @@ function TeaserCard({ m }: { m: Market }) {
       )}
     >
       {/* Poster — same asset the FeedCard uses, so the visual is
-          consistent with what the user sees once they tap in. */}
+          consistent with what the user sees once they tap in.
+          v2.29-5: explicit width/height (CSS overrides actual size,
+          but the attrs let the browser allocate space pre-load and
+          short-circuit the implicit aspect-ratio math — Lighthouse
+          flags these as "unsized-images" otherwise). 480×270 is the
+          underlying YouTube hqdefault size. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={m.media.poster}
         alt=""
+        width={480}
+        height={270}
         className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
         loading="lazy"
+        decoding="async"
       />
       {/* Tinted overlay so the white text is readable on any poster. */}
       <div

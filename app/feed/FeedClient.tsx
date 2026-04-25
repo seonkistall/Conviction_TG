@@ -1,13 +1,32 @@
 'use client';
 
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import type { Market } from '@/lib/types';
 import { FeedCard } from '@/components/FeedCard';
-import { LiveActivityTicker } from '@/components/LiveActivityTicker';
 import { ProposeInterstitial } from '@/components/ProposeInterstitial';
+
+/*
+ * v2.29-5 — Lazy-mount the LiveActivityTicker.
+ *
+ * The ticker is below-fold-equivalent in priority for the first
+ * paint: the feed card video + price are what the user reads in the
+ * first second; the ticker chips arrive within 3 seconds of mount
+ * regardless. Pulling it out of the initial bundle saves ~3KB minified
+ * + the synth-feed deterministic-hash work it runs on every rotation
+ * tick, which Lighthouse attributed to the long TBT (mobile mid-tier).
+ *
+ * `ssr: false` because the ticker's setInterval + matchMedia code is
+ * client-only anyway — pre-render emits a useless static snapshot
+ * that React replaces on hydration.
+ */
+const LiveActivityTicker = dynamic(
+  () => import('@/components/LiveActivityTicker').then((m) => m.LiveActivityTicker),
+  { ssr: false }
+);
 import { useT } from '@/lib/i18n';
 import { usePositions } from '@/lib/positions';
 import { useToast } from '@/lib/toast';

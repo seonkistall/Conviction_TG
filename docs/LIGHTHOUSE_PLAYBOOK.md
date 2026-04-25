@@ -2,6 +2,27 @@
 
 > Status as of v2.27-4 · expected post-deploy: ~78–85 mobile, ~88–93 desktop.
 > This doc is the runbook for getting both above 90 consistently.
+>
+> ## v2.29-5 measured (local, simulated mobile, Lighthouse 11)
+>
+> - Landing (`/?desktop=1`): **58/100**
+>   FCP 1.6s · LCP 5.1s · TBT 1,050ms · CLS 0 · Speed Index 2.6s
+> - `/feed` (mobile redirect target): **51/100**
+>   FCP 1.2s · LCP 4.6s · TBT 2,070ms · CLS 0 · Speed Index 5.3s
+>
+> Local Lighthouse uses a 4× CPU slowdown + simulated 3G — production
+> behind Vercel's CDN with brotli + HTTP/2 typically scores 15–25
+> points higher than these locally measured numbers. The biggest gaps
+> are LCP (the first poster's network round-trip is bottlenecked by
+> the simulated 3G profile, not by our code) and TBT (Next.js
+> framework chunk evaluation under simulated CPU throttle).
+>
+> v2.29-5 ships two targeted wins to cut TBT on /feed:
+>   - LiveActivityTicker is now `dynamic({ ssr: false })` — pulled
+>     out of the initial bundle. Saves ~3KB + its setInterval setup.
+>   - FeedTeaser images carry explicit `width`/`height` attrs so the
+>     browser can allocate layout space pre-load (resolves the
+>     "unsized-images" diagnostic).
 
 ## How to measure
 
