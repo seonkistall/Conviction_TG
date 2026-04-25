@@ -21,6 +21,22 @@ import { useWatchlist } from '@/lib/watchlist';
 
 interface Props {
   market: Market;
+  /**
+   * v2.28-3 — Warm-landing auto-open.
+   *
+   * When /feed receives a `?m=<slug>` query param (typically from a
+   * social share or our own /share/p/[token] CTA), FeedClient reorders
+   * the catalog so the requested market is first and passes
+   * `autoOpenSide` to that one card. The card fires `openSheet()` once
+   * on mount so the very first surface the lander sees is the order
+   * sheet pre-context'd to that market — the shortest possible path
+   * from "I clicked a friend's link" to "I'm staring at YES/NO".
+   *
+   *   undefined  → no warm landing (default)
+   *   null       → open the sheet in read mode (no side pre-picked)
+   *   'YES'/'NO' → open the sheet pre-picked to that side
+   */
+  autoOpenSide?: 'YES' | 'NO' | null;
 }
 
 /*
@@ -56,7 +72,7 @@ const HEART_ANIM_MS = 900;        // lifespan of the heart pop overlay
  *   - Swipe right → open Parlay Slip drawer. Axis-locked so it never
  *     fights the vertical snap-feed scroll.
  */
-export function FeedCard({ market }: Props) {
+export function FeedCard({ market, autoOpenSide }: Props) {
   const positions = usePositions();
   const toast = useToast();
   const mute = useMute();
@@ -92,6 +108,28 @@ export function FeedCard({ market }: Props) {
   const openSheet = useCallback((withSide: 'YES' | 'NO' | null) => {
     setPendingSide(withSide);
     setInfoOpen(true);
+  }, []);
+
+  /*
+   * v2.28-3 — Warm-landing trigger. When `autoOpenSide` is defined
+   * (the parent FeedClient parsed ?m=<slug> from the URL and matched
+   * this card), pop the order sheet open exactly once on mount. The
+   * `useEffect` runs only when `autoOpenSide` changes — but in
+   * practice FeedClient stops passing the prop after the first mount
+   * (it's keyed off a one-shot URL read), so this fires at most
+   * once per session.
+   *
+   * Why mount-time and not in-render? React StrictMode would double-
+   * call render-phase setState; the effect fires once per real
+   * commit. Also: the user might dismiss the sheet and we DON'T want
+   * to re-open it on every prop reflow, only on the initial warm
+   * landing.
+   */
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (autoOpenSide === undefined) return;
+    openSheet(autoOpenSide);
+    // Intentionally empty deps: fire once per FeedCard instance.
   }, []);
 
   const popHeart = useCallback((x: number, y: number) => {

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { LIVE_MARKETS } from '@/lib/markets';
 import { FeedClient } from './FeedClient';
 
@@ -32,7 +33,22 @@ export default function FeedPage() {
       <h1 className="sr-only">
         Conviction Feed · Live APAC prediction markets
       </h1>
-      <FeedClient markets={ordered} />
+      {/*
+       * v2.28-3 — Suspense boundary around FeedClient.
+       *
+       * FeedClient now calls `useSearchParams()` to parse the
+       * `?m=<slug>&s=<YES|NO>` warm-landing query. Next 14 best-
+       * practice is to wrap any client subtree that reads search
+       * params in a Suspense so the static page shell can prerender
+       * and stream while the search-params-dependent subtree hydrates
+       * client-side. Without the boundary the entire `/feed` route
+       * would opt into client-side rendering, killing FCP for shared
+       * social-card landings — exactly the path this feature exists
+       * to optimize.
+       */}
+      <Suspense fallback={null}>
+        <FeedClient markets={ordered} />
+      </Suspense>
     </>
   );
 }

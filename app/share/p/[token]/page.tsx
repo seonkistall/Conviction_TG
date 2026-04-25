@@ -179,12 +179,29 @@ export default function ShareReceiptPage({ params }: Props) {
           </div>
         </div>
 
-        {/* CTA — the conversion. */}
+        {/*
+         * CTA — the conversion.
+         *
+         * v2.28-3: Deep-link to /feed?m=<slug>&s=<side> so the lander
+         * drops directly into the immersive feed with the order sheet
+         * already open and pre-picked to the same side the sharer was
+         * on. Shortest path from "I clicked a friend's link" to "I
+         * place a YES at ¢62". Detail page link kept as a sub-CTA for
+         * users who want to read first.
+         */}
         <Link
-          href={`/markets/${m.slug}`}
+          href={`/feed?m=${m.slug}&s=${
+            payload.s === 'YES' || payload.s === 'NO' ? payload.s : 'YES'
+          }`}
           className="block bg-volt px-5 py-4 text-center text-sm font-bold text-ink-900 transition hover:bg-volt-dark"
         >
-          Trade the same market →
+          Trade {payload.s === 'NO' ? 'NO' : 'YES'} on this market →
+        </Link>
+        <Link
+          href={`/markets/${m.slug}`}
+          className="block border-t border-white/10 bg-ink-900 px-5 py-3 text-center text-xs text-bone-muted transition hover:text-bone"
+        >
+          Read full market detail
         </Link>
       </div>
 

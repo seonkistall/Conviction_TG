@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
 import type { Market } from '@/lib/types';
@@ -68,6 +68,40 @@ export function FeedClient({ markets }: Props) {
   const toast = useToast();
 
   /*
+   * v2.28-3 — Warm-landing parser.
+   *
+   * Read /feed?m=<slug>&s=<YES|NO> ONCE on first mount. The captured
+   * values drive (a) reordering markets so the requested slug is the
+   * first card, and (b) telling that single FeedCard to auto-open
+   * its order sheet — pre-picked to YES/NO if the param was given.
+   *
+   * We snapshot via a ref + a one-shot useEffect rather than reading
+   * useSearchParams() every render because:
+   *   - We don't want a second navigation that mutates the query (or
+   *     even an HMR re-render in dev) to re-pop the order sheet on
+   *     every render. The warm landing is a single-shot UX.
+   *   - The reorder + autoOpenSide should be stable for the lifetime
+   *     of the feed view; subsequent in-app navigations to /feed
+   *     (the back button, the keyboard 'Esc' to grid → back) start
+   *     a fresh component tree and parse fresh.
+   */
+  const search = useSearchParams();
+  const warmLandingRef = useRef<{
+    slug: string | null;
+    side: 'YES' | 'NO' | null;
+  }>({
+    slug: search?.get('m') ?? null,
+    side:
+      search?.get('s') === 'YES'
+        ? 'YES'
+        : search?.get('s') === 'NO'
+          ? 'NO'
+          : null,
+  });
+  const warmSlug = warmLandingRef.current.slug;
+  const warmSide = warmLandingRef.current.side;
+
+  /*
    * v2.26 — Pull-to-refresh state.
    *
    * The /feed feels most alive when it responds to the native iOS /
@@ -95,11 +129,21 @@ export function FeedClient({ markets }: Props) {
   // v2.21-2: items interleaves FeedCard + ProposeInterstitial.
   // v2.26: depend on refreshSeq so a pull-to-refresh rebuilds the list
   // even when the underlying markets reference hasn't changed.
-  const items = useMemo(
-    () => buildItems(markets),
+  // v2.28-3: when ?m=<slug> is present, hoist that market to the top
+  // before the interstitials get interleaved so the warm-landed market
+  // is also the *first scroll snap* — the lander never has to scroll
+  // to find what their friend shared.
+  const items = useMemo(() => {
+    let list = markets;
+    if (warmSlug) {
+      const idx = markets.findIndex((m) => m.slug === warmSlug);
+      if (idx > 0) {
+        list = [markets[idx], ...markets.slice(0, idx), ...markets.slice(idx + 1)];
+      }
+    }
+    return buildItems(list);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [markets, refreshSeq]
-  );
+  }, [markets, refreshSeq, warmSlug]);
 
   // IntersectionObserver on children to track currently-visible card
   useEffect(() => {
@@ -408,7 +452,19 @@ export function FeedClient({ markets }: Props) {
       >
         {items.map((it, i) => {
           if (it.kind === 'market') {
-            return <FeedCard key={`m-${it.market.id}`} market={it.market} />;
+            // v2.28-3: only the warm-landed card receives autoOpenSide.
+            // Comparing by slug (not id) because the URL param is the
+            // human-readable slug. Pass `undefined` (not null) on the
+            // non-warm cards so the FeedCard's prop discriminator
+            // ('undefined → no auto-open') stays clean.
+            const isWarm = warmSlug && it.market.slug === warmSlug;
+            return (
+              <FeedCard
+                key={`m-${it.market.id}`}
+                market={it.market}
+                autoOpenSide={isWarm ? warmSide : undefined}
+              />
+            );
           }
           if (it.kind === 'propose') {
             return <ProposeInterstitial key={`p-${i}`} />;
