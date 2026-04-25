@@ -17,14 +17,29 @@ export const alt = 'Conviction Market';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-export function generateImageMetadata() {
-  return MARKETS.map((m) => ({
-    id: m.slug,
-    alt: `${m.title} — Conviction market`,
-    size,
-    contentType,
-  }));
-}
+/*
+ * v2.27-2 — Removed `generateImageMetadata`.
+ *
+ * In Next's file-based metadata convention, `generateImageMetadata`
+ * declares multiple images for a SINGLE page (e.g. a product page
+ * with several gallery shots) — Next emits one `<meta property=
+ * "og:image">` per entry on that page. We were returning every
+ * market in the catalog from this function on EVERY market page,
+ * so a single market route's HTML carried 41 og:image meta tags
+ * (one per market). X / LinkedIn / Slack would scrape the first
+ * one, which on a popular market like /markets/btc-150k-eoy could
+ * be the BLACKPINK image — completely wrong preview.
+ *
+ * Without `generateImageMetadata`, Next renders ONE og:image per
+ * route via the default file-based handler at
+ * `/markets/[id]/opengraph-image`, which is exactly what we want:
+ * the BLACKPINK page gets the BLACKPINK image, the BTC page gets
+ * the BTC image. Static-generation still works through the parent
+ * page's `generateStaticParams`.
+ *
+ * Same fix applied in app/traders/[handle]/opengraph-image.tsx and
+ * app/narratives/[slug]/opengraph-image.tsx.
+ */
 
 function truncate(s: string, max: number): string {
   return s.length > max ? s.slice(0, max - 1) + '…' : s;

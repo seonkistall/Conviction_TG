@@ -6,7 +6,9 @@
  * a build-time warning and falls back to the default runtime.
  */
 
-export { default, generateImageMetadata } from './opengraph-image';
+// v2.27-2: Stopped re-exporting `generateImageMetadata`. See markets/
+// twitter-image.tsx for the explanation.
+export { default } from './opengraph-image';
 
 export const runtime = 'edge';
 export const revalidate = 3600;

@@ -194,7 +194,7 @@ const MODELS = [
     ctx: 'Streaming',
     tokens: 'Internal',
     notes:
-      'Takes judge + quant output, calibrates against the running Brier-score history per category, and posts the actual AI confidence that appears in the UI.',
+      'Takes judge + quant output, calibrates against the running per-category miscalibration history, and posts the actual AI confidence that appears in the UI.',
   },
 ];
 
@@ -554,6 +554,18 @@ export default function MethodologyPage() {
                 publish this live per category on every trader profile.
               </p>
             </div>
+            {/*
+              v2.27-2: Sample-size copy honest-pass.
+              Pre-v2.27: "Resolved markets since v2.0" implied 5,958
+              live resolutions on the platform. Reality: this is the
+              backtest panel — historical resolvable APAC events
+              fed through the same pipeline so we can score
+              calibration before the live catalog is large enough.
+              Live count is n=3 today (KBO Heroes, Son Heung-min PL
+              goals, BJH Oscar). The split is now explicit — exactly
+              the same framing /investors uses, so a reader who hops
+              between the two pages reads one consistent story.
+            */}
             <div className="rounded-2xl border border-white/10 bg-ink-800 p-5">
               <div className="text-[10px] font-semibold uppercase tracking-widest text-bone-muted">
                 Sample size
@@ -562,7 +574,9 @@ export default function MethodologyPage() {
                 {totalSamples.toLocaleString()}
               </div>
               <p className="mt-2 text-xs text-bone-muted">
-                Resolved markets since v2.0. Curve rebuilds nightly.
+                Historical backtest panel · resolvable APAC events run
+                through the live pipeline. Live resolutions to date:
+                3/3 (catalog is pre-launch). Curve rebuilds nightly.
               </p>
             </div>
           </div>

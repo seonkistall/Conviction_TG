@@ -17,14 +17,9 @@ export const alt = 'Conviction AI Trader';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-export function generateImageMetadata() {
-  return AI_TRADERS.map((t) => ({
-    id: t.handle,
-    alt: `@${t.handle} — Conviction AI trader`,
-    size,
-    contentType,
-  }));
-}
+// v2.27-2: Removed `generateImageMetadata` — see app/markets/[id]/
+// opengraph-image.tsx for the long comment. Without this function,
+// Next emits exactly one og:image per trader page.
 
 // Match the in-app MODEL_TINT lookup so shared images feel cohesive with
 // the page body. Falls back to volt (house brand) on unknown models.

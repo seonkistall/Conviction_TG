@@ -17,14 +17,9 @@ export const alt = 'Conviction Narrative Index';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-export function generateImageMetadata() {
-  return NARRATIVE_INDICES.map((n) => ({
-    id: n.slug,
-    alt: `${n.title} — Conviction Narrative Index`,
-    size,
-    contentType,
-  }));
-}
+// v2.27-2: Removed `generateImageMetadata`. See markets variant for
+// the explanation. Each narrative now gets exactly one og:image
+// rather than the entire narrative catalog appearing on every page.
 
 function truncate(s: string, max: number): string {
   return s.length > max ? s.slice(0, max - 1) + '…' : s;
