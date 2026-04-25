@@ -372,7 +372,24 @@ export default function PortfolioPage() {
                         </Link>
                       )}
                       <div className="mt-2 flex items-center justify-between text-[11px] text-bone-muted">
-                        <span>{new Date(a.at).toLocaleString()}</span>
+                        {/*
+                          v2.27-6: Drop toLocaleString() — server (en-US
+                          + UTC) and client (user locale + tz) computed
+                          different strings, triggering React #425
+                          hydration warning on every /portfolio visit.
+                          Hardcoded en-US + UTC matches the same fix
+                          applied on market detail timeline (v2.27-1).
+                        */}
+                        <span suppressHydrationWarning>
+                          {new Intl.DateTimeFormat('en-US', {
+                            month: 'short',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            timeZone: 'UTC',
+                          }).format(new Date(a.at))}{' '}
+                          UTC
+                        </span>
                         {a.amount && (
                           <span className="font-mono text-bone">
                             ${a.amount.toFixed(2)}
