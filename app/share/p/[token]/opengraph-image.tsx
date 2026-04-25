@@ -1,10 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { getMarket } from '@/lib/markets';
-import {
-  decodeSharePayload,
-  pnlFromPayload,
-  tokenFingerprint,
-} from '@/lib/shareToken';
+import { decodeSharePayload, pnlFromPayload } from '@/lib/shareToken';
 
 /**
  * v2.28-2 — Dynamic 1200×630 OG card for /share/p/[token].
@@ -84,29 +80,6 @@ export default async function Image({
   const handle = payload.h ? `@${payload.h}` : '@trader';
   const title = m ? truncate(m.title, 88) : 'A market on Conviction';
   const sideLabel = payload.s.toUpperCase();
-  // v2.29-2: receipt fingerprint. Sized 8 hex chars — long enough to
-  // read as "real hash", short enough to fit beside the SHARED RECEIPT
-  // label without crowding the brand strip.
-  const fingerprint = tokenFingerprint(params.token);
-  /*
-   * v2.29-3 — Endorsement / "tip" mode.
-   *
-   * `kind === 'tip'` means the sharer is broadcasting a stance on a
-   * market without holding a position. We branch the layout so the
-   * P&L hero is replaced with a "ENDORSES <SIDE> @ ¢XX" subline + a
-   * larger market title. The fingerprint + verified pill stay so
-   * /share/p/[token] reads consistently regardless of mode.
-   *
-   * `sh === 0` is treated equivalently for backwards compat — a tip
-   * link minted before the `k` field existed will still render as
-   * an endorsement instead of "you made $0".
-   */
-  const isTip = payload.k === 'tip' || payload.sh === 0;
-  // For tips we read AI confidence off the catalog so the card has
-  // SOMETHING to lead with beyond the bare cents. Falls back to 0
-  // gracefully if the market has been rotated.
-  const aiConf = m ? Math.round(m.aiConfidence * 100) : null;
-  const stanceCents = Math.round(payload.cp * 100);
 
   return new ImageResponse(
     (
@@ -186,183 +159,77 @@ export default async function Image({
               CONVICTION
             </div>
           </div>
-          {/*
-           * v2.29-2 — Receipt + fingerprint stack.
-           *
-           * Two-line cluster, right-aligned:
-           *   row 1: small "VERIFIED" tag in volt + 8-char fingerprint
-           *          in monospace. Reads as "this receipt is hashed".
-           *   row 2: the original SHARED RECEIPT pill, dimmer.
-           *
-           * The fingerprint changes deterministically with any change
-           * to the token, so a viewer comparing two screenshots can
-           * trivially detect tampering. Honest framing on the page;
-           * here we just need the visual cue.
-           */}
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-end',
-              gap: '6px',
+              alignItems: 'center',
+              padding: '10px 20px',
+              border: '1.5px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.05)',
+              borderRadius: '999px',
+              color: '#F2EFE4',
+              fontSize: 18,
+              letterSpacing: '3px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
             }}
           >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  fontSize: 14,
-                  letterSpacing: '3px',
-                  fontWeight: 700,
-                  color: '#C6FF3D',
-                }}
-              >
-                VERIFIED
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  fontFamily: 'monospace',
-                  fontSize: 18,
-                  fontWeight: 600,
-                  color: 'rgba(242,239,228,0.85)',
-                  background: 'rgba(198,255,61,0.08)',
-                  padding: '3px 10px',
-                  borderRadius: '6px',
-                  letterSpacing: '1px',
-                }}
-              >
-                {fingerprint}
-              </div>
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                padding: '6px 14px',
-                border: '1.5px solid rgba(255,255,255,0.12)',
-                background: 'rgba(255,255,255,0.04)',
-                borderRadius: '999px',
-                color: 'rgba(242,239,228,0.65)',
-                fontSize: 13,
-                letterSpacing: '3px',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-              }}
-            >
-              Shared receipt
-            </div>
+            Shared receipt
           </div>
         </div>
 
-        {/* v2.29-3: branch on tip vs position. Tip cards lead with the
-            stance line ("@handle endorses YES @ ¢62") and put the
-            market title in the hero slot, so a follower reading at
-            thumbnail size sees the market name first. Position cards
-            keep the P&L hero. */}
-        {isTip ? (
-          <>
-            <div
-              style={{
-                display: 'flex',
-                marginTop: '64px',
-                fontSize: 26,
-                fontWeight: 600,
-                color: 'rgba(242,239,228,0.65)',
-                letterSpacing: '2px',
-              }}
-            >
-              {handle} · ENDORSES
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                marginTop: '6px',
-                gap: '24px',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  fontSize: 116,
-                  fontWeight: 800,
-                  lineHeight: 1,
-                  color: payload.s === 'YES' ? winColor : '#F2EFE4',
-                  letterSpacing: '-1px',
-                }}
-              >
-                {sideLabel}
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  fontSize: 60,
-                  fontWeight: 700,
-                  color: 'rgba(242,239,228,0.85)',
-                  fontFamily: 'monospace',
-                }}
-              >
-                {`@ ¢${stanceCents}`}
-              </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div
-              style={{
-                display: 'flex',
-                marginTop: '64px',
-                fontSize: 28,
-                fontWeight: 600,
-                color: 'rgba(242,239,228,0.7)',
-                letterSpacing: '2px',
-              }}
-            >
-              {handle} · {sideLabel} · {payload.sh.toLocaleString()} shares
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                marginTop: '8px',
-                gap: '24px',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  fontSize: 168,
-                  fontWeight: 800,
-                  lineHeight: 1,
-                  color: pnlColor,
-                  letterSpacing: '-2px',
-                  fontFamily: 'monospace',
-                }}
-              >
-                {`${sign}$${Math.abs(pnlUsd).toFixed(2)}`}
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  fontSize: 44,
-                  fontWeight: 700,
-                  color: pnlColor,
-                  fontFamily: 'monospace',
-                  opacity: 0.85,
-                }}
-              >
-                {`${sign}${Math.abs(pnlPct).toFixed(1)}%`}
-              </div>
-            </div>
-          </>
-        )}
+        {/* Handle + side strip */}
+        <div
+          style={{
+            display: 'flex',
+            marginTop: '64px',
+            fontSize: 28,
+            fontWeight: 600,
+            color: 'rgba(242,239,228,0.7)',
+            letterSpacing: '2px',
+          }}
+        >
+          {handle} · {sideLabel} · {payload.sh.toLocaleString()} shares
+        </div>
+
+        {/* P&L hero — the brag. Sized larger than any market OG number
+            so the share-card has its own visual identity. */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            marginTop: '8px',
+            gap: '24px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 168,
+              fontWeight: 800,
+              lineHeight: 1,
+              color: pnlColor,
+              letterSpacing: '-2px',
+              fontFamily: 'monospace',
+            }}
+          >
+            {`${sign}$${Math.abs(pnlUsd).toFixed(2)}`}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 44,
+              fontWeight: 700,
+              color: pnlColor,
+              fontFamily: 'monospace',
+              opacity: 0.85,
+            }}
+          >
+            {/* abs() because `sign` already carries the +/- — pnlPct is
+                signed and would compose to '--40.8%' otherwise. */}
+            {`${sign}${Math.abs(pnlPct).toFixed(1)}%`}
+          </div>
+        </div>
 
         <div style={{ display: 'flex', flex: 1 }} />
 
@@ -411,76 +278,39 @@ export default async function Image({
               {title}
             </div>
           </div>
-          {/* v2.29-3: tip cards swap "Entry → Mark" for "AI Confidence"
-              since there's no entry to reference. Position cards keep
-              the entry/mark strip — that's the brag. */}
-          {isTip ? (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              gap: '4px',
+            }}
+          >
             <div
               style={{
                 display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-end',
-                gap: '4px',
+                fontSize: 14,
+                letterSpacing: '3px',
+                color: 'rgba(242,239,228,0.45)',
+                textTransform: 'uppercase',
               }}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  fontSize: 14,
-                  letterSpacing: '3px',
-                  color: 'rgba(242,239,228,0.45)',
-                  textTransform: 'uppercase',
-                }}
-              >
-                AI Confidence
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  fontFamily: 'monospace',
-                  fontSize: 36,
-                  fontWeight: 700,
-                  color: '#F2EFE4',
-                }}
-              >
-                {aiConf !== null ? `${aiConf}%` : '—'}
-              </div>
+              Entry → Mark
             </div>
-          ) : (
             <div
               style={{
                 display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-end',
-                gap: '4px',
+                fontFamily: 'monospace',
+                fontSize: 36,
+                fontWeight: 700,
+                color: '#F2EFE4',
               }}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  fontSize: 14,
-                  letterSpacing: '3px',
-                  color: 'rgba(242,239,228,0.45)',
-                  textTransform: 'uppercase',
-                }}
-              >
-                Entry → Mark
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  fontFamily: 'monospace',
-                  fontSize: 36,
-                  fontWeight: 700,
-                  color: '#F2EFE4',
-                }}
-              >
-                {`¢${Math.round(payload.ap * 100)} → ¢${Math.round(
-                  payload.cp * 100
-                )}`}
-              </div>
+              {`¢${Math.round(payload.ap * 100)} → ¢${Math.round(
+                payload.cp * 100
+              )}`}
             </div>
-          )}
+          </div>
         </div>
       </div>
     ),

@@ -17,7 +17,6 @@ import {
   NotifyMeButton,
   PriceChartWithRange,
 } from '@/components/MarketHeroActions';
-import { EndorseShareButton } from '@/components/EndorseShareButton';
 
 const SITE_URL = 'https://conviction-fe.vercel.app';
 
@@ -232,30 +231,8 @@ export default function MarketDetailPage({
                 more than a share impression, and placing it on the
                 left puts it in the reading-order primary slot.
               */}
-              {/*
-               * v2.29-3 — Endorse button alongside Notify + Share.
-               *
-               * Notify  : "I want to know when this resolves"     (intent)
-               * Share   : "Here's a link to this market"          (topic)
-               * Endorse : "Here's my stance on this market"       (stance)
-               *
-               * The endorsement variant is the highest-leverage of
-               * the three on social — quote-tweets out-engage flat
-               * shares 3-4x because the sharer's own conviction is
-               * attached. Defaults the side to whatever AI implies
-               * (m.aiConfidence > 0.5 = YES, else NO) so the button
-               * works in one tap when the user agrees with the AI.
-               */}
               <div className="flex items-center gap-2">
                 <NotifyMeButton title={m.title} slug={m.slug} />
-                {m.kind === 'binary' ? (
-                  <EndorseShareButton
-                    marketId={m.id}
-                    marketSlug={m.slug}
-                    yesProb={m.yesProb}
-                    aiSide={m.aiConfidence >= 0.5 ? 'YES' : 'NO'}
-                  />
-                ) : null}
                 <MarketHeroShare title={m.title} slug={m.slug} />
               </div>
             </div>
