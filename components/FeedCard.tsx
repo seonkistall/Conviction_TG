@@ -4,8 +4,8 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Market } from '@/lib/types';
+import { AIEdgeBar } from './AIEdgeBar';
 import { AutoVideo } from './AutoVideo';
-import { EdgeBadge } from './EdgeBadge';
 import { OutcomeBar } from './OutcomeBar';
 import { ResolvedBanner } from './ResolvedBanner';
 import { FeedDetailSheet } from './FeedDetailSheet';
@@ -234,7 +234,14 @@ export function FeedCard({ market }: Props) {
                 <span className="live-dot" />
                 {timeUntil(market.endsAt)}
               </span>
-              {market.edgePP && market.edgePP >= 5 && <EdgeBadge pp={market.edgePP} />}
+              {/*
+               * v2.26.2: top-bar EdgeBadge removed to clear visual
+               * space for the LiveActivityTicker (which sits just
+               * below this row) and because the AIEdgeBar at the
+               * bottom is now the canonical edge surface. Top bar
+               * keeps category + countdown only — minimal metadata,
+               * non-competing with the ticker chips.
+               */}
             </>
           )}
         </div>
@@ -353,17 +360,12 @@ export function FeedCard({ market }: Props) {
               @{feedProposerHandle(market.id)}
             </Link>
           </span>
-          <span aria-hidden="true" className="text-bone-muted/60">
-            ·
-          </span>
-          <Link
-            href={`/markets/${market.slug}?evidence=open`}
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 rounded-full border border-conviction/30 bg-conviction/10 px-1.5 py-0.5 font-mono text-[10px] text-conviction hover:bg-conviction/20"
-          >
-            <span aria-hidden="true" className="h-1 w-1 rounded-full bg-conviction" />
-            23-src AI · {Math.round(market.aiConfidence * 100)}%
-          </Link>
+          {/*
+           * v2.26.2: The compact "23-src AI · 78%" chip that used to
+           * live here was promoted to the prominent AIEdgeBar below
+           * the title. Removing the chip avoids saying the same thing
+           * twice in the same vertical inch.
+           */}
         </div>
 
         <Link
@@ -372,6 +374,31 @@ export function FeedCard({ market }: Props) {
         >
           {market.title}
         </Link>
+
+        {/*
+         * v2.26.2 — AI Edge meter.
+         *
+         * Placed directly between the title (the question) and the
+         * YES/NO action row. Reading order becomes:
+         *   1. Proposer + tags  (who is asking)
+         *   2. Title            (what is being asked)
+         *   3. AI Edge bar      (how much edge AI sees vs the market)
+         *   4. YES / NO         (act)
+         * VC scanning this card top-to-bottom in 30s reads the AI
+         * moat as the bridge between the question and the action —
+         * exactly where the differentiator belongs in the funnel.
+         *
+         * Hidden on resolved markets — the gap is academic once the
+         * market has settled.
+         */}
+        {!isResolved ? (
+          <div className="mt-3" onClick={(e) => e.stopPropagation()}>
+            <AIEdgeBar
+              aiConfidence={market.aiConfidence}
+              yesProb={displayYes}
+            />
+          </div>
+        ) : null}
 
         {/* YES/NO quick-bet for binary, outcome bar for multi, or settled banner */}
         {isResolved ? (
