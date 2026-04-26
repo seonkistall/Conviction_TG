@@ -734,17 +734,30 @@ function FeedShareButton({
  * markets can legitimately share a proposer (and the leaderboard will
  * eventually want to roll those up).
  */
+/*
+ * v2.26.4 — Proposer pool audit fix.
+ *
+ * Pre-fix the pool contained 5 handles that did not exist in either
+ * AI_TRADERS or TRADERS (`culturebae_`, `lck.sharp`, `seoulquant`,
+ * `tokyo.macro`, `shanghai.bull`). Since the proposer chip links to
+ * `/traders/[handle]` and that route only static-resolves AI_TRADERS
+ * entries, ~50% of "Proposed by @..." link clicks landed on the 404
+ * page — a Tier-1 VC clicking through a single feed card had a coin-
+ * flip chance of hitting "This market doesn't exist". Replaced the
+ * bogus entries with the 8 catalog-verified AI trader handles from
+ * lib/markets.ts. Duplication across markets is fine (the original
+ * comment already noted "multiple markets can legitimately share a
+ * proposer").
+ */
 const PROPOSER_POOL = [
   'ai.oracle.kr',
   'allora.lck',
   'qwen.drama',
   'sonnet.macro',
+  'ai.vibe.jp',
+  'lpl.scout',
   'anime.signal.jp',
-  'culturebae_',
-  'lck.sharp',
-  'seoulquant',
-  'tokyo.macro',
-  'shanghai.bull',
+  'npb.analytics',
 ];
 
 function feedProposerHandle(seed: string): string {
