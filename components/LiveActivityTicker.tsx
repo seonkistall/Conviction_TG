@@ -45,7 +45,12 @@ import {
  */
 
 const ROTATE_MS = 1500;     // 1.5s, within user-requested 1-2s range
-const VISIBLE_COUNT = 5;
+// v2.26.3: dropped from 5 to 1 chip per user UX feedback — the 5-chip
+// stack covered too much of the video. With 1 chip the ticker reads as
+// "live ticker" without competing with the immersive content. Each
+// rotation slides a new chip in (replacing the prior one) so the
+// "live trading" signal still pulses every 1.5s.
+const VISIBLE_COUNT = 1;
 
 export function LiveActivityTicker() {
   // SSR-stable initial rotation. Client effect bumps it on a timer.
@@ -76,33 +81,33 @@ export function LiveActivityTicker() {
       role="region"
       aria-label="Live trader activity"
       aria-live="polite"
-      className="pointer-events-none absolute inset-x-0 top-[calc(max(env(safe-area-inset-top,0px),0.5rem)+3.25rem)] z-30 flex flex-col items-center gap-1.5 px-3"
+      className="pointer-events-none absolute inset-x-0 top-[calc(max(env(safe-area-inset-top,0px),0.5rem)+3.25rem)] z-30 flex flex-col items-center gap-1 px-3"
     >
-      {items.map((it, idx) => (
-        <ActivityPill key={it.id} item={it} highlighted={idx === 0} />
-      ))}
-
       {/*
-       * Honesty surface — small ℹ icon. Sits below the bottom chip,
-       * compact enough that casual readers ignore it but visible
-       * enough to be a documented disclosure for due diligence.
-       * Tap toggles the tooltip; tap-elsewhere dismisses (we use
-       * pointer-events:auto on the icon only).
+       * v2.26.3: single-row layout. Chip + ℹ icon side-by-side via
+       * a flex row instead of stacked. Cuts the ticker's vertical
+       * footprint roughly in half (was ~210px with 5 chips, now ~32px
+       * with 1 chip), freeing the top of the immersive video card.
        */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setTooltipOpen((v) => !v);
-        }}
-        onBlur={() => window.setTimeout(() => setTooltipOpen(false), 150)}
-        aria-label="About this activity stream"
-        aria-expanded={tooltipOpen}
-        className="pointer-events-auto mt-0.5 flex h-4 w-4 items-center justify-center rounded-full border border-white/15 bg-ink-900/60 text-[9px] font-semibold text-bone-muted/70 backdrop-blur transition hover:text-bone"
-      >
-        ℹ
-      </button>
+      <div className="flex w-full max-w-[420px] items-center justify-center gap-1">
+        {items.map((it, idx) => (
+          <ActivityPill key={it.id} item={it} highlighted={idx === 0} />
+        ))}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setTooltipOpen((v) => !v);
+          }}
+          onBlur={() => window.setTimeout(() => setTooltipOpen(false), 150)}
+          aria-label="About this activity stream"
+          aria-expanded={tooltipOpen}
+          className="pointer-events-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-white/15 bg-ink-900/80 text-[10px] font-semibold text-bone-muted/70 backdrop-blur transition hover:text-bone"
+        >
+          ℹ
+        </button>
+      </div>
 
       {tooltipOpen && (
         <div

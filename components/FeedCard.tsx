@@ -220,8 +220,22 @@ export function FeedCard({ market }: Props) {
         aria-hidden="true"
       />
 
-      {/* Top bar — category + live */}
-      <div className="absolute inset-x-0 top-0 z-10 flex items-center justify-between p-4 pt-[env(safe-area-inset-top,1rem)]">
+      {/*
+       * Top bar — category + live.
+       *
+       * v2.26.3 — Pushed down by ~3rem (was top-0) to clear the
+       * FeedClient back-chip + counter row that lives at top:0 z-20.
+       * Pre-fix the back chip ("← Markets") at z-20 was drawing on
+       * top of the FeedCard category chip ("MUSIC") at z-10; same
+       * x-axis (left:16px), back chip at y=16-50, category chip at
+       * y=4-29 — clear visual collision. Bumping the FeedCard chips
+       * down by 3rem clears them below the back-chip row entirely.
+       *
+       * Also clears the LiveActivityTicker (1 chip + ℹ) which sits
+       * at top:~3.25rem and is ~32px tall. Combined back-chip + ticker
+       * area is ~6.5rem from the top; we land here just below that.
+       */}
+      <div className="absolute inset-x-0 top-[calc(max(env(safe-area-inset-top,0px),0.5rem)+6.25rem)] z-10 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-ink-900/70 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-bone backdrop-blur">
             {market.category}
