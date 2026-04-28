@@ -261,7 +261,7 @@ export default function MethodologyPage() {
 
       {/* Hero */}
       <section className="border-b border-white/5">
-        <div className="mx-auto w-full max-w-[1200px] px-6 pt-16 pb-14 md:pt-20">
+        <div className="mx-auto w-full max-w-[1440px] px-6 pt-8 pb-14">
           <div className="inline-flex items-center gap-2 rounded-full border border-conviction/30 bg-conviction/10 px-3 py-1 text-[11px] font-medium uppercase tracking-widest text-conviction">
             Methodology · v2.6
           </div>
@@ -305,7 +305,7 @@ export default function MethodologyPage() {
        * Narrative "Why this basket" (v2.19-7) so the 3 trust surfaces
        * read as one family.
        */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 pt-4">
+      <section className="mx-auto w-full max-w-[1440px] px-6 pt-4">
         <div className="rounded-3xl border border-conviction/30 bg-gradient-to-br from-conviction/10 via-ink-800 to-ink-800 p-6 md:p-8">
           <div className="text-[11px] font-semibold uppercase tracking-widest text-conviction">
             Why this pipeline
@@ -338,7 +338,7 @@ export default function MethodologyPage() {
       </section>
 
       {/* Pipeline */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 pt-16">
+      <section className="mx-auto w-full max-w-[1440px] px-6 pt-16">
         <SectionHeading
           eyebrow="Pipeline"
           title="Every question runs the same 6 steps"
@@ -368,7 +368,7 @@ export default function MethodologyPage() {
       </section>
 
       {/* Scrapers */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 pt-16">
+      <section className="mx-auto w-full max-w-[1440px] px-6 pt-16">
         <SectionHeading
           eyebrow="Evidence swarm"
           title="The 23-source scraper pool"
@@ -437,7 +437,7 @@ export default function MethodologyPage() {
       </section>
 
       {/* Model cards */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 pt-16">
+      <section className="mx-auto w-full max-w-[1440px] px-6 pt-16">
         <SectionHeading
           eyebrow="Models in the loop"
           title="Four models, each with a specific job"
@@ -482,7 +482,7 @@ export default function MethodologyPage() {
       </section>
 
       {/* Calibration */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 pt-16">
+      <section className="mx-auto w-full max-w-[1440px] px-6 pt-16">
         <SectionHeading
           eyebrow="Calibration"
           title="Does the oracle mean what it says?"
@@ -531,7 +531,7 @@ export default function MethodologyPage() {
       </section>
 
       {/* Agentic traders */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 pt-16">
+      <section className="mx-auto w-full max-w-[1440px] px-6 pt-16">
         <SectionHeading
           eyebrow="Agentic traders"
           title="The oracle is also a trader"
@@ -568,7 +568,7 @@ export default function MethodologyPage() {
       </section>
 
       {/* Audit trail / evidence */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 pt-16">
+      <section className="mx-auto w-full max-w-[1440px] px-6 pt-16">
         <SectionHeading
           eyebrow="Audit trail"
           title="Every price comes with a receipt"
@@ -591,7 +591,7 @@ export default function MethodologyPage() {
       </section>
 
       {/* Disclaimers */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 pt-16">
+      <section className="mx-auto w-full max-w-[1440px] px-6 pt-16">
         <div className="rounded-2xl border border-white/5 bg-ink-800/50 p-6 md:p-8">
           <h2 className="font-display text-2xl text-bone">What the oracle is not</h2>
           <ul className="mt-4 space-y-3 text-sm text-bone-muted">
@@ -621,7 +621,7 @@ export default function MethodologyPage() {
       </section>
 
       {/* CTA */}
-      <section className="mx-auto w-full max-w-[1200px] px-6 pt-14">
+      <section className="mx-auto w-full max-w-[1440px] px-6 pt-14">
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/"

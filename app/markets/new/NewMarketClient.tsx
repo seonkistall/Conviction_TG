@@ -95,7 +95,7 @@ export function NewMarketClient() {
   }, [phase]);
 
   return (
-    <div className="mx-auto max-w-[1200px] px-6 pt-10 pb-16">
+    <div className="mx-auto max-w-[1440px] px-6 pt-8 pb-16">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-conviction/30 bg-conviction/10 px-3 py-1 text-[11px] font-medium uppercase tracking-widest text-conviction">
