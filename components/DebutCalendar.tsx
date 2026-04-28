@@ -109,8 +109,8 @@ export function DebutCalendar() {
          * after a flick. Without it, snap-start aligns each card
          * flush to the viewport edge and already-seen cards vanish.
          */}
-        <div className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 scroll-pl-[80px]">
-          <div className='relative shrink-0 snap-start overflow-hidden w-min-[calc((100dvw-1440px)/2)] w-[calc((100dvw-1440px)/2)] height-10 block ' />
+        <div className="no-scrollbar flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 scroll-pl-[80px]">
+          <div className='relative shrink-0 snap-start overflow-hidden w-min-[calc((100dvw-1440px)/2)] w-[calc((100dvw-1440px)/2)] height-10 block' />
           {DEBUT_EVENTS.map((d) => {
             const { day, month } = fmtDate(d.dropsAt);
             const n = daysUntil(d.dropsAt);
