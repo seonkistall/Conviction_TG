@@ -218,88 +218,111 @@ export default function LeaderboardPage({
       </div>
 
       {/* Full table */}
-      <div className="mt-10 overflow-hidden rounded-2xl border border-white/10 bg-ink-800">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-ink-900 text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
-            <tr>
-              <Th className="w-12">Rank</Th>
-              <Th>Trader</Th>
-              <Th>Region</Th>
-              <Th>Kind / badge</Th>
-              <Th className="text-right">P&L 30d</Th>
-              <Th className="text-right">Winrate</Th>
-              {/* v2.20-6: column heading adapts — when filtering to AI
-                  only, we show AUM; human only, Volume; mixed, a
-                  combined "Volume / AUM" header with per-row formatting. */}
-              <Th className="text-right">
-                {filter === 'ai' ? 'AUM' : filter === 'human' ? 'Volume' : 'Volume / AUM'}
-              </Th>
-              <Th className="text-right">
-                {filter === 'ai' ? 'Followers' : filter === 'human' ? 'Streak' : 'Streak / Fol.'}
-              </Th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/5">
-            {top.map((t, i) => (
-              <tr
-                key={t.id}
-                className={clsx(
-                  'hover:bg-ink-700/50',
-                  t.isAi && 'bg-conviction/[0.04]'
-                )}
-              >
-                <td className="p-4 font-mono text-bone-muted">#{i + 1}</td>
-                <td className="p-4">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-900 text-xl">
-                      {t.avatar}
-                    </span>
-                    {t.isAi ? (
-                      <Link
-                        href={`/traders/${t.handle}`}
-                        className="font-medium text-bone hover:text-conviction"
-                      >
-                        🤖 @{t.handle}
-                      </Link>
-                    ) : (
-                      <span className="font-medium text-bone">@{t.handle}</span>
-                    )}
-                  </div>
-                </td>
-                <td className="p-4 text-bone-muted">
-                  {REGION_LABEL[t.region]}
-                </td>
-                <td className="p-4">
-                  {t.isAi ? (
-                    <span className="rounded-full border border-conviction/40 bg-conviction/10 px-2 py-1 text-[11px] text-conviction">
-                      🤖 {t.model}
-                    </span>
-                  ) : t.badge ? (
-                    <span className="rounded-full border border-white/10 bg-ink-900 px-2 py-1 text-[11px] text-bone">
-                      {BADGE_LABEL[t.badge]}
-                    </span>
-                  ) : (
-                    <span className="text-bone-muted">—</span>
-                  )}
-                </td>
-                <td className="p-4 text-right font-mono text-volt tabular-nums">
-                  +{formatUSD(t.pnl30d)}
-                </td>
-                <td className="p-4 text-right font-mono tabular-nums text-bone">
-                  {pct(t.winRate)}
-                </td>
-                <td className="p-4 text-right font-mono tabular-nums text-bone-muted">
-                  {t.isAi ? formatUSD(t.aum ?? 0) : formatUSD(t.volume30d ?? 0)}
-                </td>
-                <td className="p-4 text-right font-mono tabular-nums text-bone">
-                  {t.isAi
-                    ? `${(t.followers ?? 0).toLocaleString()}`
-                    : `${t.streak ?? 0}W / ${(t.streak ?? 0) * 7}D`}
-                </td>
+      <div className="relative mt-10 overflow-hidden rounded-2xl border border-white/10 bg-ink-800">
+        <div className="overflow-x-auto md:overflow-visible">
+          <table className="w-full min-w-[760px] text-left text-sm md:min-w-0">
+            <thead className="bg-ink-900 text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
+              <tr>
+                <Th className="sticky left-0 z-30 w-[72px] min-w-[72px] bg-ink-900 md:static md:w-12 md:min-w-0 md:z-auto md:bg-transparent">
+                  Rank
+                </Th>
+                <Th className="sticky left-[72px] z-30 bg-ink-900 md:static md:left-auto md:z-auto md:bg-transparent">
+                  Trader
+                </Th>
+                <Th>Region</Th>
+                <Th>Kind / badge</Th>
+                <Th className="text-right">P&L 30d</Th>
+                <Th className="text-right">Winrate</Th>
+                {/* v2.20-6: column heading adapts — when filtering to AI
+                    only, we show AUM; human only, Volume; mixed, a
+                    combined "Volume / AUM" header with per-row formatting. */}
+                <Th className="text-right">
+                  {filter === 'ai' ? 'AUM' : filter === 'human' ? 'Volume' : 'Volume / AUM'}
+                </Th>
+                <Th className="text-right">
+                  {filter === 'ai' ? 'Followers' : filter === 'human' ? 'Streak' : 'Streak / Fol.'}
+                </Th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {top.map((t, i) => (
+                <tr
+                  key={t.id}
+                  className={clsx(
+                    'hover:bg-ink-700/50',
+                    t.isAi && 'bg-conviction/[0.04]'
+                  )}
+                >
+                  <td
+                    className={clsx(
+                      'sticky left-0 z-10 w-[72px] min-w-[72px] p-2 md:p-4 font-mono text-bone-muted md:static md:w-auto md:min-w-0 md:z-auto',
+                      t.isAi
+                        ? 'bg-ink-800 [background:linear-gradient(rgba(124,92,255,0.04),rgba(124,92,255,0.04)),#0B0D14] md:bg-transparent md:bg-none'
+                        : 'bg-ink-800 md:bg-transparent'
+                    )}
+                  >
+                    #{i + 1}
+                  </td>
+                  <td
+                    className={clsx(
+                      'sticky left-[72px] z-10 p-2 md:p-4 md:static md:left-auto md:z-auto',
+                      t.isAi
+                        ? 'bg-ink-800 [background:linear-gradient(rgba(124,92,255,0.04),rgba(124,92,255,0.04)),#0B0D14] md:bg-transparent md:bg-none'
+                        : 'bg-ink-800 md:bg-transparent'
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-900 text-xl">
+                        {t.avatar}
+                      </span>
+                      {t.isAi ? (
+                        <Link
+                          href={`/traders/${t.handle}`}
+                          className="font-medium text-bone hover:text-conviction"
+                        >
+                          🤖 @{t.handle}
+                        </Link>
+                      ) : (
+                        <span className="font-medium text-bone">@{t.handle}</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="p-2 md:p-4 text-bone-muted">
+                    {REGION_LABEL[t.region]}
+                  </td>
+                  <td className="p-2 md:p-4">
+                    {t.isAi ? (
+                      <span className="rounded-full border border-conviction/40 bg-conviction/10 px-2 py-1 text-[11px] text-conviction">
+                        🤖 {t.model}
+                      </span>
+                    ) : t.badge ? (
+                      <span className="rounded-full border border-white/10 bg-ink-900 px-2 py-1 text-[11px] text-bone">
+                        {BADGE_LABEL[t.badge]}
+                      </span>
+                    ) : (
+                      <span className="text-bone-muted">—</span>
+                    )}
+                  </td>
+                  <td className="p-2 md:p-4 text-right font-mono text-volt tabular-nums">
+                    +{formatUSD(t.pnl30d)}
+                  </td>
+                  <td className="p-2 md:p-4 text-right font-mono tabular-nums text-bone">
+                    {pct(t.winRate)}
+                  </td>
+                  <td className="p-2 md:p-4 text-right font-mono tabular-nums text-bone-muted">
+                    {t.isAi ? formatUSD(t.aum ?? 0) : formatUSD(t.volume30d ?? 0)}
+                  </td>
+                  <td className="p-2 md:p-4 text-right font-mono tabular-nums text-bone">
+                    {t.isAi
+                      ? `${(t.followers ?? 0).toLocaleString()}`
+                      : `${t.streak ?? 0}W / ${(t.streak ?? 0) * 7}D`}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-20 w-8 bg-gradient-to-l from-ink-800 to-transparent md:hidden" />
       </div>
 
       {/* Hot markets */}
@@ -342,7 +365,7 @@ function Th({
   children?: React.ReactNode;
   className?: string;
 }) {
-  return <th className={`p-4 font-semibold ${className}`}>{children}</th>;
+  return <th className={`p-2 md:p-4 font-semibold ${className}`}>{children}</th>;
 }
 
 function Mini({ k, v, accent }: { k: string; v: string; accent?: string }) {
