@@ -436,7 +436,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '2kdYSeoHChg',
-      poster: 'https://i.ytimg.com/vi/2kdYSeoHChg/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/2kdYSeoHChg/hqdefault.jpg',
       start: 40,
     },
     tags: ['C-Pop', 'Jay Chou', 'JVR', 'China'],
@@ -584,7 +584,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '2wf-lzoWPwY',
-      poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/hqdefault.jpg',
       start: 2,
     },
     tags: ['PBOC', 'USD/CNY', 'Macro', 'China'],
@@ -669,7 +669,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: 'Af7sactG2Eo',
-      poster: 'https://i.ytimg.com/vi/Af7sactG2Eo/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/Af7sactG2Eo/hqdefault.jpg',
       start: 10,
     },
     tags: ['NPB', 'Baseball', 'Hanshin', 'Japan'],
@@ -1028,7 +1028,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '2wf-lzoWPwY',
-      poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/hqdefault.jpg',
     },
     tags: ['BOJ', 'Japan', 'Macro', 'Rates'],
     status: 'live',
@@ -1149,7 +1149,7 @@ export const MARKETS: Market[] = [
     media: {
       kind: 'youtube',
       src: '2wf-lzoWPwY',
-      poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/maxresdefault.jpg',
+      poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/hqdefault.jpg',
       start: 4,
     },
     tags: ['Crypto', 'Upbit', 'Korea', 'Binance'],
@@ -1598,7 +1598,7 @@ export const DEBUT_EVENTS: DebutEvent[] = [
     region: 'CN',
     dropsAt: '2026-08-22T12:00:00Z',
     heat: 0.62,
-    poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/maxresdefault.jpg',
+    poster: 'https://i.ytimg.com/vi/2wf-lzoWPwY/hqdefault.jpg',
   },
 
   // Pair 4 → Spawn
