@@ -329,7 +329,7 @@ export function FeedCard({ market }: Props) {
       </div>
 
       {/* Bottom content */}
-      <div className="absolute inset-x-0 bottom-0 z-10 p-5 pb-[calc(env(safe-area-inset-bottom,0)+1rem)] pr-20 md:pr-24">
+      <div className="absolute inset-x-0 bottom-0 z-10 p-5 pb-[calc(env(safe-area-inset-bottom,0px)_+_1rem)] pr-20 md:pr-24 md:translate-y-0">
         <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-bone-muted">
           {market.tags.slice(0, 3).map((tg) => (
             <span

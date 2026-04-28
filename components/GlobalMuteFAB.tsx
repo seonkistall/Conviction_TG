@@ -59,7 +59,7 @@ export function GlobalMuteFAB() {
   return (
     <div
       className={clsx(
-        'fixed bottom-5 left-5 z-40 md:bottom-6 md:left-6',
+        'fixed md:right-auto z-40 md:bottom-6 md:left-6 bottom-16 right-3 left-auto',
         immersive && 'hidden'
       )}
     >
@@ -68,7 +68,7 @@ export function GlobalMuteFAB() {
           events-none so it never intercepts the FAB's tap. */}
       {hinting && muted && (
         <div
-          className="pointer-events-none absolute bottom-[calc(100%+8px)] left-0 w-max max-w-[220px] rounded-lg border border-volt/40 bg-ink-900/95 px-3 py-2 text-xs text-bone shadow-xl md:text-sm"
+          className="pointer-events-none absolute bottom-[calc(100%+8px)] left-0 w-max max-w-[220px] rounded-lg border border-volt/40 bg-ink-900/95 px-3 py-2 text-xs text-bone shadow-xl md:text-sm translate-x-[-70%] md:translate-x-0 flex flex-col md:flex-row"
           role="status"
           aria-live="polite"
         >
@@ -76,7 +76,7 @@ export function GlobalMuteFAB() {
           <span className="ml-1 text-bone-muted">— videos start muted</span>
           <span
             aria-hidden="true"
-            className="absolute left-6 top-full -mt-1 h-2 w-2 rotate-45 border-b border-r border-volt/40 bg-ink-900"
+            className="absolute right-6 md:right-auto left-auto md:left-6 top-full -mt-1 h-2 w-2 rotate-45 border-b border-r border-volt/40 bg-ink-900"
           />
         </div>
       )}

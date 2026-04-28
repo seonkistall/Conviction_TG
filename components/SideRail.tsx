@@ -150,10 +150,13 @@ export function SideRail() {
         })}
       </ul>
 
-      <div className="mt-auto flex w-full flex-col gap-2 pb-2">
+      <div className={["mt-auto flex w-full flex-col gap-2 pb-2", path.includes("/feed") ? "items-center" : "items-start"].join(" ")}>
         <button
           type="button"
-          className="rounded-md bg-volt px-2 py-2 text-[10px] font-bold uppercase tracking-widest text-ink-900 transition hover:bg-volt-dark"
+          className={
+            ["rounded-md bg-volt px-2 py-2 text-[10px] font-bold uppercase tracking-widest text-ink-900 transition hover:bg-volt-dark",
+            path.includes("/feed") ? "[writing-mode:vertical-rl] [text-orientation:upright] w-8" : "w-auto"].join(" ")
+          }
         >
           Connect
         </button>

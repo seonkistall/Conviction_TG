@@ -416,7 +416,7 @@ export function FeedClient({ markets }: Props) {
         type="button"
         onClick={() => setShowHelp((v) => !v)}
         aria-label="Keyboard shortcuts"
-        className="pointer-events-auto absolute bottom-4 right-4 z-20 hidden h-8 items-center gap-1 rounded-full border border-white/10 bg-ink-900/70 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-bone-muted backdrop-blur transition hover:text-bone md:flex"
+        className="pointer-events-auto absolute bottom-[-2rem] right-3 z-20 hidden h-8 items-center gap-1 rounded-full border border-white/10 bg-ink-900/70 px-2.5 text-[10px] font-semibold uppercase tracking-widest text-bone-muted backdrop-blur transition hover:text-bone md:flex"
       >
         <kbd className="rounded border border-white/10 px-1 text-[10px]">?</kbd>
         Shortcuts
