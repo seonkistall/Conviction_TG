@@ -209,10 +209,13 @@ export function AutoVideo({
             playing ? 'opacity-0' : 'opacity-100'
           }`}
           loading={priority ? 'eager' : 'lazy'}
-          // fetchPriority is still a relatively new attribute — React 18 lower-
-          // cases it from the JSX side, so we pass it through the DOM literal.
-          // @ts-expect-error: React 18 type defs predate fetchPriority.
-          fetchpriority={priority ? 'high' : undefined}
+          // v2.26.5: camelCase `fetchPriority` (React 18.3+ types it natively).
+          // The lowercase variant + @ts-expect-error predates 18.3 and emits an
+          // "Invalid DOM property" warning in dev plus a recoverable hydration
+          // error (#418/#422/#425) in production on the synthesized
+          // mobile-android-tall regression slot — the prod failure shape that
+          // surfaced in the v2.26.4 CI smoke run.
+          fetchPriority={priority ? 'high' : undefined}
           decoding={priority ? 'sync' : 'async'}
           onError={() =>
             setPosterState((s) => (s === 'max' ? 'hq' : 'fallback'))

@@ -49,11 +49,19 @@ jobs:
           VERSION=$(node -e "console.log(require('./node_modules/@playwright/test/package.json').version)")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+      # v2.26.5: Cache key includes the browser set ("chromium-webkit")
+      # so adding/removing browsers cleanly invalidates the cache. The
+      # previous key (`pw-<os>-<version>`) silently reused a stale
+      # chromium-only cache after v2.25 added webkit, causing every
+      # mobile-iphone-14-webkit test to fail with "Executable doesn't
+      # exist at .cache/ms-playwright/webkit-XXXX/pw_run.sh" because
+      # the cache-hit branch only ran `install-deps` (apt packages),
+      # not `install` (browser binaries).
       - uses: actions/cache@v4
         id: pw-cache
         with:
           path: ~/.cache/ms-playwright
-          key: pw-${{ runner.os }}-${{ steps.pw.outputs.version }}
+          key: pw-${{ runner.os }}-${{ steps.pw.outputs.version }}-chromium-webkit
 
       # v2.25: Also install webkit + its system libs so the WebKit
       # mobile project (mobile-iphone-14-webkit) can actually run on
