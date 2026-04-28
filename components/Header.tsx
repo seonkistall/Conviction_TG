@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import clsx from 'clsx';
 import { useT } from '@/lib/i18n';
-import { TimezoneCluster } from './TimezoneCluster';
 import { ConnectModal } from './ConnectModal';
 
 export function Header() {
@@ -134,7 +133,6 @@ export function Header() {
               ⌘K
             </kbd>
           </button>
-          <TimezoneCluster />
           <button className="hidden items-center gap-2 rounded-md border border-white/10 bg-ink-800 px-3 py-1.5 text-sm text-bone hover:bg-ink-700 sm:flex">
             <span className="live-dot" />
             {t('nav.live')}
