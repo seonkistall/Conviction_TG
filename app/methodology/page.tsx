@@ -3,6 +3,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { AI_TRADERS } from '@/lib/markets';
 import { JsonLd } from '@/components/JsonLd';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 
 const SITE_URL = 'https://conviction-fe.vercel.app';
 
@@ -279,17 +280,17 @@ export default function MethodologyPage() {
           </p>
 
           <dl className="mt-10 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <Stat label="Scrapers" value="23" />
+            <Stat label="Scrapers" value={<AnimatedNumber target={23} />} />
             <Stat
               label="Calibration samples"
-              value={totalSamples.toLocaleString()}
+              value={<AnimatedNumber target={totalSamples} />}
             />
             <Stat
               label="Brier score"
-              value={brier.toFixed(3)}
+              value={<AnimatedNumber target={brier} decimals={3} />}
               accent="text-volt"
             />
-            <Stat label="Models in loop" value="4" />
+            <Stat label="Models in loop" value={<AnimatedNumber target={4} />} />
           </dl>
         </div>
       </section>
@@ -507,7 +508,7 @@ export default function MethodologyPage() {
                 Brier score
               </div>
               <div className="mt-1 font-mono text-4xl font-bold tabular-nums text-bone">
-                {brier.toFixed(3)}
+                <AnimatedNumber target={brier} decimals={3} />
               </div>
               <p className="mt-2 text-xs text-bone-muted">
                 Lower is better. 0.25 is chance; {'<'} 0.15 is meaningfully
@@ -520,7 +521,7 @@ export default function MethodologyPage() {
                 Sample size
               </div>
               <div className="mt-1 font-mono text-3xl font-bold tabular-nums text-bone">
-                {totalSamples.toLocaleString()}
+                <AnimatedNumber target={totalSamples} />
               </div>
               <p className="mt-2 text-xs text-bone-muted">
                 Resolved markets since v2.0. Curve rebuilds nightly.
@@ -677,7 +678,7 @@ function Stat({
   accent,
 }: {
   label: string;
-  value: string;
+  value: React.ReactNode;
   accent?: string;
 }) {
   return (
