@@ -11,6 +11,12 @@
     "e2e:prod": "E2E_BASE_URL=https://conviction-fe.vercel.app playwright test"
   },
   "dependencies": {
+    "@fontsource-variable/noto-sans-jp": "5.2.10",
+    "@fontsource-variable/noto-sans-kr": "5.2.10",
+    "@fontsource-variable/noto-sans-sc": "5.2.10",
+    "@fontsource-variable/noto-serif-jp": "5.2.9",
+    "@fontsource-variable/noto-serif-kr": "5.2.10",
+    "@fontsource-variable/noto-serif-sc": "5.2.10",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "clsx": "^2.1.1",

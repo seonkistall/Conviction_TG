@@ -3,12 +3,6 @@ import {
   Inter,
   Instrument_Serif,
   JetBrains_Mono,
-  Noto_Sans_KR,
-  Noto_Sans_SC,
-  Noto_Sans_JP,
-  Noto_Serif_KR,
-  Noto_Serif_SC,
-  Noto_Serif_JP,
 } from 'next/font/google';
 import './globals.css';
 import { ChromeShell } from '@/components/ChromeShell';
@@ -25,17 +19,23 @@ import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 /**
- * Self-hosted font loading via next/font/google.
+ * Self-hosted font loading.
  *
- * Benefits over the previous <link> CDN approach:
- *  - Fonts served from our own origin → zero external DNS/TLS cost per visitor
- *  - Automatic subsetting (latin + CJK) → smaller payload than the raw CSS2 URL
- *  - Zero layout shift: next/font inlines the size-adjusted fallback metrics
- *  - No render-blocking <link>; Next injects the @font-face CSS at build time
- *  - `display: swap` keeps text visible during font load
+ * Latin fonts (Inter / Instrument Serif / JetBrains Mono) load via
+ * `next/font/google`, which subsets per-character-range, inlines size-adjusted
+ * fallback metrics for zero layout shift, and injects @font-face CSS at build
+ * time so there is no render-blocking <link>. Each font exposes a `.variable`
+ * class that sets a CSS custom property on the root element; globals.css
+ * composes the fallback stack from those vars.
  *
- * Each font exposes a `.variable` class that sets a CSS custom property on the
- * root element. globals.css then composes the fallback stack using those vars.
+ * CJK fonts (Noto Sans / Serif KR · SC · JP) load via `@fontsource-variable/*`
+ * imported from app/globals.css. They were on `next/font/google` until the
+ * Google Fonts loader's per-build fan-out (4 fonts × 4 weights × ~120
+ * unicode-range subsets ≈ 2,000 parallel woff2 fetches against
+ * fonts.gstatic.com) started reliably ETIMEDOUT-ing local builds. fontsource
+ * ships the same variable woff2 from npm so build-time outbound fetches drop
+ * to zero; the matching `--font-noto-*` CSS variables are defined in
+ * globals.css to keep the existing fallback stack composition intact.
  */
 
 const inter = Inter({
@@ -60,62 +60,10 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-// Korean — use `preload: false` for CJK because each subset is large and we
-// want the browser to only fetch them when a Korean glyph is actually painted.
-const notoSansKR = Noto_Sans_KR({
-  weight: ['400', '500', '700', '900'],
-  variable: '--font-noto-sans-kr',
-  display: 'swap',
-  preload: false,
-});
-
-// Simplified Chinese
-const notoSansSC = Noto_Sans_SC({
-  weight: ['400', '500', '700', '900'],
-  variable: '--font-noto-sans-sc',
-  display: 'swap',
-  preload: false,
-});
-
-// Japanese
-const notoSansJP = Noto_Sans_JP({
-  weight: ['400', '500', '700', '900'],
-  variable: '--font-noto-sans-jp',
-  display: 'swap',
-  preload: false,
-});
-
-const notoSerifKR = Noto_Serif_KR({
-  weight: ['400', '700'],
-  variable: '--font-noto-serif-kr',
-  display: 'swap',
-  preload: false,
-});
-
-const notoSerifSC = Noto_Serif_SC({
-  weight: ['400', '700'],
-  variable: '--font-noto-serif-sc',
-  display: 'swap',
-  preload: false,
-});
-
-const notoSerifJP = Noto_Serif_JP({
-  weight: ['400', '700'],
-  variable: '--font-noto-serif-jp',
-  display: 'swap',
-  preload: false,
-});
-
 const fontVariables = [
   inter.variable,
   instrumentSerif.variable,
   jetbrainsMono.variable,
-  notoSansKR.variable,
-  notoSansSC.variable,
-  notoSansJP.variable,
-  notoSerifKR.variable,
-  notoSerifSC.variable,
-  notoSerifJP.variable,
 ].join(' ');
 
 const SITE_URL = 'https://conviction-fe.vercel.app';

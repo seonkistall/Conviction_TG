@@ -1,8 +1,40 @@
+/*
+ * CJK self-host via @fontsource-variable. Replaces next/font/google for
+ * Noto Sans/Serif KR · SC · JP because the Google Fonts loader fetches
+ * ~120 unicode-range subsets per CJK weight at build time, and the
+ * resulting fan-out (4 fonts × 4 weights × 120 subsets ≈ 2,000 parallel
+ * woff2 fetches) reliably ETIMEDOUT against fonts.gstatic.com on local
+ * machines. Each fontsource package ships its own variable woff2 plus
+ * a CSS file of unicode-range @font-face rules, served from our own
+ * origin — zero outbound fetches at build, browser only pulls the
+ * subset needed to paint the character.
+ */
+@import '@fontsource-variable/noto-sans-kr';
+@import '@fontsource-variable/noto-sans-sc';
+@import '@fontsource-variable/noto-sans-jp';
+@import '@fontsource-variable/noto-serif-kr';
+@import '@fontsource-variable/noto-serif-sc';
+@import '@fontsource-variable/noto-serif-jp';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
+  /*
+   * CJK font-family aliases — resolve to the variable face registered
+   * by the @fontsource-variable/* @imports above. Latin fonts (Inter,
+   * Instrument Serif, JetBrains Mono) still come in via next/font and
+   * inject their own --font-* vars from app/layout.tsx; CJK is now
+   * named directly here.
+   */
+  --font-noto-sans-kr: 'Noto Sans KR Variable';
+  --font-noto-sans-sc: 'Noto Sans SC Variable';
+  --font-noto-sans-jp: 'Noto Sans JP Variable';
+  --font-noto-serif-kr: 'Noto Serif KR Variable';
+  --font-noto-serif-sc: 'Noto Serif SC Variable';
+  --font-noto-serif-jp: 'Noto Serif JP Variable';
+
   /*
    * Font stacks compose next/font CSS variables injected by app/layout.tsx.
    * Each --font-* var is a comma-separated list that already includes the
