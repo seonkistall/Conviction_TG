@@ -163,8 +163,16 @@ export function NotifyMeButton({
  * — the underlying PriceChart always rendered 30 days. Now each
  * range dispatches a days count to the chart.
  */
+/*
+ * "Days" is really "points the chart draws". `1D` is the only range
+ * that's intraday — 24 hourly ticks instead of one daily candle —
+ * because `priceHistory(seed, 1)` returns a length-1 array, which
+ * makes the chart's `W / (data.length - 1)` step blow up to
+ * Infinity and the line never renders. The other ranges keep their
+ * day-count semantic.
+ */
 const RANGE_DAYS: Record<string, number> = {
-  '1D': 1,
+  '1D': 24,
   '1W': 7,
   '1M': 30,
   ALL: 180,
