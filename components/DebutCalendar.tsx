@@ -101,8 +101,16 @@ export function DebutCalendar() {
        *   scrollbar by default, so the strip read as a static row of
        *   3–4 cards.
        */}
-      <div className="relative -mx-6 pb-4">
-        <div className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto px-6">
+      <div className="relative left-1/2 w-screen -translate-x-1/2 pb-4">
+        {/*
+         * v2.26.10 — `scroll-pl-20` (80px) offsets each snap target
+         * past the first by ~64px (80px scroll-padding − 16px `gap-4`)
+         * so a strip of the previous card stays visible on the left
+         * after a flick. Without it, snap-start aligns each card
+         * flush to the viewport edge and already-seen cards vanish.
+         */}
+        <div className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 scroll-pl-[80px]">
+          <div className='relative shrink-0 snap-start overflow-hidden w-min-[calc((100dvw-1440px)/2)] w-[calc((100dvw-1440px)/2)] height-10 block ' />
           {DEBUT_EVENTS.map((d) => {
             const { day, month } = fmtDate(d.dropsAt);
             const n = daysUntil(d.dropsAt);
