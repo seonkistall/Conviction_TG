@@ -39,7 +39,7 @@ export function ConnectModal({ open, onClose }: Props) {
   return (
     <div
       className={clsx(
-        'fixed inset-0 z-[60] flex items-end justify-center px-4 pb-4 transition sm:items-center sm:p-4',
+        'fixed inset-0 z-[60] flex items-end justify-center px-4 pb-4 transition sm:items-center sm:p-4 w-[100dvw] h-[100dvh]',
         open ? 'pointer-events-auto' : 'pointer-events-none'
       )}
       role="dialog"
@@ -49,7 +49,7 @@ export function ConnectModal({ open, onClose }: Props) {
     >
       <div
         className={clsx(
-          'absolute inset-0 bg-ink-900/70 backdrop-blur-sm transition-opacity duration-300',
+          'absolute inset-0 bg-ink-900/70 backdrop-blur-sm transition-opacity duration-300 w-full h-full',
           open ? 'opacity-100' : 'opacity-0'
         )}
         onClick={onClose}
