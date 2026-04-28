@@ -65,7 +65,7 @@ export function ConvictionScoreCard() {
               Streak
             </div>
             <div className="font-mono text-lg font-bold text-yes">
-              🔥 {score.streak}
+              🔥 {score.streak}W / {score.streak * 7}D
             </div>
           </div>
         )}

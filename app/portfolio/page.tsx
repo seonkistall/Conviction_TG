@@ -220,7 +220,7 @@ export default function PortfolioPage() {
                             </span>
                           </td>
                           <td className="p-4 text-right font-mono tabular-nums text-bone">
-                            {p.shares.toLocaleString()}
+                            {p.shares.toLocaleString('en-US')}
                           </td>
                           <td className="p-4 text-right font-mono text-sm tabular-nums text-bone-muted">
                             ¢{Math.round(p.avgPrice * 100)} →{' '}
@@ -258,7 +258,7 @@ export default function PortfolioPage() {
                                 close(p.marketId, p.side, mark);
                                 push({
                                   kind: 'trade',
-                                  title: `Closed ${p.side} · ${p.shares.toLocaleString()} shares`,
+                                  title: `Closed ${p.side} · ${p.shares.toLocaleString('en-US')} shares`,
                                   body: `${mk.title} · Realized ${
                                     livePnl >= 0 ? '+' : ''
                                   }$${livePnl.toFixed(2)}`,
@@ -297,7 +297,7 @@ export default function PortfolioPage() {
                           {mk?.title ?? f.marketId}
                         </div>
                         <div className="text-[11px] text-bone-muted">
-                          {f.side} · {f.shares.toLocaleString()} @ ¢
+                          {f.side} · {f.shares.toLocaleString('en-US')} @ ¢
                           {Math.round(f.avgPrice * 100)} → ¢
                           {Math.round(f.closePrice * 100)}
                         </div>
@@ -372,7 +372,7 @@ export default function PortfolioPage() {
                         </Link>
                       )}
                       <div className="mt-2 flex items-center justify-between text-[11px] text-bone-muted">
-                        <span>{new Date(a.at).toLocaleString()}</span>
+                        <span>{new Date(a.at).toLocaleString('en-US')}</span>
                         {a.amount && (
                           <span className="font-mono text-bone">
                             ${a.amount.toFixed(2)}
