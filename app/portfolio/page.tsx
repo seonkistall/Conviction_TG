@@ -128,7 +128,7 @@ export default function PortfolioPage() {
 
       <div className="mt-8 grid gap-8 md:grid-cols-12">
         {/* Positions */}
-        <div className="md:col-span-8">
+        <div className="min-w-0 md:col-span-8">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-3xl text-bone">Open positions</h3>
             <div className="text-xs text-bone-muted">
@@ -140,141 +140,146 @@ export default function PortfolioPage() {
             </div>
           </div>
 
-          <div className="mt-4 overflow-hidden rounded-2xl border border-white/10 bg-ink-800">
+          <div className="relative mt-4 overflow-hidden rounded-2xl border border-white/10 bg-ink-800">
             {positions.length === 0 && hydrated ? (
               <EmptyState />
             ) : (
-              <table className="w-full text-left text-sm">
-                <thead className="bg-ink-900 text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
-                  <tr>
-                    <Th>Market</Th>
-                    <Th>Side</Th>
-                    <Th className="text-right">Shares</Th>
-                    <Th className="text-right">Avg · Now</Th>
-                    <Th className="hidden text-right md:table-cell">
-                      Trend · 14d
-                    </Th>
-                    <Th className="text-right">P&L</Th>
-                    <Th className="w-10"></Th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {positions
-                    .slice()
-                    .sort((a, b) => b.pnl - a.pnl)
-                    .map((p) => {
-                      const mk = getMarket(p.marketId) ?? MARKETS[0];
-                      // Use the live market's yesProb as the mark price so
-                      // "now" reflects the app's current state rather than
-                      // the stale currentPrice we wrote at buy time.
-                      const mark =
-                        p.side === 'YES' ? mk.yesProb : 1 - mk.yesProb;
-                      const livePnl = p.shares * (mark - p.avgPrice);
-                      const pnlPct = (mark / p.avgPrice - 1) * 100;
-                      // 14-day trend series — seeded from the market's
-                      // yesProb and flipped for NO positions so "up" on the
-                      // sparkline visually corresponds to the user winning.
-                      const rawSeries = priceHistory(mk.yesProb * 100, 14);
-                      const series =
-                        p.side === 'YES' ? rawSeries : rawSeries.map((v) => 1 - v);
-                      const dir: 'up' | 'down' | 'flat' =
-                        Math.abs(mark - p.avgPrice) < 0.005
-                          ? 'flat'
-                          : mark > p.avgPrice
-                          ? 'up'
-                          : 'down';
-                      return (
-                        <tr
-                          key={`${p.marketId}-${p.side}`}
-                          className="hover:bg-ink-700/50"
-                        >
-                          <td className="p-4">
-                            <Link
-                              href={`/markets/${mk.slug}`}
-                              className="flex items-center gap-3"
+              <>
+                <div className="overflow-x-auto md:overflow-visible">
+                  <table className="w-full min-w-[700px] text-left text-sm md:min-w-0">
+                    <thead className="bg-ink-900 text-[11px] font-semibold uppercase tracking-widest text-bone-muted">
+                      <tr>
+                        <Th className="sticky left-0 z-30 min-w-[180px] bg-ink-900 md:static md:z-auto md:min-w-0 md:bg-transparent">
+                          Market
+                        </Th>
+                        <Th>Side</Th>
+                        <Th className="text-right">Shares</Th>
+                        <Th className="text-right flex flex-row align-items-center min-w-[8rem] gap-0.5">Avg · Now</Th>
+                        <Th className="text-right">Trend · 14d</Th>
+                        <Th className="text-right">P&L</Th>
+                        <Th className="w-10"></Th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {positions
+                        .slice()
+                        .sort((a, b) => b.pnl - a.pnl)
+                        .map((p) => {
+                          const mk = getMarket(p.marketId) ?? MARKETS[0];
+                          // Use the live market's yesProb as the mark price so
+                          // "now" reflects the app's current state rather than
+                          // the stale currentPrice we wrote at buy time.
+                          const mark =
+                            p.side === 'YES' ? mk.yesProb : 1 - mk.yesProb;
+                          const livePnl = p.shares * (mark - p.avgPrice);
+                          const pnlPct = (mark / p.avgPrice - 1) * 100;
+                          // 14-day trend series — seeded from the market's
+                          // yesProb and flipped for NO positions so "up" on the
+                          // sparkline visually corresponds to the user winning.
+                          const rawSeries = priceHistory(mk.yesProb * 100, 14);
+                          const series =
+                            p.side === 'YES' ? rawSeries : rawSeries.map((v) => 1 - v);
+                          const dir: 'up' | 'down' | 'flat' =
+                            Math.abs(mark - p.avgPrice) < 0.005
+                              ? 'flat'
+                              : mark > p.avgPrice
+                              ? 'up'
+                              : 'down';
+                          return (
+                            <tr
+                              key={`${p.marketId}-${p.side}`}
+                              className="hover:bg-ink-700/50"
                             >
-                              <img
-                                src={mk.media.poster}
-                                alt=""
-                                className="h-10 w-10 rounded-md object-cover"
-                              />
-                              <div>
-                                <div className="font-medium text-bone line-clamp-1">
-                                  {mk.title}
+                              <td className="sticky left-0 z-10 min-w-[180px] bg-ink-800 p-4 md:static md:z-auto md:min-w-0 md:bg-transparent">
+                                <Link
+                                  href={`/markets/${mk.slug}`}
+                                  className="flex items-center gap-3"
+                                >
+                                  <img
+                                    src={mk.media.poster}
+                                    alt=""
+                                    className="h-10 w-10 rounded-md object-cover"
+                                  />
+                                  <div>
+                                    <div className="font-medium text-bone line-clamp-1">
+                                      {mk.title}
+                                    </div>
+                                    <div className="text-[11px] text-bone-muted">
+                                      {mk.category}
+                                    </div>
+                                  </div>
+                                </Link>
+                              </td>
+                              <td className="p-4">
+                                <span
+                                  className={`rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-widest ${
+                                    p.side === 'YES'
+                                      ? 'bg-yes-soft text-yes'
+                                      : 'bg-no-soft text-no'
+                                  }`}
+                                >
+                                  {p.side}
+                                </span>
+                              </td>
+                              <td className="p-4 text-right font-mono tabular-nums text-bone">
+                                {p.shares.toLocaleString('en-US')}
+                              </td>
+                              <td className="p-4 text-left font-mono text-sm tabular-nums text-bone-muted">
+                                ¢{Math.round(p.avgPrice * 100)} →{' '}
+                                <span className="text-bone">
+                                  ¢{Math.round(mark * 100)}
+                                </span>
+                              </td>
+                              <td className="p-4 text-right">
+                                <span className="inline-block align-middle">
+                                  <Sparkline
+                                    data={series}
+                                    baseline={p.avgPrice}
+                                    direction={dir}
+                                    width={90}
+                                    height={26}
+                                  />
+                                </span>
+                              </td>
+                              <td
+                                className={`p-4 text-right font-mono tabular-nums ${
+                                  livePnl >= 0 ? 'text-yes' : 'text-no'
+                                }`}
+                              >
+                                {livePnl >= 0 ? '+' : ''}
+                                ${livePnl.toFixed(2)}
+                                <div className="text-[11px] opacity-70">
+                                  {pnlPct >= 0 ? '+' : ''}
+                                  {pnlPct.toFixed(1)}%
                                 </div>
-                                <div className="text-[11px] text-bone-muted">
-                                  {mk.category}
-                                </div>
-                              </div>
-                            </Link>
-                          </td>
-                          <td className="p-4">
-                            <span
-                              className={`rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-widest ${
-                                p.side === 'YES'
-                                  ? 'bg-yes-soft text-yes'
-                                  : 'bg-no-soft text-no'
-                              }`}
-                            >
-                              {p.side}
-                            </span>
-                          </td>
-                          <td className="p-4 text-right font-mono tabular-nums text-bone">
-                            {p.shares.toLocaleString('en-US')}
-                          </td>
-                          <td className="p-4 text-right font-mono text-sm tabular-nums text-bone-muted">
-                            ¢{Math.round(p.avgPrice * 100)} →{' '}
-                            <span className="text-bone">
-                              ¢{Math.round(mark * 100)}
-                            </span>
-                          </td>
-                          <td className="hidden p-4 text-right md:table-cell">
-                            <span className="inline-block align-middle">
-                              <Sparkline
-                                data={series}
-                                baseline={p.avgPrice}
-                                direction={dir}
-                                width={90}
-                                height={26}
-                              />
-                            </span>
-                          </td>
-                          <td
-                            className={`p-4 text-right font-mono tabular-nums ${
-                              livePnl >= 0 ? 'text-yes' : 'text-no'
-                            }`}
-                          >
-                            {livePnl >= 0 ? '+' : ''}
-                            ${livePnl.toFixed(2)}
-                            <div className="text-[11px] opacity-70">
-                              {pnlPct >= 0 ? '+' : ''}
-                              {pnlPct.toFixed(1)}%
-                            </div>
-                          </td>
-                          <td className="p-4 text-right">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                close(p.marketId, p.side, mark);
-                                push({
-                                  kind: 'trade',
-                                  title: `Closed ${p.side} · ${p.shares.toLocaleString('en-US')} shares`,
-                                  body: `${mk.title} · Realized ${
-                                    livePnl >= 0 ? '+' : ''
-                                  }$${livePnl.toFixed(2)}`,
-                                  amount: `¢${Math.round(mark * 100)}`,
-                                });
-                              }}
-                              className="rounded-md border border-white/10 bg-ink-900 px-2.5 py-1 text-[11px] text-bone hover:bg-ink-700"
-                            >
-                              Close
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
+                              </td>
+                              <td className="p-4 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    close(p.marketId, p.side, mark);
+                                    push({
+                                      kind: 'trade',
+                                      title: `Closed ${p.side} · ${p.shares.toLocaleString('en-US')} shares`,
+                                      body: `${mk.title} · Realized ${
+                                        livePnl >= 0 ? '+' : ''
+                                      }$${livePnl.toFixed(2)}`,
+                                      amount: `¢${Math.round(mark * 100)}`,
+                                    });
+                                  }}
+                                  className="rounded-md border border-white/10 bg-ink-900 px-2.5 py-1 text-[11px] text-bone hover:bg-ink-700"
+                                >
+                                  Close
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="pointer-events-none absolute bottom-0 right-0 top-0 z-20 w-8 bg-gradient-to-l from-ink-800 to-transparent md:hidden" />
+              </>
             )}
           </div>
 
@@ -328,7 +333,7 @@ export default function PortfolioPage() {
          * intent (saving something = forward-looking intent; holding
          * something = active state; activity = past).
          */}
-        <div className="md:col-span-4 space-y-6">
+        <div className="min-w-0 space-y-6 md:col-span-4">
           <ConvictionScoreCard />
           <Watchlist />
           <HotPositions />
