@@ -16,7 +16,12 @@ import { usePositions } from '@/lib/positions';
 import { useToast } from '@/lib/toast';
 import { useMute } from '@/lib/mute';
 import { useT } from '@/lib/i18n';
-import { openXIntent } from '@/lib/share';
+import {
+  openXIntent,
+  openThreadsIntent,
+  openInstagramShare,
+  openNativeShare,
+} from '@/lib/share';
 import { useWatchlist } from '@/lib/watchlist';
 
 interface Props {
@@ -670,26 +675,6 @@ function FeedCommentButton({
   );
 }
 
-/*
- * v2.23-5 — Share button. X-direct.
- *
- * Through v2.22-2 this was a three-tier chain (Web Share API →
- * clipboard → X.com intent), designed for mobile natives to pick
- * their preferred channel. In practice testers reported that the
- * Web Share API on desktop silently fell through to clipboard,
- * which felt like "nothing happened" — and mobile users were also
- * asking for X specifically because that's where the APAC crowd
- * they want to share with actually lives.
- *
- * New behavior: tap Share → open `x.com/intent/tweet` in a new
- * tab/window with the market title + URL pre-filled, every time.
- * On mobile, iOS/Android will auto-redirect the intent URL into
- * the installed X app via deep-link if present.
- *
- * The toast still fires so the user gets visible feedback that the
- * tap registered (popup blockers sometimes eat the window.open
- * silently on desktop).
- */
 function FeedShareButton({
   title,
   slug,
@@ -698,26 +683,165 @@ function FeedShareButton({
   slug: string;
 }) {
   const toast = useToast();
-  const onShare = () => {
-    if (typeof window === 'undefined') return;
-    const url = `${window.location.origin}/markets/${slug}`;
-    // v2.25: Routed through the shared `lib/share.ts` helper so the
-    // X handle + tweet copy stay in lockstep with MarketHeroShare.
-    openXIntent({ title, url });
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const shareTarget = useCallback(() => {
+    if (typeof window === 'undefined') return { title, url: '' };
+    return { title, url: `${window.location.origin}/markets/${slug}` };
+  }, [title, slug]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    document.addEventListener('keydown', onEsc);
+    return () => {
+      document.removeEventListener('mousedown', onClickOutside);
+      document.removeEventListener('keydown', onEsc);
+    };
+  }, [menuOpen]);
+
+  const handleX = () => {
+    setMenuOpen(false);
+    const t = shareTarget();
+    openXIntent(t);
     toast.push({
       kind: 'trade',
       title: 'Opening X',
       body: 'Compose tweet with market link',
-      cta: { href: url, label: 'Copy link' },
+      cta: { href: t.url, label: 'Copy link' },
     });
   };
+
+  const handleThreads = () => {
+    setMenuOpen(false);
+    const t = shareTarget();
+    openThreadsIntent(t);
+    toast.push({
+      kind: 'trade',
+      title: 'Opening Threads',
+      body: 'Compose post with market link',
+      cta: { href: t.url, label: 'Copy link' },
+    });
+  };
+
+  const handleInstagram = async () => {
+    setMenuOpen(false);
+    const t = shareTarget();
+    await openInstagramShare(t);
+    toast.push({
+      kind: 'trade',
+      title: 'Link copied · opening Instagram',
+      body: 'Paste the link into your story or DM',
+      cta: { href: t.url, label: 'Copy link' },
+    });
+  };
+
+  const handleNative = async () => {
+    setMenuOpen(false);
+    const t = shareTarget();
+    const shared = await openNativeShare(t);
+    if (!shared) {
+      try {
+        await navigator.clipboard.writeText(t.url);
+        toast.push({ kind: 'trade', title: 'Link copied', body: t.url });
+      } catch {
+        toast.push({ kind: 'trade', title: 'Share unavailable', body: 'Copy the link manually' });
+      }
+    }
+  };
+
   return (
-    <RailButton
-      icon="𝕏"
-      label="Share"
-      aria-label="Share on X"
-      onClick={onShare}
-    />
+    <div ref={menuRef} className="relative">
+      <RailButton
+        icon={
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+        }
+        label="Share"
+        aria-label="Share this market"
+        onClick={() => setMenuOpen((v) => !v)}
+      />
+
+      {menuOpen && (
+        <div
+          className="absolute bottom-full right-0 mb-2 w-48 rounded-xl border border-white/10 bg-ink-900/95 py-1.5 shadow-2xl backdrop-blur-xl"
+          role="menu"
+          aria-label="Share options"
+        >
+          <ShareMenuItem
+            icon={
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+              </svg>
+            }
+            label="Instagram"
+            onClick={handleInstagram}
+          />
+          <ShareMenuItem
+            icon={
+              <svg width="16" height="16" viewBox="0 0 192 192" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M141.537 88.9883C140.71 88.5919 139.87 88.2104 139.019 87.8451C137.537 60.5382 122.616 44.905 97.5619 44.745C97.4484 44.7443 97.3355 44.7443 97.222 44.7443C82.2364 44.7443 69.7731 51.1409 62.102 62.7807L75.881 72.2328C81.6116 63.5383 90.6052 61.6848 97.2286 61.6848C97.3051 61.6848 97.3819 61.6848 97.4576 61.6855C105.707 61.7381 111.932 64.1366 115.961 68.814C118.893 72.2193 120.854 76.925 121.825 82.8638C114.511 81.6207 106.601 81.2385 98.145 81.7233C74.3247 83.0954 59.0111 96.9879 60.0396 116.292C60.5615 126.084 65.4397 134.508 73.775 140.011C80.8224 144.663 89.899 146.938 99.3323 146.423C111.79 145.74 121.563 140.987 128.381 132.296C133.559 125.696 136.834 117.143 138.28 106.366C144.217 109.949 148.617 114.664 151.047 120.332C155.179 129.967 155.42 145.8 142.501 158.708C131.182 170.016 117.576 174.908 97.0135 175.059C74.2042 174.89 56.9538 167.575 45.7381 153.317C35.2355 139.966 29.8077 120.682 29.6052 96C29.8077 71.3178 35.2355 52.0336 45.7381 38.6827C56.9538 24.4249 74.2039 17.11 97.0132 16.9405C119.988 17.1113 137.539 24.4614 149.184 38.788C154.894 45.8136 159.199 54.6488 162.037 64.9503L178.184 60.6422C174.744 47.9622 169.331 37.0357 161.965 27.974C147.036 9.60668 125.202 0.195148 97.0695 0H96.9569C68.8816 0.19447 47.2921 9.6418 32.7883 28.0793C19.8819 44.4864 13.2244 67.3157 13.0007 95.9325L13 96L13.0007 96.0675C13.2244 124.684 19.8819 147.514 32.7883 163.921C47.2921 182.358 68.8816 191.806 96.9569 192H97.0695C122.03 191.827 139.624 185.292 154.118 170.811C173.081 151.866 172.51 128.119 166.26 113.541C161.776 103.087 153.227 94.5962 141.537 88.9883ZM98.4405 129.507C88.0005 130.095 77.1544 125.409 76.6196 115.372C76.2232 107.93 81.9158 99.626 99.0812 98.6368C101.047 98.5234 102.976 98.468 104.871 98.468C111.106 98.468 116.939 99.0737 122.242 100.233C120.264 124.935 108.662 128.946 98.4405 129.507Z" />
+              </svg>
+            }
+            label="Threads"
+            onClick={handleThreads}
+          />
+          <ShareMenuItem
+            icon={<span className="text-sm font-bold">𝕏</span>}
+            label="X"
+            onClick={handleX}
+          />
+          <div className="mx-2 my-1 border-t border-white/5" />
+          <ShareMenuItem
+            icon={
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" y1="2" x2="12" y2="15" />
+              </svg>
+            }
+            label="Share via…"
+            onClick={handleNative}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ShareMenuItem({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left text-sm font-medium text-bone transition hover:bg-white/5 active:bg-white/10"
+    >
+      <span className="flex h-5 w-5 items-center justify-center">{icon}</span>
+      {label}
+    </button>
   );
 }
 

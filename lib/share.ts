@@ -48,3 +48,46 @@ export function openXIntent(target: ShareTarget): boolean {
   const win = window.open(href, '_blank', 'noopener,noreferrer');
   return win !== null;
 }
+
+/**
+ * Build a Threads share intent URL. Deep-links into the app when
+ * installed, falls back to threads.net on desktop.
+ */
+export function threadsIntentUrl({ title, url }: ShareTarget): string {
+  const text = `${title} — live on @${BRAND_X_HANDLE}\n${url}`;
+  return `https://www.threads.net/intent/post?text=${encodeURIComponent(text)}`;
+}
+
+export function openThreadsIntent(target: ShareTarget): boolean {
+  if (typeof window === 'undefined') return false;
+  const href = threadsIntentUrl(target);
+  const win = window.open(href, '_blank', 'noopener,noreferrer');
+  return win !== null;
+}
+
+/**
+ * Instagram has no web intent API — copies the link to clipboard then
+ * opens instagram.com (deep-links into the app on mobile).
+ */
+export async function openInstagramShare({ url }: ShareTarget): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  try {
+    await navigator.clipboard.writeText(url);
+  } catch { /* clipboard denied */ }
+  window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+  return true;
+}
+
+/**
+ * Native Web Share API (OS-level share sheet on iOS / Android).
+ * Returns `false` if unavailable or user cancelled.
+ */
+export async function openNativeShare({ title, url }: ShareTarget): Promise<boolean> {
+  if (typeof window === 'undefined' || !navigator.share) return false;
+  try {
+    await navigator.share({ title, url });
+    return true;
+  } catch {
+    return false;
+  }
+}
