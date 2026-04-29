@@ -124,9 +124,9 @@ export function NewMarketClient() {
        *     evaluator wouldn't otherwise know they can type "블랙핑크
        *     4인 앨범 2026?" directly.
        */}
-      <div className="mt-8 rounded-3xl border border-white/10 bg-ink-800 p-5">
+      <div className="mt-8 rounded-3xl border border-white/10 bg-ink-800 p-4 sm:p-5">
         <div className="flex items-start gap-3">
-          <span className="mt-2 flex h-8 w-8 items-center justify-center rounded-md bg-volt text-sm font-bold text-ink-900">
+          <span className="mt-2 hidden h-8 w-8 items-center justify-center rounded-md bg-volt text-sm font-bold text-ink-900 sm:flex">
             ?
           </span>
           <textarea
@@ -139,15 +139,17 @@ export function NewMarketClient() {
                 : t('newmkt.placeholder')
             }
             rows={2}
-            className="flex-1 resize-none bg-transparent text-2xl leading-tight text-bone transition-opacity duration-500 placeholder:text-bone-muted/60 focus:outline-none md:text-3xl"
+            className="min-w-0 flex-1 resize-none bg-transparent text-xl leading-tight text-bone transition-opacity duration-500 placeholder:text-bone-muted/60 focus:outline-none sm:text-2xl md:text-3xl"
             disabled={phase !== 'idle' && phase !== 'done'}
           />
+        </div>
+        <div className="mt-3 sm:pl-11">
           <button
             type="button"
             onClick={run}
             disabled={!q.trim() || (phase !== 'idle' && phase !== 'done')}
             className={clsx(
-              'rounded-full px-5 py-3 text-sm font-semibold transition active:scale-[0.98]',
+              'w-full rounded-full px-5 py-3 text-sm font-semibold transition active:scale-[0.98] sm:w-auto',
               q.trim() && (phase === 'idle' || phase === 'done')
                 ? 'bg-gradient-to-r from-volt to-volt-dark text-ink-900 shadow-xl hover:brightness-105'
                 : 'bg-ink-900 text-bone-muted'
@@ -157,14 +159,14 @@ export function NewMarketClient() {
           </button>
         </div>
 
-        <div className="mt-3 flex items-center gap-2 pl-11 text-[11px] text-bone-muted">
+        <div className="mt-3 flex items-center gap-2 text-[11px] text-bone-muted sm:pl-11">
           <span aria-hidden="true" className="text-conviction">✨</span>
           Type in English, 한국어, 日本語, or 中文. AI routes to the
           matching domain stack.
         </div>
 
         {phase === 'idle' && (
-          <div className="mt-4 flex flex-wrap gap-2 pl-11">
+          <div className="mt-4 flex flex-wrap gap-2 sm:pl-11">
             {SAMPLE_QS.map((s) => (
               <button
                 key={s}
