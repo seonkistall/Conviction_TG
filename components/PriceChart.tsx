@@ -41,9 +41,17 @@ export function PriceChart({
   const first = data[0];
   const up = last >= first;
 
+  const lastPoint = points[points.length - 1];
+  const dotLeftPct = (lastPoint[0] / W) * 100;
+  const dotTopPct = (lastPoint[1] / H) * 100;
+
   return (
-    <div className={`relative w-full ${className}`}>
-      <svg viewBox={`0 0 ${W} ${H}`} className="block h-full w-full">
+    <div className={`relative h-full w-full ${className}`}>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        preserveAspectRatio="none"
+        className="block h-full w-full"
+      >
         {/* grid */}
         {[0.25, 0.5, 0.75].map((g) => (
           <line
@@ -54,6 +62,7 @@ export function PriceChart({
             y2={padY + g * (H - padY * 2)}
             stroke="rgba(255,255,255,0.05)"
             strokeDasharray="3 4"
+            vectorEffect="non-scaling-stroke"
           />
         ))}
         <defs>
@@ -63,24 +72,31 @@ export function PriceChart({
           </linearGradient>
         </defs>
         {fill && <path d={area} fill={`url(#g-${seed})`} />}
-        <path d={path} fill="none" stroke={stroke} strokeWidth={2.5} strokeLinecap="round" />
-        {/* end dot */}
-        <circle
-          cx={points[points.length - 1][0]}
-          cy={points[points.length - 1][1]}
-          r={5}
-          fill={stroke}
-        />
-        <circle
-          cx={points[points.length - 1][0]}
-          cy={points[points.length - 1][1]}
-          r={10}
-          fill={stroke}
-          opacity={0.25}
+        <path
+          d={path}
+          fill="none"
+          stroke={stroke}
+          strokeWidth={2.5}
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
         />
       </svg>
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2"
+        style={{ left: `${dotLeftPct}%`, top: `${dotTopPct}%` }}
+      >
+        <span
+          className="absolute left-1/2 top-1/2 h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-25"
+          style={{ backgroundColor: stroke }}
+        />
+        <span
+          className="relative block h-2.5 w-2.5 rounded-full"
+          style={{ backgroundColor: stroke }}
+        />
+      </span>
       <div
-        className={`absolute right-3 top-3 rounded-md border px-2 py-0.5 font-mono text-[11px] ${
+        className={`absolute right-0 top-0 rounded-md border px-2 py-0.5 font-mono text-[11px] ${
           up
             ? 'border-yes/40 bg-yes/10 text-yes'
             : 'border-no/40 bg-no/10 text-no'

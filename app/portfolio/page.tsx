@@ -105,7 +105,7 @@ export default function PortfolioPage() {
 
       {/* PnL chart */}
       <div className="mt-8 rounded-2xl border border-white/10 bg-ink-800 p-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
           <div>
             <h3 className="font-display text-2xl text-bone">Net worth · 30 days</h3>
             <p className="text-sm text-bone-muted">
