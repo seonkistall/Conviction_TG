@@ -207,7 +207,7 @@ export default function LeaderboardPage({
                 <Mini k="P&L 30d" v={`+${formatUSD(t.pnl30d)}`} accent="text-volt" />
                 <Mini k="Winrate" v={pct(t.winRate)} />
                 {t.isAi ? (
-                  <Mini k="AUM" v={formatUSD(t.aum ?? 0)} />
+                  <Mini k="AUM" v={formatUSD(t.aum ?? 0) + "AUM"} />
                 ) : (
                   <Mini k="Streak" v={`${t.streak ?? 0}W / ${(t.streak ?? 0) * 7}D`} />
                 )}
@@ -314,7 +314,7 @@ export default function LeaderboardPage({
                   </td>
                   <td className="p-2 md:p-4 text-right font-mono tabular-nums text-bone">
                     {t.isAi
-                      ? `${(t.followers ?? 0).toLocaleString()}`
+                      ? `${(t.followers ?? 0).toLocaleString()} Followers`
                       : `${t.streak ?? 0}W / ${(t.streak ?? 0) * 7}D`}
                   </td>
                 </tr>
