@@ -268,7 +268,7 @@ export default function MarketDetailPage({
                 <TimelineItem
                   dot="bg-volt"
                   label="Trading opened"
-                  value="Apr 02, 2026"
+                  value={new Date("Apr 02, 2026").toLocaleString()}
                 />
                 <TimelineItem
                   dot="bg-bone-muted"
