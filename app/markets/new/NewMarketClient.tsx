@@ -125,8 +125,8 @@ export function NewMarketClient() {
        *     4인 앨범 2026?" directly.
        */}
       <div className="mt-8 rounded-3xl border border-white/10 bg-ink-800 p-4 sm:p-5">
-        <div className="flex items-start gap-3">
-          <span className="mt-2 hidden h-8 w-8 items-center justify-center rounded-md bg-volt text-sm font-bold text-ink-900 sm:flex">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <span className="mt-2 hidden h-8 w-8 shrink-0 items-center justify-center rounded-md bg-volt text-sm font-bold text-ink-900 sm:flex">
             ?
           </span>
           <textarea
@@ -142,14 +142,12 @@ export function NewMarketClient() {
             className="min-w-0 flex-1 resize-none bg-transparent text-xl leading-tight text-bone transition-opacity duration-500 placeholder:text-bone-muted/60 focus:outline-none sm:text-2xl md:text-3xl"
             disabled={phase !== 'idle' && phase !== 'done'}
           />
-        </div>
-        <div className="mt-3 sm:pl-11">
           <button
             type="button"
             onClick={run}
             disabled={!q.trim() || (phase !== 'idle' && phase !== 'done')}
             className={clsx(
-              'w-full rounded-full px-5 py-3 text-sm font-semibold transition active:scale-[0.98] sm:w-auto',
+              'shrink-0 rounded-full px-5 py-3 text-sm font-semibold transition active:scale-[0.98]',
               q.trim() && (phase === 'idle' || phase === 'done')
                 ? 'bg-gradient-to-r from-volt to-volt-dark text-ink-900 shadow-xl hover:brightness-105'
                 : 'bg-ink-900 text-bone-muted'

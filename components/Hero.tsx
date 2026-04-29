@@ -179,12 +179,12 @@ function HeroCard({
               <div className="absolute inset-0 card-gradient" />
             </div>
 
-            <div className="absolute inset-x-0 top-0 flex items-center justify-between p-4">
-              <div className="flex items-center gap-2">
+            <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4">
+              <div className="flex gap-2 flex-col items-start md:flex-row">
                 <span className="inline-flex items-center rounded-full bg-ink-900/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-bone backdrop-blur">
                   {m.category}
                 </span>
-                <span className="inline-flex items-center rounded-full bg-volt/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-volt backdrop-blur">
+                <span className="inline-flex items-center whitespace-nowrap rounded-full bg-volt/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-widest text-volt backdrop-blur">
                   ✨ Featured
                 </span>
               </div>
