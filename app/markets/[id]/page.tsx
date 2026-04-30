@@ -12,6 +12,7 @@ import { AIOracleCard } from '@/components/AIOracleCard';
 import { LiveMarketGrid } from '@/components/LiveMarketGrid';
 import { JsonLd } from '@/components/JsonLd';
 import { ResolvedBanner } from '@/components/ResolvedBanner';
+import { MarketTgBuyButton } from '@/components/MarketTgBuyButton';
 import {
   MarketHeroShare,
   NotifyMeButton,
@@ -380,6 +381,13 @@ export default function MarketDetailPage({
           className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
         />
       </section>
+      {/* v2.28 — TG-only sticky Buy CTA (F-02). No-op on browsers. */}
+      <MarketTgBuyButton
+        marketId={m.id}
+        marketTitle={m.title}
+        yesProb={m.yesProb}
+        resolved={m.status === 'resolved'}
+      />
     </div>
   );
 }
