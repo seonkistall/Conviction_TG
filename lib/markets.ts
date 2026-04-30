@@ -1773,3 +1773,72 @@ export function priceHistory(seed: number, days = 30): number[] {
   }
   return out;
 }
+
+
+// v2.28.1 (F-06) — Region preference scoring.
+//
+// Reorders markets so the most regionally-relevant ones surface first
+// when a TG user opens the Mini App from KR / JP / CN / TW / IN / SEA.
+// The function is pure + stable (preserves original order within a tier),
+// so SSR markup unchanged when called with default region 'apac'.
+//
+// Scoring rule (per market):
+//   region match by category-or-tag heuristic → +100
+//   trending flag                              → +20
+//   higher volume                              → tie-breaker
+//
+// Categories vs. region (heuristic — not perfect, good enough for a
+// 30-second wow path):
+//   kr   → Music (K-pop), Sports (KBO), Esports (LCK)
+//   jp   → Esports (LoL JP, Splatoon), Sports (NPB), Film & TV (anime)
+//   cn   → Markets (CN macro), Film & TV (CN cinema)
+//   tw   → Esports (PCS), Film & TV
+//   in   → Sports (cricket), Film & TV (Bollywood)
+//   sea  → Music (regional pop), Sports
+//   apac → no reorder (fall-through)
+export type RegionKey = 'kr' | 'jp' | 'cn' | 'tw' | 'in' | 'sea' | 'apac';
+
+const REGION_CATEGORY_BIAS: Record<RegionKey, string[]> = {
+  kr:   ['Music', 'Sports', 'Esports'],
+  jp:   ['Esports', 'Sports', 'Film & TV'],
+  cn:   ['Markets', 'Film & TV'],
+  tw:   ['Esports', 'Film & TV'],
+  in:   ['Sports', 'Film & TV'],
+  sea:  ['Music', 'Sports'],
+  apac: [],
+};
+
+const REGION_TAG_BIAS: Record<RegionKey, string[]> = {
+  kr:   ['k-pop', 'kpop', 'lck', 'kbo', 'korea', 'seoul'],
+  jp:   ['j-pop', 'jpop', 'anime', 'tokyo', 'npb', 'lpl-jp'],
+  cn:   ['cpop', 'china', 'shanghai', 'beijing', 'lpl'],
+  tw:   ['taiwan', 'pcs', 'tpop'],
+  in:   ['ipl', 'cricket', 'bollywood', 'india', 'mumbai'],
+  sea:  ['indo', 'thai', 'vpop', 'philippines', 'singapore'],
+  apac: [],
+};
+
+export function regionPreferred(
+  markets: Market[],
+  region: RegionKey
+): Market[] {
+  if (region === 'apac') return markets;
+  const cats = REGION_CATEGORY_BIAS[region];
+  const tags = REGION_TAG_BIAS[region].map((t) => t.toLowerCase());
+
+  const score = (m: Market): number => {
+    let n = 0;
+    if (cats.includes(m.category)) n += 100;
+    if (m.tags.some((t) => tags.includes(t.toLowerCase()))) n += 100;
+    if (m.trending) n += 20;
+    n += Math.min(m.volume / 1_000_000, 10); // 0..10 from volume
+    return n;
+  };
+
+  // Stable sort by score desc, preserving original order within ties.
+  return markets
+    .map((m, i) => ({ m, i, s: score(m) }))
+    .sort((a, b) => b.s - a.s || a.i - b.i)
+    .map((x) => x.m);
+}
+
