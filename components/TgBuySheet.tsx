@@ -28,6 +28,7 @@ import clsx from 'clsx';
 import { usePositions } from '@/lib/positions';
 import { useToast } from '@/lib/toast';
 import * as haptics from '@/lib/haptics';
+import { mark, PERF_MARKS } from '@/lib/perfMarks';
 import { useTgMainButton } from '@/lib/tgMainButton';
 
 const STAKE_PRESETS = [10, 25, 100, 500];
@@ -67,6 +68,7 @@ export function TgBuySheet({
   // because the sheet is a regular HTML element from its POV.
   useEffect(() => {
     if (!open) return;
+    mark(PERF_MARKS.buyModalOpen);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
@@ -119,6 +121,7 @@ export function TgBuySheet({
     window.setTimeout(() => {
       try {
         positions.buy({ marketId, side, shares, price });
+        mark(PERF_MARKS.betPlaced);
         haptics.commit();
         toast.push({
           kind: 'trade',

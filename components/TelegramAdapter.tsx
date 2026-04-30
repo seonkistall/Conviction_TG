@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { mark, PERF_MARKS } from '@/lib/perfMarks';
 import { usePathname, useRouter } from 'next/navigation';
 
 /**
@@ -59,6 +60,7 @@ export function TelegramAdapter() {
 
       try {
         tg.ready();
+        mark(PERF_MARKS.tgReady);
         if (!tg.isExpanded) tg.expand();
         // 7.7+ — guards `/feed` pull-to-refresh from being interpreted
         // as a close-the-app gesture.

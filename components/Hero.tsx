@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { regionPreferred } from '@/lib/markets';
+import { getTgRegion } from '@/lib/tgWebApp';
 import type { Market } from '@/lib/types';
 import { AutoVideo } from './AutoVideo';
 import { LivePrice } from './LivePrice';
@@ -18,18 +20,37 @@ export function Hero({ markets }: { markets: Market[] }) {
   // enough to surface regional diversity on any given visit, narrow
   // enough that the rotation cycle (7s/slide × 6 = 42s) still feels
   // like curation rather than a ticker.
-  const featured = markets
-    .filter((m) => m.kind === 'binary' && m.trending && m.status !== 'resolved')
-    .slice(0, 6);
+  // v2.28.1 (F-06) — Region-aware reorder of the featured carousel.
+  // The first slot the user sees on a Korean/Japanese/Indian
+  // mobile open should be a regionally-relevant market — the
+  // Smoketest report's primary 30-second wow finding.
+  const [region, setRegion] = useState<'kr'|'jp'|'cn'|'tw'|'in'|'sea'|'apac'>('apac');
+  useEffect(() => { setRegion(getTgRegion()); }, []);
+  const featured = useMemo(() => {
+    const base = markets
+      .filter((m) => m.kind === 'binary' && m.trending && m.status !== 'resolved')
+      .slice(0, 12); // wider pool so reorder has something to pick from
+    return regionPreferred(base, region).slice(0, 6);
+  }, [markets, region]);
   const [i, setI] = useState(0);
+  // v2.28.1 (F-05) — hover/focus pauses the auto-rotation. The previous
+  // implementation rotated every 7s regardless, which made the carousel
+  // change cards out from under a user mid-tap and produced the
+  // "I clicked NewJeans but BTC opened" Smoketest finding.
+  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     // Guard: `(x + 1) % 0` is NaN, which would poison the rotation index
     // forever once featured goes empty (data change, all resolved, etc.).
     // Skip the timer entirely in that case.
     if (featured.length === 0) return;
+    if (paused) return;
     const t = setInterval(() => setI((x) => (x + 1) % featured.length), 7000);
     return () => clearInterval(t);
+  }, [featured.length, paused]);
+  // Reset slot when featured composition changes (e.g. region just resolved).
+  useEffect(() => {
+    setI(0);
   }, [featured.length]);
 
   const m = featured[i];
@@ -54,7 +75,7 @@ export function Hero({ markets }: { markets: Market[] }) {
   // the destructured `m.slug` / `m.media` crash the whole landing page.
   if (!m) return null;
 
-  return <HeroCard m={m} featured={featured} i={i} setI={setI} endsLabel={endsLabel} />;
+  return <HeroCard m={m} featured={featured} i={i} setI={setI} endsLabel={endsLabel} setPaused={setPaused} />;
 }
 
 function HeroCard({
@@ -63,11 +84,13 @@ function HeroCard({
   i,
   setI,
   endsLabel,
+  setPaused,
 }: {
   m: Market;
   featured: Market[];
   i: number;
   setI: (n: number) => void;
+  setPaused: (v: boolean) => void;
   endsLabel: string | null;
 }) {
   // Live-tick the featured card's YES probability. Falls back to the
@@ -162,7 +185,13 @@ function HeroCard({
 
         {/* Featured rotating card */}
         <div className="md:col-span-5">
-          <div className="relative overflow-hidden rounded-3xl border border-white/10 shadow-[0_40px_120px_-20px_rgba(124,92,255,0.45)]">
+          <div
+            className="relative overflow-hidden rounded-3xl border border-white/10 shadow-[0_40px_120px_-20px_rgba(124,92,255,0.45)]"
+            onMouseEnter={() => setPaused(true)}
+            onMouseLeave={() => setPaused(false)}
+            onFocus={() => setPaused(true)}
+            onBlur={() => setPaused(false)}
+          >
             <div className="aspect-[4/5]">
               {/*
                * `priority` marks the first featured poster as the LCP
