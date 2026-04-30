@@ -15,6 +15,7 @@ import { Toaster } from '@/components/Toaster';
 import { GlobalMuteFAB } from '@/components/GlobalMuteFAB';
 import { OnboardingIntro } from '@/components/OnboardingIntro';
 import { CommandPalette } from '@/components/CommandPalette';
+import { TelegramAdapter } from '@/components/TelegramAdapter';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -139,6 +140,25 @@ export default function RootLayout({
           crossOrigin=""
         />
         <link rel="dns-prefetch" href="https://www.youtube-nocookie.com" />
+        {/*
+         * Telegram WebApp SDK. Loaded `async defer` so it never blocks
+         * first paint on a regular browser. When the page is opened
+         * inside Telegram, TG injects the same script earlier in the
+         * boot flow — by the time TelegramAdapter's effect runs, the
+         * `window.Telegram.WebApp` global is reliably present.
+         *
+         * Outside Telegram the script costs ~12 KB gzip and exposes a
+         * benign `Telegram.WebApp` object with no side effects until
+         * something calls `.ready()`. We intentionally do NOT
+         * conditionally inject this only-in-TG: the script needs to
+         * be in the HTML the user-agent first parses, and we only
+         * know we're in TG after JS runs.
+         */}
+        <script
+          src="https://telegram.org/js/telegram-web-app.js"
+          async
+          defer
+        />
       </head>
       <body className="min-h-screen bg-ink-900 text-bone antialiased">
         <a href="#main-content" className="skip-link">
@@ -180,6 +200,16 @@ export default function RootLayout({
                   <OnboardingIntro />
                   <CommandPalette />
                   <Toaster />
+                  {/*
+                   * v2.27 — Telegram Mini App adapter (Phase 1).
+                   *
+                   * No-op outside Telegram. Inside TG: calls ready/
+                   * expand, mirrors theme params into CSS vars, wires
+                   * the WebApp BackButton to router.back() on non-root
+                   * routes, and disables the swipe-to-close gesture
+                   * that conflicts with /feed pull-to-refresh.
+                   */}
+                  <TelegramAdapter />
                 </LivePricesProvider>
               </PositionsProvider>
             </ToastProvider>
