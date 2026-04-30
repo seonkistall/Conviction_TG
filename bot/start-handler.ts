@@ -23,7 +23,7 @@ export const runtime = 'edge';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN!;
 const WEBAPP_URL =
-  process.env.NEXT_PUBLIC_WEBAPP_URL ?? 'https://conviction-fe.vercel.app';
+  process.env.NEXT_PUBLIC_WEBAPP_URL ?? 'https://conviction-tg.vercel.app';
 const SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 
 const TG = `https://api.telegram.org/bot${BOT_TOKEN}`;

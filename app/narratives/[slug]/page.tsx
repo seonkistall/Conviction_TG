@@ -14,7 +14,7 @@ import {
 import { formatUSD } from '@/lib/format';
 import type { AITrader, Trader } from '@/lib/types';
 
-const SITE_URL = 'https://conviction-fe.vercel.app';
+const SITE_URL = 'https://conviction-tg.vercel.app';
 
 /**
  * /narratives/[slug] — narrative-index detail.

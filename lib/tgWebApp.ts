@@ -120,7 +120,7 @@ export function getTgWebApp(): TelegramWebApp | null {
 
 /**
  * `true` only when running inside the actual Telegram client. False
- * on conviction-fe.vercel.app opened in a regular browser, false
+ * on conviction-tg.vercel.app opened in a regular browser, false
  * during SSR, false in tests.
  *
  * Use this to gate UI that should only show in TG (e.g. native share

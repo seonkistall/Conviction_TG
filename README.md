@@ -5,8 +5,8 @@
 > APAC macro — every narrative that moves 4 billion people, priced live,
 > resolved by a 23-source AI Oracle swarm.
 
-**Live:** [conviction-fe.vercel.app](https://conviction-fe.vercel.app) ·
-**Pitch:** [conviction-fe.vercel.app/investors](https://conviction-fe.vercel.app/investors)
+**Live:** [conviction-tg.vercel.app](https://conviction-tg.vercel.app) ·
+**Pitch:** [conviction-tg.vercel.app/investors](https://conviction-tg.vercel.app/investors)
 
 ---
 
@@ -68,7 +68,7 @@ npm run e2e:chromium     # desktop chromium only
 Against production:
 
 ```bash
-E2E_BASE_URL=https://conviction-fe.vercel.app npm run e2e:chromium
+E2E_BASE_URL=https://conviction-tg.vercel.app npm run e2e:chromium
 ```
 
 ## Routes

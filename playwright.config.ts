@@ -6,7 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  * Two run modes:
  *   - Local: `npm run e2e` → starts `next start` against the production
  *     build and runs the smoke suite on http://localhost:3000.
- *   - CI / production: `E2E_BASE_URL=https://conviction-fe.vercel.app npm run e2e`
+ *   - CI / production: `E2E_BASE_URL=https://conviction-tg.vercel.app npm run e2e`
  *     → skips the webServer boot and smoke-tests the live deployment.
  */
 

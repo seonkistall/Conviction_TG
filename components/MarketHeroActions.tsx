@@ -145,7 +145,7 @@ export function NotifyMeButton({
     'Hi Conviction team,',
     '',
     `Please notify me when this market resolves:`,
-    `https://conviction-fe.vercel.app/markets/${slug}`,
+    `https://conviction-tg.vercel.app/markets/${slug}`,
     '',
     'Thanks!',
   ].join('\n');

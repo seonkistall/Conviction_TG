@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "e2e": "playwright test",
-    "e2e:prod": "E2E_BASE_URL=https://conviction-fe.vercel.app playwright test",
+    "e2e:prod": "E2E_BASE_URL=https://conviction-tg.vercel.app playwright test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

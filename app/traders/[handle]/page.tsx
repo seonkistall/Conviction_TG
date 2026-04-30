@@ -11,7 +11,7 @@ import { PriceChart } from '@/components/PriceChart';
 import { CopyTradeButton } from '@/components/CopyTradeButton';
 import { JsonLd } from '@/components/JsonLd';
 
-const SITE_URL = 'https://conviction-fe.vercel.app';
+const SITE_URL = 'https://conviction-tg.vercel.app';
 
 interface Props {
   params: { handle: string };

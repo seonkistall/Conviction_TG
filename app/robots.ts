@@ -8,7 +8,7 @@ import type { MetadataRoute } from 'next';
  * - Point crawlers to the auto-generated sitemap so they find every SSG slug.
  */
 
-const BASE_URL = 'https://conviction-fe.vercel.app';
+const BASE_URL = 'https://conviction-tg.vercel.app';
 
 export default function robots(): MetadataRoute.Robots {
   return {

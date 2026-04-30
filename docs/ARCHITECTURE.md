@@ -112,7 +112,7 @@ Total to a fully real backend: ~40 days. Demo-grade (phases 1–3 + a single liv
 
 ## 4. Hard rules (do not break)
 
-- **Browser path stays alive**: `conviction-fe.vercel.app` opened in a regular browser must work without backend, without TG, with no env vars. Fixture is the safety net.
+- **Browser path stays alive**: `conviction-tg.vercel.app` opened in a regular browser must work without backend, without TG, with no env vars. Fixture is the safety net.
 - **No env-var leak to client** for any secret. `NEXT_PUBLIC_*` only for non-sensitive (bot username, app short name, public API base, public Sentry DSN).
 - **Hydration safety**: any TG-sniffing reorder commits in `useEffect`, never in `useState` initial value. SSR markup must match `getTgRegion() === 'apac'` baseline.
 - **No external redirect** from inside a TG Mini App. All wallet / share / link flows route through TG SDK methods.
