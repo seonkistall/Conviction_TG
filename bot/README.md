@@ -8,7 +8,7 @@ the same project; webhook lives at `https://app.conviction.bet/api/telegram/webh
 
 1. **BotFather** — set webhook:
    ```
-   /setdomain   Conviction_Predict_bot   conviction-fe.vercel.app
+   /setdomain   Conviction_Predict_bot   conviction-tg.vercel.app
    ```
 
 2. **Vercel env var** (Production scope only, sensitive):
@@ -20,13 +20,13 @@ the same project; webhook lives at `https://app.conviction.bet/api/telegram/webh
 
 3. **Webhook registration** — run once after first deploy:
    ```bash
-   curl -F "url=https://conviction-fe.vercel.app/api/telegram/webhook" \
+   curl -F "url=https://conviction-tg.vercel.app/api/telegram/webhook" \
         https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/setWebhook
    ```
 
 4. **BotFather menu button** — point at the Mini App:
    - `/setmenubutton` → choose bot → button text `Open Conviction`
-   - URL: `https://conviction-fe.vercel.app`
+   - URL: `https://conviction-tg.vercel.app`
 
 5. **BotFather commands**:
    ```

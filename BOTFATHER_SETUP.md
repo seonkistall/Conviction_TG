@@ -35,7 +35,7 @@ Asia-native prediction market. AI-graded resolution. Beta.
 @Conviction_Predict_bot
 Configure menu button
 text:  Open Conviction
-url:   https://conviction-fe.vercel.app
+url:   https://conviction-tg.vercel.app
 ```
 
 ### Register the Mini App (if not already)
@@ -46,7 +46,7 @@ title:        Conviction
 description:  Asia-native prediction market
 photo:        640x360 PNG
 demo gif:     30s wow recording
-url:          https://conviction-fe.vercel.app
+url:          https://conviction-tg.vercel.app
 short name:   open    (deeplink: t.me/Conviction_Predict_bot/open)
 ```
 
@@ -63,7 +63,7 @@ Vercel → Project → Settings → Environment Variables → Production:
 ## 2. Webhook registration (one-time, after deploy)
 
 ```bash
-curl -F "url=https://conviction-fe.vercel.app/api/telegram/webhook" \
+curl -F "url=https://conviction-tg.vercel.app/api/telegram/webhook" \
      -F "secret_token=<TELEGRAM_WEBHOOK_SECRET>" \
      "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook"
 ```
@@ -71,16 +71,16 @@ curl -F "url=https://conviction-fe.vercel.app/api/telegram/webhook" \
 Verify:
 ```bash
 curl "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/getWebhookInfo"
-# expect: "url": "https://conviction-fe.vercel.app/api/telegram/webhook"
+# expect: "url": "https://conviction-tg.vercel.app/api/telegram/webhook"
 ```
 
 ## 3. TON Connect manifest
 
 Already shipped at `public/tonconnect-manifest.json` and served at
-`https://conviction-fe.vercel.app/tonconnect-manifest.json`. Validate
+`https://conviction-tg.vercel.app/tonconnect-manifest.json`. Validate
 with:
 ```bash
-curl -i https://conviction-fe.vercel.app/tonconnect-manifest.json
+curl -i https://conviction-tg.vercel.app/tonconnect-manifest.json
 # expect 200 + access-control-allow-origin: *
 ```
 

@@ -67,7 +67,7 @@ const fontVariables = [
   jetbrainsMono.variable,
 ].join(' ');
 
-const SITE_URL = 'https://conviction-fe.vercel.app';
+const SITE_URL = 'https://conviction-tg.vercel.app';
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

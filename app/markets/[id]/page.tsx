@@ -20,7 +20,7 @@ import {
   PriceChartWithRange,
 } from '@/components/MarketHeroActions';
 
-const SITE_URL = 'https://conviction-fe.vercel.app';
+const SITE_URL = 'https://conviction-tg.vercel.app';
 
 export function generateStaticParams() {
   return MARKETS.map((m) => ({ id: m.slug }));

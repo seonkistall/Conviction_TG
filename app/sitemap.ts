@@ -14,7 +14,7 @@ import {
  * Priorities follow hub → detail: landing > hub pages > details.
  */
 
-const BASE_URL = 'https://conviction-fe.vercel.app';
+const BASE_URL = 'https://conviction-tg.vercel.app';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();

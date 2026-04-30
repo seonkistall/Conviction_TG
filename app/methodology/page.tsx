@@ -5,7 +5,7 @@ import { AI_TRADERS } from '@/lib/markets';
 import { JsonLd } from '@/components/JsonLd';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 
-const SITE_URL = 'https://conviction-fe.vercel.app';
+const SITE_URL = 'https://conviction-tg.vercel.app';
 
 export const metadata: Metadata = {
   title: 'Methodology · How the Conviction AI Oracle works',

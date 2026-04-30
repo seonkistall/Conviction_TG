@@ -1,7 +1,7 @@
 {
-  "url": "https://conviction-fe.vercel.app",
+  "url": "https://conviction-tg.vercel.app",
   "name": "Conviction",
-  "iconUrl": "https://conviction-fe.vercel.app/icon.png",
-  "termsOfUseUrl": "https://conviction-fe.vercel.app/terms",
-  "privacyPolicyUrl": "https://conviction-fe.vercel.app/privacy"
+  "iconUrl": "https://conviction-tg.vercel.app/icon.png",
+  "termsOfUseUrl": "https://conviction-tg.vercel.app/terms",
+  "privacyPolicyUrl": "https://conviction-tg.vercel.app/privacy"
 }

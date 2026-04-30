@@ -10,7 +10,7 @@ import { usePathname, useRouter } from 'next/navigation';
  * Wires Conviction into Telegram's WebApp shell when the page is loaded
  * inside Telegram (`window.Telegram?.WebApp` is defined). On a regular
  * browser this component is a no-op — every effect early-returns when
- * the SDK isn't present, so visitors on conviction-fe.vercel.app see
+ * the SDK isn't present, so visitors on conviction-tg.vercel.app see
  * exactly the same UI they always have.
  *
  * What it does inside Telegram:
