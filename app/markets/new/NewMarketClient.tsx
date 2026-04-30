@@ -61,21 +61,30 @@ export function NewMarketClient() {
    * 'idle' || q.trim()) so it never flashes under their caret.
    */
   const [placeholderIdx, setPlaceholderIdx] = useState(0);
+  // v2.28 (F-04): pause placeholder rotation while the textarea has
+  // focus. The carousel motion under an active caret read as
+  // "the field is rejecting my input" in the smoketest.
+  const [focused, setFocused] = useState(false);
   useEffect(() => {
-    if (phase !== 'idle' || q.trim().length > 0) return;
+    if (phase !== 'idle' || q.trim().length > 0 || focused) return;
     const t = setInterval(() => {
       setPlaceholderIdx((x) => (x + 1) % SAMPLE_QS.length);
     }, 3000);
     return () => clearInterval(t);
-  }, [phase, q]);
+  }, [phase, q, focused]);
   const activePlaceholder = SAMPLE_QS[placeholderIdx];
 
   useEffect(() => () => {
     if (timerRef.current) window.clearTimeout(timerRef.current);
   }, []);
 
+  // v2.28 (F-03): empty / too-short input now produces visible
+  // feedback. Pre-v2.28 the silent early-return left users tapping
+  // the button repeatedly with no signal that anything was wrong.
+  const MIN_LEN = 10;
   function run() {
-    if (!q.trim()) return;
+    const trimmed = q.trim();
+    if (trimmed.length < MIN_LEN) return;
     const next = (p: Phase, delay: number) => {
       timerRef.current = window.setTimeout(() => setPhase(p), delay) as unknown as number;
     };
@@ -133,34 +142,63 @@ export function NewMarketClient() {
             key={activePlaceholder}
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             placeholder={
               phase === 'idle' && !q.trim()
                 ? activePlaceholder
                 : t('newmkt.placeholder')
             }
             rows={2}
-            className="min-w-0 flex-1 resize-none bg-transparent text-xl leading-tight text-bone transition-opacity duration-500 placeholder:text-bone-muted/60 focus:outline-none sm:text-2xl md:text-3xl"
+            maxLength={200}
+            className="min-w-0 flex-1 resize-none bg-transparent text-xl leading-tight text-bone caret-volt transition-opacity duration-500 placeholder:text-bone-muted/60 focus:outline-none sm:text-2xl md:text-3xl"
             disabled={phase !== 'idle' && phase !== 'done'}
+            aria-describedby="newmkt-helper"
           />
           <button
             type="button"
             onClick={run}
-            disabled={!q.trim() || (phase !== 'idle' && phase !== 'done')}
+            disabled={
+              q.trim().length < MIN_LEN ||
+              (phase !== 'idle' && phase !== 'done')
+            }
             className={clsx(
               'shrink-0 rounded-full px-5 py-3 text-sm font-semibold transition active:scale-[0.98]',
-              q.trim() && (phase === 'idle' || phase === 'done')
+              q.trim().length >= MIN_LEN &&
+                (phase === 'idle' || phase === 'done')
                 ? 'bg-gradient-to-r from-volt to-volt-dark text-ink-900 shadow-xl hover:brightness-105'
                 : 'bg-ink-900 text-bone-muted'
             )}
+            aria-label={
+              q.trim().length < MIN_LEN
+                ? 'Type at least ' + MIN_LEN + ' characters first'
+                : undefined
+            }
           >
             {t('newmkt.propose')} →
           </button>
         </div>
 
-        <div className="mt-3 flex items-center gap-2 text-[11px] text-bone-muted sm:pl-11">
-          <span aria-hidden="true" className="text-conviction">✨</span>
-          Type in English, 한국어, 日本語, or 中文. AI routes to the
-          matching domain stack.
+        <div
+          id="newmkt-helper"
+          className="mt-3 flex items-center justify-between gap-3 text-[11px] text-bone-muted sm:pl-11"
+        >
+          <span className="flex items-center gap-2">
+            <span aria-hidden="true" className="text-conviction">✨</span>
+            {q.trim().length === 0 ? (
+              <>Type in English, 한국어, 日本語, or 中文. AI routes to the matching domain stack.</>
+            ) : q.trim().length < MIN_LEN ? (
+              <>
+                <span className="text-no">Add a bit more detail —{' '}
+                  <span className="font-mono">{MIN_LEN - q.trim().length}</span>{' '}
+                  characters to go.
+                </span>
+              </>
+            ) : (
+              <>Looks good. Tap propose to run the swarm.</>
+            )}
+          </span>
+          <span className="font-mono tabular-nums">{q.length}/200</span>
         </div>
 
         {phase === 'idle' && (

@@ -40,51 +40,8 @@ import { usePathname, useRouter } from 'next/navigation';
  *   - Telegram Stars / crypto payments
  */
 
-// Minimal subset of the TG WebApp surface we touch. The full type lives
-// at @twa-dev/types if we ever pull that dep — for Phase 1 this hand-
-// rolled shape avoids adding a runtime dep just for typing.
-interface TelegramWebApp {
-  ready(): void;
-  expand(): void;
-  isExpanded: boolean;
-  // disableVerticalSwipes was added in TG 7.7; older clients won't have
-  // the method — we feature-detect.
-  disableVerticalSwipes?: () => void;
-  themeParams: {
-    bg_color?: string;
-    text_color?: string;
-    hint_color?: string;
-    link_color?: string;
-    button_color?: string;
-    button_text_color?: string;
-    secondary_bg_color?: string;
-    header_bg_color?: string;
-    accent_text_color?: string;
-    section_bg_color?: string;
-    section_header_text_color?: string;
-    subtitle_text_color?: string;
-    destructive_text_color?: string;
-  };
-  colorScheme: 'light' | 'dark';
-  viewportHeight: number;
-  viewportStableHeight: number;
-  BackButton: {
-    show(): void;
-    hide(): void;
-    onClick(cb: () => void): void;
-    offClick(cb: () => void): void;
-  };
-  setHeaderColor?: (color: string) => void;
-  setBackgroundColor?: (color: string) => void;
-  version: string;
-  platform: string;
-}
+// v2.28: type + global declare moved to lib/tgWebApp.ts (single source of truth).
 
-declare global {
-  interface Window {
-    Telegram?: { WebApp?: TelegramWebApp };
-  }
-}
 
 export function TelegramAdapter() {
   const router = useRouter();
@@ -184,6 +141,57 @@ export function TelegramAdapter() {
       tg.BackButton.hide();
     };
   }, [pathname, router]);
+
+  // -- Phase 2 (v2.28) — Deeplink routing via start_param ---------------
+  //
+  // Smoketest finding F-10. Group-chat viral loop:
+  //   friend shares  t.me/Conviction_Predict_bot/open?startapp=market_btc-150k-eoy
+  //   user taps      → Mini App launches → this effect routes to
+  //                    /markets/btc-150k-eoy on first paint.
+  //
+  // Conventions:
+  //   market_<slug>     → /markets/<slug>
+  //   propose_<query>   → /markets/new?q=<decoded query>
+  //   propose           → /markets/new
+  //   feed              → /feed
+  //   leaderboard       → /leaderboard
+  //
+  // Runs once per Mini-App session. We use sessionStorage as the
+  // single-flight latch so a soft route change (router.replace then
+  // user navigates back to /) doesn't re-fire the redirect and trap
+  // the user at the deeplink target forever.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const tg = window.Telegram?.WebApp;
+    if (!tg) return;
+    const startParam = tg.initDataUnsafe?.start_param;
+    if (!startParam) return;
+    if (sessionStorage.getItem('cv_tg_start_handled') === '1') return;
+    sessionStorage.setItem('cv_tg_start_handled', '1');
+
+    let target: string | null = null;
+    if (startParam.startsWith('market_')) {
+      const slug = startParam.slice('market_'.length);
+      if (slug) target = '/markets/' + encodeURIComponent(slug);
+    } else if (startParam.startsWith('propose_')) {
+      const q = startParam.slice('propose_'.length);
+      target = q
+        ? '/markets/new?q=' + encodeURIComponent(decodeURIComponent(q))
+        : '/markets/new';
+    } else if (startParam === 'propose') {
+      target = '/markets/new';
+    } else if (startParam === 'feed') {
+      target = '/feed';
+    } else if (startParam === 'leaderboard') {
+      target = '/leaderboard';
+    }
+
+    if (target && target !== pathname) {
+      router.replace(target);
+    }
+    // Run only once on mount — the latch handles re-entry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return null;
 }
