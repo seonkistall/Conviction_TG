@@ -13,6 +13,7 @@ import { LiveMarketGrid } from '@/components/LiveMarketGrid';
 import { JsonLd } from '@/components/JsonLd';
 import { ResolvedBanner } from '@/components/ResolvedBanner';
 import { MarketTgBuyButton } from '@/components/MarketTgBuyButton';
+import { RecentTradesPanel } from '@/components/RecentTradesPanel';
 import {
   MarketHeroShare,
   NotifyMeButton,
@@ -285,36 +286,11 @@ export default function MarketDetailPage({
             </div>
           </div>
 
-          {/* Recent trades */}
-          <div className="rounded-2xl border border-white/10 bg-ink-800 p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="font-display text-2xl text-bone">Recent trades</h3>
-              <span className="text-[11px] text-bone-muted">Live · websocket</span>
-            </div>
-            <div className="divide-y divide-white/5">
-              {mockTrades(m.yesProb).map((t, i) => (
-                <div key={i} className="flex items-center justify-between py-2.5 text-sm">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg">{t.avatar}</span>
-                    <span className="text-bone">{t.handle}</span>
-                    <span
-                      className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest ${
-                        t.side === 'YES'
-                          ? 'bg-yes-soft text-yes'
-                          : 'bg-no-soft text-no'
-                      }`}
-                    >
-                      {t.side}
-                    </span>
-                    <span className="font-mono text-bone-muted">
-                      {t.shares} shares @ ¢{t.price}
-                    </span>
-                  </div>
-                  <span className="font-mono text-bone-muted">{t.ago}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Recent trades — v2.28.2 swapped to <RecentTradesPanel/> using
+              useLiveTrades(). Today still ticks a 4-second mock; flips to
+              real WebSocket the moment NEXT_PUBLIC_LIVE_TRADES_WS_URL is set,
+              with no consumer-side change. */}
+          <RecentTradesPanel marketId={m.id} yesProb={m.yesProb} />
         </div>
 
         {/* Right rail — sticky */}
@@ -433,31 +409,4 @@ function TimelineItem({
       </div>
     </li>
   );
-}
-
-function mockTrades(p: number) {
-  const avatars = ['🧠', '🎌', '🐋', '🎮', '💜', '🟧', '📺', '🗼', '⚾'];
-  const handles = [
-    'oracle.seoul',
-    'bias.jp',
-    'whale.apac',
-    'faker.fanboy',
-    'idol.scout',
-    'btc.maxi.hk',
-    'drama.nerd',
-    'tokyo.takes',
-    'kbo.quant',
-  ];
-  return Array.from({ length: 8 }).map((_, i) => {
-    const side = Math.random() > 0.45 ? 'YES' : 'NO';
-    const price = Math.round((side === 'YES' ? p : 1 - p) * 100 + (Math.random() - 0.5) * 6);
-    return {
-      avatar: avatars[i % avatars.length],
-      handle: handles[i % handles.length],
-      side: side as 'YES' | 'NO',
-      shares: Math.round(50 + Math.random() * 900),
-      price,
-      ago: `${Math.ceil(Math.random() * 58) + 1}s ago`,
-    };
-  });
 }
