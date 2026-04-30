@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useToast } from '@/lib/toast';
-import { openXIntent } from '@/lib/share';
+import { openXIntent, openContextShare } from '@/lib/share';
+import { isInTelegram } from '@/lib/tgWebApp';
 import { BRAND_BETA_EMAIL } from '@/lib/constants';
 import { PriceChart } from './PriceChart';
 
@@ -35,6 +36,26 @@ export function MarketHeroShare({
     window.setTimeout(() => setLabel('default'), 2800);
 
   const onShare = async () => {
+    // v2.28 (F-10) — TG-first share. When opened inside Telegram, use
+    // the t.me deeplink so the receiving group-chat member lands
+    // directly on this market inside the Mini App with one tap.
+    if (isInTelegram()) {
+      const ok = await openContextShare({
+        title,
+        startApp: 'market_' + slug,
+        fallbackUrl:
+          typeof window !== 'undefined'
+            ? window.location.origin + '/markets/' + slug
+            : '/markets/' + slug,
+      });
+      if (ok) {
+        setLabel('shared');
+        reset();
+        return;
+      }
+      // fall through to the regular flow if for any reason TG share failed
+    }
+
     const url =
       typeof window !== 'undefined'
         ? `${window.location.origin}/markets/${slug}`

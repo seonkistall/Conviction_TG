@@ -185,5 +185,56 @@ export function TelegramAdapter() {
     };
   }, [pathname, router]);
 
+  // -- Phase 2 (v2.28) — Deeplink routing via start_param ---------------
+  //
+  // Smoketest finding F-10. Group-chat viral loop:
+  //   friend shares  t.me/Conviction_Predict_bot/open?startapp=market_btc-150k-eoy
+  //   user taps      → Mini App launches → this effect routes to
+  //                    /markets/btc-150k-eoy on first paint.
+  //
+  // Conventions:
+  //   market_<slug>     → /markets/<slug>
+  //   propose_<query>   → /markets/new?q=<decoded query>
+  //   propose           → /markets/new
+  //   feed              → /feed
+  //   leaderboard       → /leaderboard
+  //
+  // Runs once per Mini-App session. We use sessionStorage as the
+  // single-flight latch so a soft route change (router.replace then
+  // user navigates back to /) doesn't re-fire the redirect and trap
+  // the user at the deeplink target forever.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const tg = window.Telegram?.WebApp;
+    if (!tg) return;
+    const startParam = tg.initDataUnsafe?.start_param;
+    if (!startParam) return;
+    if (sessionStorage.getItem('cv_tg_start_handled') === '1') return;
+    sessionStorage.setItem('cv_tg_start_handled', '1');
+
+    let target: string | null = null;
+    if (startParam.startsWith('market_')) {
+      const slug = startParam.slice('market_'.length);
+      if (slug) target = '/markets/' + encodeURIComponent(slug);
+    } else if (startParam.startsWith('propose_')) {
+      const q = startParam.slice('propose_'.length);
+      target = q
+        ? '/markets/new?q=' + encodeURIComponent(decodeURIComponent(q))
+        : '/markets/new';
+    } else if (startParam === 'propose') {
+      target = '/markets/new';
+    } else if (startParam === 'feed') {
+      target = '/feed';
+    } else if (startParam === 'leaderboard') {
+      target = '/leaderboard';
+    }
+
+    if (target && target !== pathname) {
+      router.replace(target);
+    }
+    // Run only once on mount — the latch handles re-entry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return null;
 }
