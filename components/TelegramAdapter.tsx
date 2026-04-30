@@ -40,51 +40,8 @@ import { usePathname, useRouter } from 'next/navigation';
  *   - Telegram Stars / crypto payments
  */
 
-// Minimal subset of the TG WebApp surface we touch. The full type lives
-// at @twa-dev/types if we ever pull that dep — for Phase 1 this hand-
-// rolled shape avoids adding a runtime dep just for typing.
-interface TelegramWebApp {
-  ready(): void;
-  expand(): void;
-  isExpanded: boolean;
-  // disableVerticalSwipes was added in TG 7.7; older clients won't have
-  // the method — we feature-detect.
-  disableVerticalSwipes?: () => void;
-  themeParams: {
-    bg_color?: string;
-    text_color?: string;
-    hint_color?: string;
-    link_color?: string;
-    button_color?: string;
-    button_text_color?: string;
-    secondary_bg_color?: string;
-    header_bg_color?: string;
-    accent_text_color?: string;
-    section_bg_color?: string;
-    section_header_text_color?: string;
-    subtitle_text_color?: string;
-    destructive_text_color?: string;
-  };
-  colorScheme: 'light' | 'dark';
-  viewportHeight: number;
-  viewportStableHeight: number;
-  BackButton: {
-    show(): void;
-    hide(): void;
-    onClick(cb: () => void): void;
-    offClick(cb: () => void): void;
-  };
-  setHeaderColor?: (color: string) => void;
-  setBackgroundColor?: (color: string) => void;
-  version: string;
-  platform: string;
-}
+// v2.28: type + global declare moved to lib/tgWebApp.ts (single source of truth).
 
-declare global {
-  interface Window {
-    Telegram?: { WebApp?: TelegramWebApp };
-  }
-}
 
 export function TelegramAdapter() {
   const router = useRouter();
