@@ -28,7 +28,42 @@ const SECRET = process.env.TELEGRAM_WEBHOOK_SECRET;
 
 const TG = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
+/**
+ * v2.28.1 — Webhook idempotency cache (F-21).
+ *
+ * Telegram retries webhook delivery for ~24h if the receiver doesn't
+ * 200 fast enough. Without dedup the user gets the welcome message
+ * twice when our cold start crosses TG's ~5s timeout, or N times if
+ * an instance briefly fails to drain. Dedup window: 5 minutes is
+ * well past TG's outer retry window for a single update_id and
+ * costs effectively zero memory (~ <1 MB for tens of thousands of
+ * ids).
+ *
+ * Edge instances are not perfectly sticky, so this is a best-effort
+ * dedup that catches the *common* case of the same instance
+ * receiving the retry. For multi-region deploys we'd back this with
+ * Vercel KV; the in-memory implementation is sufficient through
+ * beta when traffic is concentrated to a single region.
+ */
+const DEDUP_TTL_MS = 5 * 60 * 1000;
+const dedup = new Map<number, number>(); // update_id → ms epoch first seen
+function isDuplicate(updateId: number): boolean {
+  const now = Date.now();
+  // Drop expired entries opportunistically while we're here.
+  if (dedup.size > 4096) {
+    for (const [id, ts] of dedup) {
+      if (now - ts > DEDUP_TTL_MS) dedup.delete(id);
+    }
+  }
+  const seen = dedup.get(updateId);
+  if (seen !== undefined && now - seen < DEDUP_TTL_MS) return true;
+  dedup.set(updateId, now);
+  return false;
+}
+
+
 interface TgUpdate {
+  update_id: number;
   message?: {
     chat: { id: number };
     text?: string;
@@ -75,6 +110,12 @@ export async function POST(req: NextRequest) {
   }
 
   const update = (await req.json()) as TgUpdate;
+
+  // Idempotency — a TG retry of the same update_id is a no-op.
+  if (isDuplicate(update.update_id)) {
+    return NextResponse.json({ ok: true, dedup: true });
+  }
+
   const msg = update.message;
   const text = msg?.text;
   if (!msg || !text) {
